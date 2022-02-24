@@ -1,0 +1,2 @@
+class Catalog(object):
+    pass
