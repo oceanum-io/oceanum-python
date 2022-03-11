@@ -10,6 +10,7 @@ if "%SPHINXBUILD%" == "" (
 set SOURCEDIR=.
 set BUILDDIR=_build
 set SPHINXPROJ=oceanum
+set DATAMESH_KEY=<datamesh_key>
 
 if "%1" == "" goto help
 

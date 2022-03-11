@@ -7,9 +7,8 @@ import click
 
 @click.command()
 def main(args=None):
-    """Console script for oceanum."""
-    click.echo("Replace this message by putting your code into " "oceanum.cli.main")
-    click.echo("See click documentation at http://click.pocoo.org/")
+    """Console interface for oceanum."""
+    click.echo("Oceanum.io CLI. Just a stub at present.")
     return 0
 
 

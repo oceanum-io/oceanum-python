@@ -2,31 +2,23 @@
 # -*- coding: utf-8 -*-
 
 """Tests for `oceanum` package."""
-
+import os
 import pytest
 
 from click.testing import CliRunner
 
-from oceanum.datamesh import Connector
+from oceanum.datamesh import Connector, Datasource
 from oceanum import cli
 
 
 @pytest.fixture
-def response():
-    """Sample pytest fixture.
-
-    See more at: http://doc.pytest.org/en/latest/fixture.html
-    """
-    # import requests
-    # return requests.get('https://github.com/audreyr/cookiecutter-pypackage')
+def conn():
+    """Connection fixture"""
+    return Connector(os.environ["DATAMESH_KEY"])
 
 
-def test_connect():
-    datamesh = Connector("aa54ff999abf474c0c1584fb6e97134249c3e437")
-
-    """Sample pytest test function with the pytest fixture as an argument."""
-    # from bs4 import BeautifulSoup
-    # assert 'GitHub' in BeautifulSoup(response.content).title.string
+def test_catalog(conn):
+    cat = conn.get_catalog()
 
 
 def test_command_line_interface():

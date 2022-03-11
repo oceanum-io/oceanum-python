@@ -102,12 +102,12 @@ class Connector(object):
             filter (dict, optional): Set of filters to apply. Defaults to {}.
 
         Returns:
-            :obj:`oceanum.datamesh.catalog.Catalog`: A datamesh catalog instance
+            :obj:`oceanum.datamesh.Catalog`: A datamesh catalog instance
         """
         resp = requests.get(
             f"{self._proto}//{self._host}/datasource/", headers={**self._auth_headers}
         )
-        cat = Catalog(resp.json())
+        cat = Catalog._init(self, resp.json())
         return cat
 
     def get_datasource(self, datasource_id):
@@ -117,7 +117,7 @@ class Connector(object):
             datasource_id (string): Unique datasource id
 
         Returns:
-            :obj:`oceanum.datamesh.datasource.Datasource`: A datasource instance
+            :obj:`oceanum.datamesh.Datasource`: A datasource instance
 
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
@@ -137,7 +137,7 @@ class Connector(object):
             use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
 
         Returns:
-            Union[:obj:`pandas.DataFrame`,:obj:`geopandas.GeoDataFrame`,:obj:`xarray.Dataset`]: The datasource container
+            Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
         ds = self.get_datasource(datasource_id)
         return ds.load()
@@ -146,8 +146,18 @@ class Connector(object):
         """Make a datamesh query
 
         Args:
-            query (Union[:obj:`oceanum.datamesh.query.Query`, dict]): Datamesh query as a query object or a valid query dictionary
+            query (Union[:obj:`oceanum.datamesh.Query`, dict]): Datamesh query as a query object or a valid query dictionary
 
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
+
+        if not isinstance(query, Query):
+            query = Query(query)
+        transfer_format = (
+            "application/x-netcdf4"
+            if self.container == "xarray.Dataset"
+            else "application/parquet"
+        )
+
+        return self._query_request(query, data_format=transfer_format)

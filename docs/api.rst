@@ -15,16 +15,15 @@ End-user classes
 .. autosummary::
    :toctree: classes/datamesh
 
-    connection.Connector
-    query.Query
+    Connector
+    Datasource
+    Catalog
+    Query
 
 Internal classes
 
 .. autosummary::
    :toctree: classes/datamesh
-
-    datasource.Datasource
-    catalog.Catalog
     query.GeoFilter
 
 .. 
