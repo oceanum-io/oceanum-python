@@ -1,17 +1,15 @@
-Welcome to oceanum's documentation!
+Oceanum library
 ======================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   readme
    installation
    usage
-   modules
-   contributing
-   authors
-   history
+   api
+   about
+
 
 Indices and tables
 ==================

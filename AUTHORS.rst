@@ -1,7 +1,3 @@
-=======
-Credits
-=======
-
 Development Lead
 ----------------
 
@@ -10,4 +6,4 @@ Development Lead
 Contributors
 ------------
 
-None yet. Why not be the first?
+Always looking for feedback and input

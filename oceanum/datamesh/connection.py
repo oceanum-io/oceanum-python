@@ -1,5 +1,6 @@
 import os
 import requests
+import fsspec
 from urllib.parse import urlparse
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
@@ -18,13 +19,13 @@ class Connector(object):
     def __init__(
         self,
         key=os.environ.get("DATAMESH_KEY", None),
-        service=DEFAULT_CONFIG["DATAMESH_SERVICE"],
+        service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
     ):
-        f"""Datamesh connector constructor
+        """Datamesh connector constructor
 
         Args:
             key (string): Your datamesh access key. Defaults to os.environ.get("DATAMESH_KEY", None).
-            service (_type_, optional): URL of datamesh service. Defaults to {DEFAULT_CONFIG["DATAMESH_SERVICE"]}.
+            service (string, optional): URL of datamesh service. Defaults to os.environ.get("DATAMESH_KEY", "https://datamesh.oceanum.io").
 
         Raises:
             ValueError: Missing or invalid arguments
@@ -63,53 +64,70 @@ class Connector(object):
         )
         return resp
 
-    def _zarr_proxy(self, id):
-        resp = requests.get(
-            f"{self._proto}//gateway.{self._host}/zarr/{datasource_id}",
-            headers=headers,
-        )
+    def _zarr_proxy(self, datasource_id):
+        try:
+            mapper = fsspec.get_mapper(
+                f"{self._proto}//gateway.{self._host}/zarr/{datasource_id}",
+                headers=headers,
+            )
+        except Exception as e:
+            raise DatameshConnectError(str(e))
+        return mapper
 
-    def _data_request(self, id):
+    def _data_request(self, datasource_id, data_format="application/json"):
         resp = requests.get(
             f"{self._proto}//gateway.{self._host}/data/{datasource_id}",
-            headers=self._auth_headers,
+            headers={"Accept": format, **self._auth_headers},
         )
         if not resp.status_code == 200:
             raise DatameshConnectError(resp.text)
+        else:
+            return resp.content
 
-    def _query_request(self, query, data_format=None):
-        headers = {**self._auth_headers}
-        if data_format:
-            headers["Accept"] = data_format
+    def _query_request(self, query, data_format="application/json"):
+        headers = {"Accept": data_format, **self._auth_headers}
         resp = requests.post(
             f"{self._proto}//gateway.{self._host}/oceanql/",
             headers=headers,
         )
         if not resp.status_code == 200:
             raise DatameshConnectError(resp.text)
+        else:
+            return resp.content
 
     def get_catalog(self, filter={}):
         """Get datamesh catalog
 
         Args:
             filter (dict, optional): Set of filters to apply. Defaults to {}.
+
+        Returns:
+            :obj:`oceanum.datamesh.catalog.Catalog`: A datamesh catalog instance
         """
-        pass
+        resp = requests.get(
+            f"{self._proto}//{self._host}/datasource/", headers={**self._auth_headers}
+        )
+        cat = Catalog(resp.json())
+        return cat
 
     def get_datasource(self, datasource_id):
-        """Get a Datasource instance from the datamesh
+        """Get a Datasource instance from the datamesh. This does not load the actual data.
 
         Args:
             datasource_id (string): Unique datasource id
 
+        Returns:
+            :obj:`oceanum.datamesh.datasource.Datasource`: A datasource instance
+
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
-        ds = Datasource.init(self, datasource_id)
+        ds = Datasource._init(self, datasource_id)
         if not ds._exists():
             raise DatameshConnectError(
                 f"Datasource {datasource_id} does not exist or is not authorized"
             )
+        return ds
 
     def load_datasource(self, datasource_id, use_dask=True):
         """Load a datasource into the work environment
@@ -117,12 +135,19 @@ class Connector(object):
         Args:
             datasource_id (string): Unique datasource id
             use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+
+        Returns:
+            Union[:obj:`pandas.DataFrame`,:obj:`geopandas.GeoDataFrame`,:obj:`xarray.Dataset`]: The datasource container
         """
         ds = self.get_datasource(datasource_id)
-        if use_dask:
-            try:
-                return ds.to_dask()
-            except:
-                return ds.read()
-        else:
-            return ds.read()
+        return ds.load()
+
+    def query(self, query):
+        """Make a datamesh query
+
+        Args:
+            query (Union[:obj:`oceanum.datamesh.query.Query`, dict]): Datamesh query as a query object or a valid query dictionary
+
+        Returns:
+            Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
+        """

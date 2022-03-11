@@ -22,7 +22,7 @@ def response():
 
 
 def test_connect():
-    datamesh = Connector("abcdefghijk123456789")
+    datamesh = Connector("aa54ff999abf474c0c1584fb6e97134249c3e437")
 
     """Sample pytest test function with the pytest fixture as an argument."""
     # from bs4 import BeautifulSoup

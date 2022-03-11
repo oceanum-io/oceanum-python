@@ -1,6 +1,6 @@
-=======
-oceanum
-=======
+==============
+oceanum-python
+==============
 
 
 .. image:: https://img.shields.io/pypi/v/oceanum.svg
@@ -14,24 +14,19 @@ oceanum
         :alt: Documentation Status
 
 
-
-
 Library for oceanum.io services
 
 
-* Free software: MIT license
+* MIT license
 * Documentation: https://oceanum.readthedocs.io.
 
 
 Features
 --------
 
-* TODO
+* Simple pythonic access to the Oceanum datamesh
 
 Credits
 -------
 
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+This package was developed by `Oceanum Numerical <https://www.oceanum.science>`_, with input from our development partners and contributors.
