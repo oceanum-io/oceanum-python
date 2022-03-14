@@ -2,7 +2,7 @@ image: python:3.7-alpine
 pages:
   stage: deploy
   script:
-    - cp -R docs/_build public
+    - cp -R docs/_build/html public
   artifacts:
     paths:
       - public
