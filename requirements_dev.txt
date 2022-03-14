@@ -1,12 +1,9 @@
 pip
 bumpversion
 wheel
-watchdog
 flake8
 tox
-coverage
 Sphinx
-twine
 pydata-sphinx-theme
 autodoc_pydantic
 
