@@ -3,7 +3,7 @@ pages:
   stage: deploy
   script:
     - mkdir .public
-    - pip install -r requirement_dev.txt
+    - pip install -r requirements_dev.txt
     - sphinx-build -b html docs public
   artifacts:
     paths:

@@ -19,6 +19,10 @@ def conn():
 
 def test_catalog(conn):
     cat = conn.get_catalog()
+    ds0 = cat.ids[0]
+    assert ds0 in str(cat)
+    assert isinstance(cat[ds0], Datasource)
+    assert len(cat)
 
 
 def test_command_line_interface():
@@ -26,7 +30,7 @@ def test_command_line_interface():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 0
-    assert "oceanum.cli.main" in result.output
+    assert "Oceanum.io CLI" in result.output
     help_result = runner.invoke(cli.main, ["--help"])
     assert help_result.exit_code == 0
     assert "--help  Show this message and exit." in help_result.output

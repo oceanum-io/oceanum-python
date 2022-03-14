@@ -7,8 +7,8 @@ tox==3.5.2
 coverage==4.5.1
 Sphinx==1.8.1
 twine==1.12.1
-pydata-sphinx-theme==0.8.0
-autodocsumm==0.2.7
+pydata-sphinx-theme
+autodoc_pydantic
 
 pytest==3.8.2
 pytest-runner==4.2

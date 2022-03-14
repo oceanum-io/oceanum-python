@@ -32,14 +32,14 @@ class Datasource(object):
 
     @classmethod
     def _init(cls, connector, id):
-        meta = connector._metadata(id)
-        if resp.status_code == 404:
+        meta = connector._metadata_request(id)
+        if meta.status_code == 404:
             raise DatasourceException("Not found")
         elif meta.status_code == 401:
             raise DatasourceException("Not Authorized")
         elif meta.status_code != 200:
             raise DatameshException(meta.text)
-        meta_dict = meta.json
+        meta_dict = meta.json()
         ds = cls(id, **{"geometry": meta_dict["geometry"], **meta_dict["properties"]})
         ds._connector = connector
         return ds
@@ -138,16 +138,16 @@ class Datasource(object):
     def container(self):
         """str: Container type for datasource
         Is one of:
-            - `xarray.Dataset`
-            - `pandas.DataFrame`
-            - `geopandas.GeoDataFrame`
+            - :obj:`xarray.Dataset`
+            - :obj:`pandas.DataFrame`
+            - :obj:`geopandas.GeoDataFrame`
         """
         if "g" in self._coordinates:
-            return "geopandas.GeoDataFrame"
+            return geopandas.GeoDataFrame
         elif "x" in self._coordinates and "y" in self._coordinates:
-            return "xarray.Dataset"
+            return xarray.Dataset
         else:
-            return "pandas.DataFrame"
+            return pandas.DataFrame
 
     @property
     def geometry(self):
@@ -175,27 +175,12 @@ class Datasource(object):
         For datasources which load into DataFrames or GeoDataFrames, this returns an in memory instance of the DataFrame.
         For datasources which load into an xarray Dataset, an open zarr backed dataset is returned.
         """
-        if self.container == "xarray.Dataset":
+        if self.container == xarray.Dataset:
             mapper = self._connector._zarr_proxy(self.id)
-        else:
-            resp = self._connector._data_request(self.id, "application/parquet")
-
-    def query(self, query):
-        """Query a datasource with optional time and/or spatial filters
-
-        Args:
-            query (Union[:obj:`oceanum.datamesh.query.Query`, dict]): Datamesh query as a query object or a valid query dictionary
-
-        Returns:
-            Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
-        """
-
-        if not isinstance(query, Query):
-            query = Query(query)
-        transfer_format = (
-            "application/x-netcdf4"
-            if self.container == "xarray.Dataset"
-            else "application/parquet"
-        )
-
-        return self._connector._query_request(query, data_format=transfer_format)
+            return xarray.open_zarr(mapper)
+        elif self.container == geopandas.GeoDataFrame:
+            tmpfile = self._connector._data_request(self.id, "application/parquet")
+            return geopandas.read_parquet(tmpfile.name)
+        elif self.container == pandas.DataFrame:
+            tmpfile = self._connector._data_request(self.id, "application/parquet")
+            return pandas.read_parquet(tmpfile.name)

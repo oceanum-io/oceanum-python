@@ -9,37 +9,35 @@ class Catalog(object):
 
     @classmethod
     def _init(cls, connector):
-        meta = connector._metadata()
-        if resp.status_code == 404:
+        meta = connector._metadata_request()
+        if meta.status_code == 404:
             raise DatasourceException("Not found")
         elif meta.status_code == 401:
             raise DatasourceException("Not Authorized")
         elif meta.status_code != 200:
             raise DatameshException(meta.text)
-        cat = cls(meta.json)
+        cat = cls(meta.json())
         cat._connector = connector
-        return ds
+        return cat
 
     def __init__(self, json):
         """Constructor for Catalog class"""
-        self._geojson = FeatureCollection(json)
-        self._ids = [ds["id"] for ds in self._geojson.features]
+        self._geojson = FeatureCollection(**json)
+        self._ids = [ds.id for ds in self._geojson.features]
 
     def __len__(self):
-        return len(self._geojson["features"])
+        return len(self._geojson.features)
 
     def __str__(self):
         datasources = [
-            f" {ds['properties']['name']} [{ds['id']}]"
-            for ds in self._geojson["features"]
+            f" {ds.properties['name']} [{ds.id}]" for ds in self._geojson.features
         ]
-        return (
-            f"Datamesh catalog with {len(datasources)} datasources:\n"
-            + datasources.join("\n")
+        return f"Datamesh catalog with {len(datasources)} datasources:\n" + "\n".join(
+            datasources
         )
 
     def __repr__(self):
-        return self._geojson.json()
+        return self._geojson
 
     def __getitem__(self, item):
         if item in self._ids:
@@ -49,6 +47,10 @@ class Catalog(object):
 
     def __setitem__(self, item):
         raise ValueError("Datamesh catalog is read only")
+
+    def __iter__(self):
+        for item in self._ids:
+            yield self[item]
 
     @property
     def ids(self):
