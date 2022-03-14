@@ -1,0 +1,37 @@
+﻿oceanum.datamesh.connection
+===========================
+
+.. currentmodule:: oceanum.datamesh.connection
+
+.. autoclass:: Connector
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+     .. automethod:: __init__
+      ~Connector.__init__
+     .. automethod:: get_catalog
+      ~Connector.get_catalog
+     .. automethod:: get_datasource
+      ~Connector.get_datasource
+     .. automethod:: load_datasource
+      ~Connector.load_datasource
+     .. automethod:: query
+      ~Connector.query
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Connector.host
+   
+   

@@ -1,0 +1,353 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>oceanum.datamesh.Connector &#8212; oceanum 0.1.0 documentation</title>
+    
+    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    
+    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="oceanum.datamesh.Datasource" href="oceanum.datamesh.Datasource.html" />
+    <link rel="prev" title="API documentation" href="../../api.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../index.html">
+  <img src="../../_static/banner_dark.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../usage.html">
+  Usage
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../../api.html">
+  API documentation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../about.html">
+  About
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   oceanum.datamesh.Connector
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="oceanum.datamesh.Datasource.html">
+   oceanum.datamesh.Datasource
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="oceanum.datamesh.Catalog.html">
+   oceanum.datamesh.Catalog
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="oceanum.datamesh.Query.html">
+   oceanum.datamesh.Query
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="oceanum-datamesh-connector">
+<h1>oceanum.datamesh.Connector<a class="headerlink" href="#oceanum-datamesh-connector" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.</span></span><span class="sig-name descname"><span class="pre">Connector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://datamesh.oceanum.io'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gateway</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Datamesh connector class.</p>
+<p>All datamesh operations are methods of this class</p>
+<p class="rubric">Attributes</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">host</span></code></p></td>
+<td><p>Datamesh host</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://datamesh.oceanum.io'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gateway</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Datamesh connector constructor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token</strong> (<em>string</em>) – Your datamesh access token. Defaults to os.environ.get(“DATAMESH_TOKEN”, None).</p></li>
+<li><p><strong>service</strong> (<em>string</em><em>, </em><em>optional</em>) – URL of datamesh service. Defaults to os.environ.get(“DATAMESH_SERVICE”, “<a class="reference external" href="https://datamesh.oceanum.io">https://datamesh.oceanum.io</a>”).</p></li>
+<li><p><strong>gateway</strong> (<em>string</em><em>, </em><em>optional</em>) – URL of gateway service. Defaults to os.environ.get(“DATAMESH_GATEWAY”, “<a class="reference external" href="https://gateway.datamesh.oceanum.io">https://gateway.datamesh.oceanum.io</a>”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Missing or invalid arguments</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.get_catalog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get datamesh catalog</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filter</strong> (<em>dict</em><em>, </em><em>optional</em>) – Set of filters to apply. Defaults to {}.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A datamesh catalog instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog" title="oceanum.datamesh.Catalog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Catalog</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.get_datasource">
+<span class="sig-name descname"><span class="pre">get_datasource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.get_datasource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.get_datasource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Datasource instance from the datamesh. This does not load the actual data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>datasource_id</strong> (<em>string</em>) – Unique datasource id</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A datasource instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource" title="oceanum.datamesh.Datasource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Datasource</span></code></a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>DatameshConnectError</strong> – Datasource cannot be found or is not authorized for the datamesh key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.load_datasource">
+<span class="sig-name descname"><span class="pre">load_datasource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.load_datasource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.load_datasource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a datasource into the work environment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datasource_id</strong> (<em>string</em>) – Unique datasource id</p></li>
+<li><p><strong>use_dask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Load datasource as a dask enabled datasource if possible. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The datasource container</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a datamesh query</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>query</strong> (Union[<a class="reference internal" href="oceanum.datamesh.Query.html#oceanum.datamesh.Query" title="oceanum.datamesh.Query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Query</span></code></a>, dict]) – Datamesh query as a query object or a valid query dictionary</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The datasource container</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="../../api.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">API documentation</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="oceanum.datamesh.Datasource.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">oceanum.datamesh.Datasource</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Oceanum Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.1.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

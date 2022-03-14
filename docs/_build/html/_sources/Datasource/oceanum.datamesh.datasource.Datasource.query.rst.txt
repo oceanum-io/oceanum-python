@@ -1,0 +1,6 @@
+oceanum.datamesh.datasource.Datasource.query
+============================================
+
+.. currentmodule:: oceanum.datamesh.datasource
+
+.. automethod:: Datasource.query

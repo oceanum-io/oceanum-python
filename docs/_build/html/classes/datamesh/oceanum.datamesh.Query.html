@@ -1,0 +1,1120 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>oceanum.datamesh.Query &#8212; oceanum 0.1.0 documentation</title>
+    
+    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    
+    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="About" href="../../about.html" />
+    <link rel="prev" title="oceanum.datamesh.Catalog" href="oceanum.datamesh.Catalog.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../index.html">
+  <img src="../../_static/banner_dark.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../usage.html">
+  Usage
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../../api.html">
+  API documentation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../about.html">
+  About
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="oceanum.datamesh.Connector.html">
+   oceanum.datamesh.Connector
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="oceanum.datamesh.Datasource.html">
+   oceanum.datamesh.Datasource
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="oceanum.datamesh.Catalog.html">
+   oceanum.datamesh.Catalog
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   oceanum.datamesh.Query
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="oceanum-datamesh-query">
+<h1>oceanum.datamesh.Query<a class="headerlink" href="#oceanum-datamesh-query" title="Permalink to this headline">¶</a></h1>
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span> </em><span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.</span></span><span class="sig-name descname"><span class="pre">Query</span></span><a class="reference internal" href="../../_modules/oceanum/datamesh/query.html#Query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Datamesh query</p>
+<p><details  class="autodoc_pydantic_collapsable_json">
+<summary>Show JSON schema</summary><div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Query&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Datamesh query&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;datasource&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;The id of the datasource&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Datasource ID&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Datasource parameters&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Dictionary of driver parameters to pass to datasource&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;default&quot;</span><span class="p">:</span> <span class="p">{},</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Optional description of this query&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Human readable description of this query&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;List of selected variables&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;List of requested variables.&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+         <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;timefilter&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Time filter&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Start and end of requested time period&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;date-time&quot;</span>
+         <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;geofilter&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Spatial filter or interpolator&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;allOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+               <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/GeoFilter&quot;</span>
+            <span class="p">}</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;spatialref&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Spatial reference for filter and output&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Valid CRS string for returned data&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;EPSG:4326&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;request&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Request type&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;\n        Type of request: can be one of:\n            - &#39;data&#39;: Return complete data request (default)\n            - &#39;schema&#39;: Only return datasource schema\n            - &#39;coords&#39;: Only return schema and coordinates\n        &quot;</span><span class="p">,</span>
+         <span class="nt">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;allOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+               <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/RequestType&quot;</span>
+            <span class="p">}</span>
+         <span class="p">]</span>
+      <span class="p">}</span>
+   <span class="p">},</span>
+   <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;datasource&quot;</span>
+   <span class="p">],</span>
+   <span class="nt">&quot;definitions&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;GeoFilterType&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;GeoFilterType&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;An enumeration.&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;enum&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;feature&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;radius&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bbox&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;Point&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Point&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Point Model&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Coordinates&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                     <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">}</span>
+                     <span class="p">]</span>
+                  <span class="p">},</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                     <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">}</span>
+                     <span class="p">]</span>
+                  <span class="p">}</span>
+               <span class="p">]</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;Point&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="p">}</span>
+         <span class="p">},</span>
+         <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;coordinates&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;MultiPoint&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiPoint&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiPoint Model&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Coordinates&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                  <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                     <span class="p">{</span>
+                        <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                        <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">},</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">}</span>
+                        <span class="p">]</span>
+                     <span class="p">},</span>
+                     <span class="p">{</span>
+                        <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                        <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">},</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">},</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">}</span>
+                        <span class="p">]</span>
+                     <span class="p">}</span>
+                  <span class="p">]</span>
+               <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiPoint&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="p">}</span>
+         <span class="p">},</span>
+         <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;coordinates&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;LineString&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;LineString&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;LineString Model&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Coordinates&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                  <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                     <span class="p">{</span>
+                        <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                        <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">},</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">}</span>
+                        <span class="p">]</span>
+                     <span class="p">},</span>
+                     <span class="p">{</span>
+                        <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                        <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">},</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">},</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">}</span>
+                        <span class="p">]</span>
+                     <span class="p">}</span>
+                  <span class="p">]</span>
+               <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;LineString&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="p">}</span>
+         <span class="p">},</span>
+         <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;coordinates&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;MultiLineString&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiLineString&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiLineString Model&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Coordinates&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                  <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                           <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                           <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">}</span>
+                     <span class="p">]</span>
+                  <span class="p">}</span>
+               <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiLineString&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="p">}</span>
+         <span class="p">},</span>
+         <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;coordinates&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;Polygon&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Polygon&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Polygon Model&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Coordinates&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                  <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                           <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                           <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                    <span class="p">},</span>
+                                    <span class="p">{</span>
+                                       <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                    <span class="p">}</span>
+                                 <span class="p">]</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">}</span>
+                     <span class="p">]</span>
+                  <span class="p">}</span>
+               <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;Polygon&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="p">}</span>
+         <span class="p">},</span>
+         <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;coordinates&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;MultiPolygon&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiPolygon&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiPolygon Model&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Coordinates&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                  <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                     <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                              <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                       <span class="p">},</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                       <span class="p">}</span>
+                                    <span class="p">]</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                       <span class="p">},</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                       <span class="p">}</span>
+                                    <span class="p">]</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">},</span>
+                           <span class="p">{</span>
+                              <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                              <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                       <span class="p">},</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                       <span class="p">}</span>
+                                    <span class="p">]</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                       <span class="p">},</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                       <span class="p">}</span>
+                                    <span class="p">]</span>
+                                 <span class="p">},</span>
+                                 <span class="p">{</span>
+                                    <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                                       <span class="p">},</span>
+                                       <span class="p">{</span>
+                                          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                       <span class="p">}</span>
+                                    <span class="p">]</span>
+                                 <span class="p">}</span>
+                              <span class="p">]</span>
+                           <span class="p">}</span>
+                        <span class="p">]</span>
+                     <span class="p">}</span>
+                  <span class="p">}</span>
+               <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;MultiPolygon&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="p">}</span>
+         <span class="p">},</span>
+         <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;coordinates&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;Feature&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature Model&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Geometry&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/Point&quot;</span>
+                  <span class="p">},</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/MultiPoint&quot;</span>
+                  <span class="p">},</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/LineString&quot;</span>
+                  <span class="p">},</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/MultiLineString&quot;</span>
+                  <span class="p">},</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/Polygon&quot;</span>
+                  <span class="p">},</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/MultiPolygon&quot;</span>
+                  <span class="p">}</span>
+               <span class="p">]</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Properties&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Id&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;bbox&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Bbox&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                     <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">}</span>
+                     <span class="p">]</span>
+                  <span class="p">},</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                     <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">},</span>
+                        <span class="p">{</span>
+                           <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                              <span class="p">},</span>
+                              <span class="p">{</span>
+                                 <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                              <span class="p">}</span>
+                           <span class="p">]</span>
+                        <span class="p">}</span>
+                     <span class="p">]</span>
+                  <span class="p">}</span>
+               <span class="p">]</span>
+            <span class="p">}</span>
+         <span class="p">},</span>
+         <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;geometry&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;GeoFilter&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;GeoFilter&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;GeoFilter class\nDescribes a spatial subset or interpolation&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Geofilter type&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;\n        Type of the geofilter. Can be one of:\n            - &#39;feature&#39;: Select with a geojson feature\n            - &#39;bbox&#39;: Select with a bounding box\n            - &#39;radius&#39;: Select within radius of point\n        &quot;</span><span class="p">,</span>
+               <span class="nt">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;bbox&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;allOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/GeoFilterType&quot;</span>
+                  <span class="p">}</span>
+               <span class="p">]</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;geom&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Selection geometry&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;\n            - For type=&#39;feature&#39;, geojson feature.\n            - For type=&#39;bbox&#39;, list[x_min,y_min,x_max,y_max] in CRS units.\n            - For type=&#39;radius&#39;, list[x0,y0,radius] in CRS units.\n        &quot;</span><span class="p">,</span>
+               <span class="nt">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                     <span class="nt">&quot;items&quot;</span><span class="p">:</span> <span class="p">{}</span>
+                  <span class="p">},</span>
+                  <span class="p">{</span>
+                     <span class="nt">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/definitions/Feature&quot;</span>
+                  <span class="p">}</span>
+               <span class="p">]</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;resolution&quot;</span><span class="p">:</span> <span class="p">{</span>
+               <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Maximum spatial resolution of data&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Maximum resolution of the data for downsampling in CRS units&quot;</span><span class="p">,</span>
+               <span class="nt">&quot;default&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+               <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+            <span class="p">}</span>
+         <span class="p">},</span>
+         <span class="nt">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;geom&quot;</span>
+         <span class="p">]</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;RequestType&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;RequestType&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Request Type&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;enum&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;schema&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;coords&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data&quot;</span>
+         <span class="p">]</span>
+      <span class="p">}</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</details></p><dl class="field-list simple">
+<dt class="field-odd">Config</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>json_dumps</strong>: <em>builtin_function_or_method = &lt;built-in function dumps&gt;</em></p></li>
+<li><p><strong>json_encoders</strong>: <em>dict = {&lt;class ‘numpy.datetime64’&gt;: &lt;class ‘str’&gt;}</em></p></li>
+<li><p><strong>json_loads</strong>: <em>builtin_function_or_method = &lt;built-in function loads&gt;</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datasource</span> <span class="pre">(str)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span> <span class="pre">(Optional[str])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">geofilter</span> <span class="pre">(Optional[oceanum.datamesh.query.GeoFilter])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span> <span class="pre">(Optional[Dict])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span> <span class="pre">(Optional[oceanum.datamesh.query.RequestType])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">spatialref</span> <span class="pre">(Optional[str])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">timefilter</span> <span class="pre">(Optional[List[Optional[oceanum.datamesh.query.Timestamp]]])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">variables</span> <span class="pre">(Optional[List[str]])</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query.datasource">
+<em class="property"><span class="pre">field</span> </em><span class="sig-name descname"><span class="pre">datasource</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.Query.datasource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Datasource ID</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query.description">
+<em class="property"><span class="pre">field</span> </em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.Query.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Human readable description of this query</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query.geofilter">
+<em class="property"><span class="pre">field</span> </em><span class="sig-name descname"><span class="pre">geofilter</span></span><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="oceanum.datamesh.query.GeoFilter.html#oceanum.datamesh.query.GeoFilter" title="oceanum.datamesh.query.GeoFilter"><span class="pre">oceanum.datamesh.query.GeoFilter</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.Query.geofilter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query.parameters">
+<em class="property"><span class="pre">field</span> </em><span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">{}</span></em><a class="headerlink" href="#oceanum.datamesh.Query.parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of driver parameters to pass to datasource</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query.request">
+<em class="property"><span class="pre">field</span> </em><span class="sig-name descname"><span class="pre">request</span></span><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">oceanum.datamesh.query.RequestType</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;RequestType.data:</span> <span class="pre">'data'&gt;</span></em><a class="headerlink" href="#oceanum.datamesh.Query.request" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Type of request: can be one of:</dt><dd><ul class="simple">
+<li><p>‘data’: Return complete data request (default)</p></li>
+<li><p>‘schema’: Only return datasource schema</p></li>
+<li><p>‘coords’: Only return schema and coordinates</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query.spatialref">
+<em class="property"><span class="pre">field</span> </em><span class="sig-name descname"><span class="pre">spatialref</span></span><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">'EPSG:4326'</span></em><a class="headerlink" href="#oceanum.datamesh.Query.spatialref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Valid CRS string for returned data</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query.timefilter">
+<em class="property"><span class="pre">field</span> </em><span class="sig-name descname"><span class="pre">timefilter</span></span><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">oceanum.datamesh.query.Timestamp</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.Query.timefilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start and end of requested time period</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Query.variables">
+<em class="property"><span class="pre">field</span> </em><span class="sig-name descname"><span class="pre">variables</span></span><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.Query.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of requested variables.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="oceanum.datamesh.Catalog.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">oceanum.datamesh.Catalog</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../../about.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">About</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Oceanum Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.1.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

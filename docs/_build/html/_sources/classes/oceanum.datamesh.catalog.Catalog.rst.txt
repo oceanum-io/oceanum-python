@@ -1,0 +1,23 @@
+﻿oceanum.datamesh.catalog
+========================
+
+.. currentmodule:: oceanum.datamesh.catalog
+
+.. autoclass:: Catalog
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+     .. automethod:: __init__
+      ~Catalog.__init__
+   
+   
+
+   
+   
+   

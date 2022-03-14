@@ -1,0 +1,6 @@
+oceanum.datamesh.connection.Connector.query
+===========================================
+
+.. currentmodule:: oceanum.datamesh.connection
+
+.. automethod:: Connector.query

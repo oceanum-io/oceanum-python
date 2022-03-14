@@ -1,0 +1,6 @@
+oceanum.datamesh.datasource.Datasource.tstart
+=============================================
+
+.. currentmodule:: oceanum.datamesh.datasource
+
+.. autoproperty:: Datasource.tstart

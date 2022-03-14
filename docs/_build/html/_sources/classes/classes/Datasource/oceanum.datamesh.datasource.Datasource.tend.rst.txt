@@ -1,0 +1,6 @@
+oceanum.datamesh.datasource.Datasource.tend
+===========================================
+
+.. currentmodule:: oceanum.datamesh.datasource
+
+.. autoproperty:: Datasource.tend

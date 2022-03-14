@@ -2,10 +2,7 @@ image: python:3.7-alpine
 pages:
   stage: deploy
   script:
-    - mkdir .public
-    - pip install -r requirements.txt
-    - pip install -r requirements_dev.txt
-    - sphinx-build -b html docs public
+    - cp -R docs/_build public
   artifacts:
     paths:
       - public
