@@ -9,9 +9,8 @@ pages:
   stage: deploy
   script:
     - mkdir .public
-    - cp -r ./docs/_build .public
-    - rm -rf public
-    - mv .public public
+    - pip install -r requirement_dev.txt
+    - sphinx-build -b html docs public
   artifacts:
     paths:
       - public
