@@ -1,4 +1,4 @@
-Oceanum library
+Oceanum python library
 ======================================
 
 .. toctree::
