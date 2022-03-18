@@ -34,9 +34,9 @@ class Datasource(object):
     def _init(cls, connector, id):
         meta = connector._metadata_request(id)
         if meta.status_code == 404:
-            raise DatasourceException("Not found")
+            raise DatasourceException(f"Datasource {id} not found")
         elif meta.status_code == 401:
-            raise DatasourceException("Not Authorized")
+            raise DatasourceException(f"Datasource {id} not Authorized")
         elif meta.status_code != 200:
             raise DatameshException(meta.text)
         meta_dict = meta.json()
@@ -98,11 +98,12 @@ class Datasource(object):
 
     def __str__(self):
         return f"""
-    Datasource +{self._name} [{self.id}]
+    {self._name} [{self.id}]
         Extent: {self.bounds}
         Timerange: {self.tstart} to {self.tend}
-        {len(self.attributes)} "attributes"
+        {len(self.attributes)} attributes
         {len(self.variables)} {"properties" if "g" in self._coordinates else "variables"}
+        Container: {str(self.container)}
     """
 
     def ___repr__(self):
@@ -157,7 +158,7 @@ class Datasource(object):
     @property
     def bounds(self):
         """list[float]: Bounding box of datasource geographical extent"""
-        return self._geometry.extent
+        return self._geometry.bounds
 
     @property
     def variables(self):

@@ -3,16 +3,24 @@ import io
 import tempfile
 import requests
 import fsspec
+import xarray
+import geopandas
+import pandas
 from urllib.parse import urlparse
 
 from ..utils.response import ResponseFile
 from .datasource import Datasource
 from .catalog import Catalog
+from .query import Query
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
 
 class DatameshConnectError(Exception):
+    pass
+
+
+class DatameshQueryError(Exception):
     pass
 
 
@@ -97,11 +105,10 @@ class Connector(object):
     def _query_request(self, query, data_format="application/json"):
         headers = {"Accept": data_format, **self._auth_headers}
         resp = requests.post(
-            f"{self._gateway}/oceanql/",
-            headers=headers,
+            f"{self._gateway}/oceanql/", headers=headers, data=query.json()
         )
         if not resp.status_code == 200:
-            raise DatameshConnectError(resp.text)
+            raise DatameshQueryError(resp.text)
         else:
             return resp.content
 
@@ -131,12 +138,7 @@ class Connector(object):
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
-        ds = Datasource._init(self, datasource_id)
-        if not ds._exists():
-            raise DatameshConnectError(
-                f"Datasource {datasource_id} does not exist or is not authorized"
-            )
-        return ds
+        return Datasource._init(self, datasource_id)
 
     def load_datasource(self, datasource_id, use_dask=True):
         """Load a datasource into the work environment
@@ -162,11 +164,19 @@ class Connector(object):
         """
 
         if not isinstance(query, Query):
-            query = Query(query)
+            query = Query(**query)
+        ds = self.get_datasource(query.datasource)
         transfer_format = (
             "application/x-netcdf4"
-            if self.container == "xarray.Dataset"
+            if ds.container == xarray.Dataset
             else "application/parquet"
         )
-
-        return self._query_request(query, data_format=transfer_format)
+        resp = self._query_request(query, data_format=transfer_format)
+        with io.BytesIO() as f:
+            f.write(resp)
+            if ds.container == xarray.Dataset:
+                return xarray.open_dataset(f, engine="h5py")
+            elif ds.container == geopandas.GeoDataFrame:
+                return geopandas.read_parquet(f)
+            else:
+                return pandas.read_parquet(f)

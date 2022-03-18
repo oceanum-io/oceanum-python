@@ -7,6 +7,10 @@ from enum import Enum
 from geojson_pydantic import Feature, FeatureCollection
 
 
+def _orjson_dumps(val, *, default):
+    return orjson.dumps(val, default=default).decode()
+
+
 class QueryError(Exception):
     pass
 
@@ -138,5 +142,5 @@ class Query(BaseModel):
 
     class Config:
         json_loads = orjson.loads
-        json_dumps = orjson.dumps
+        json_dumps = _orjson_dumps
         json_encoders = {np.datetime64: str}
