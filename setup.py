@@ -59,7 +59,7 @@ setup(
     include_package_data=True,
     keywords="oceanum",
     name="oceanum",
-    packages=find_packages(include=["oceanum", "oceanum.datamesh"]),
+    packages=find_packages(),
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
