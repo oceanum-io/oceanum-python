@@ -7,3 +7,5 @@ xarray
 shapely
 orjson
 requests
+pyarrow
+python-snappy
