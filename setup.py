@@ -23,7 +23,7 @@ requirements = [
     "orjson",
     "requests",
     "pyarrow",
-    "snappy",
+    "python-snappy",
 ]
 
 setup_requirements = [
@@ -59,11 +59,11 @@ setup(
     include_package_data=True,
     keywords="oceanum",
     name="oceanum",
-    packages=find_packages(include=["oceanum"]),
+    packages=find_packages(include=["oceanum", "oceanum.datamesh"]),
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
     url="https://gitlab.com/oceanum/oceanum",
-    version="0.3.1",
+    version="0.3.2",
     zip_safe=False,
 )
