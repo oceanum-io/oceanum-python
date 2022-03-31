@@ -1,3 +1,4 @@
+import datetime
 import orjson
 import pandas as pd
 import numpy as np
@@ -85,8 +86,8 @@ class Timestamp(pd.Timestamp):
 
     @classmethod
     def validate(cls, v):
-        if not isinstance(v, str):
-            raise TypeError("datetime string required")
+        if not (isinstance(v, str) or isinstance(v, datetime.datetime)):
+            raise TypeError("datetime or time string required")
         try:
             return cls(v, tz="UTC").tz_convert(None).to_datetime64()
         except:

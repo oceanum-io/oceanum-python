@@ -7,6 +7,10 @@ from shapely.geometry import shape
 from .query import Query
 
 
+class DatasourceException(Exception):
+    pass
+
+
 def parse_period(self, period):
     if period:
         m = re.match(
@@ -38,7 +42,7 @@ class Datasource(object):
         elif meta.status_code == 401:
             raise DatasourceException(f"Datasource {id} not Authorized")
         elif meta.status_code != 200:
-            raise DatameshException(meta.text)
+            raise DatasourceException(meta.text)
         meta_dict = meta.json()
         ds = cls(id, **{"geometry": meta_dict["geometry"], **meta_dict["properties"]})
         ds._connector = connector
