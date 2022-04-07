@@ -13,8 +13,11 @@ def test_query_datasource():
 def test_query_timefilter():
     q = Query(
         datasource="test",
-        timefilter=[datetime.datetime(2000, 1, 1), datetime.datetime(2001, 1, 1)],
+        timefilter={
+            "times": [datetime.datetime(2000, 1, 1), datetime.datetime(2001, 1, 1)]
+        },
     )
     q = Query(
-        datasource="test", timefilter=["2000-01-01T00:00:00", "2001-01-01T00:00:00Z"]
+        datasource="test",
+        timefilter={"times": ["2000-01-01T00:00:00", "2001-01-01T00:00:00Z"]},
     )

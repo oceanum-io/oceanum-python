@@ -25,6 +25,15 @@ def test_catalog(conn):
     assert len(cat)
 
 
+@pytest.mark.asyncio
+async def test_catalog(conn):
+    cat = await conn.get_catalog_async()
+    ds0 = cat.ids[0]
+    assert ds0 in str(cat)
+    assert isinstance(cat[ds0], Datasource)
+    assert len(cat)
+
+
 def test_command_line_interface():
     """Test the CLI."""
     runner = CliRunner()

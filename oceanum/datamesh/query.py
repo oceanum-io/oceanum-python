@@ -16,11 +16,30 @@ class QueryError(Exception):
     pass
 
 
+class Timestamp(pd.Timestamp):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not (isinstance(v, str) or isinstance(v, datetime.datetime)):
+            raise TypeError("datetime or time string required")
+        try:
+            return cls(v, tz="UTC").tz_convert(None).to_datetime64()
+        except:
+            raise "Timestamp format not valid"
+
+
 class GeoFilterType(Enum):
     # datasource = "datasource"
     feature = "feature"
     radius = "radius"
     bbox = "bbox"
+
+
+class TimeFilterType(str, Enum):
+    range = "range"
 
 
 class RequestType(Enum):
@@ -29,6 +48,10 @@ class RequestType(Enum):
     schema = "schema"  # Just return schema with no data
     coords = "coords"  # Return schema with coordinate arrays
     data = "data"  # Return all data
+
+
+class ResampleType(str, Enum):
+    mean = "mean"
 
 
 class DatasourceGeom(BaseModel):
@@ -68,6 +91,37 @@ class GeoFilter(BaseModel):
     )
 
 
+class TimeFilter(BaseModel):
+    """TimeFilter class
+    Describes a temporal subset or interpolation
+    """
+
+    type: TimeFilterType = Field(
+        title="Timefilter type",
+        default=TimeFilterType.range,
+        description="""
+        Type of the timefilter. Can be one of:
+            - 'range': Select times within a range
+        """,
+    )
+    times: List[Union[Timestamp, None]] = Field(
+        title="Selection times",
+        description="""
+            - For type='range', [timestart, tend].
+        """,
+    )
+    resolution: Optional[str] = Field(
+        title="Temporal resolution of data",
+        default="native",
+        description="Maximum resolution of the data for temporal downsampling. Only valid with range type",
+    )
+    resample: Optional[ResampleType] = Field(
+        title="Temporal resampling method",
+        default=ResampleType.mean,
+        description="Resampling method applied when reducing tempral resolution. Only valid with range type",
+    )
+
+
 # Geofilter selection process
 # a features select can either be a Feature/FeatureCollection or the geometry of another datasource
 # grid    ∩  bbox -> subgrid (optional resolution)
@@ -77,21 +131,6 @@ class GeoFilter(BaseModel):
 # Dataframe with x and y coordinates will be supported (not implemented yet)
 # df      ∩  bbox -> subset df within bbox
 # df      ∩  features -> subset of df within (resolution) of features
-
-
-class Timestamp(pd.Timestamp):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not (isinstance(v, str) or isinstance(v, datetime.datetime)):
-            raise TypeError("datetime or time string required")
-        try:
-            return cls(v, tz="UTC").tz_convert(None).to_datetime64()
-        except:
-            raise "Timestamp format not valid"
 
 
 class Query(BaseModel):
@@ -117,10 +156,10 @@ class Query(BaseModel):
         default=None,
         description="List of requested variables.",
     )
-    timefilter: Optional[List[Union[Timestamp, None]]] = Field(
+    timefilter: Optional[TimeFilter] = Field(
         title="Time filter",
         default=None,
-        description="Start and end of requested time period",
+        description="Temporal filter or interplator",
     )
     geofilter: Optional[GeoFilter] = Field(
         title="Spatial filter or interpolator", default=None

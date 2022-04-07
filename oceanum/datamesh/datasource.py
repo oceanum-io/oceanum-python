@@ -3,6 +3,7 @@ import datetime
 import pandas
 import geopandas
 import xarray
+import asyncio
 from shapely.geometry import shape
 from .query import Query
 
@@ -35,7 +36,7 @@ class Datasource(object):
     """Datasource class"""
 
     @classmethod
-    def _init(cls, connector, id):
+    def _init(cls, connector, id, asynchronous=False):
         meta = connector._metadata_request(id)
         if meta.status_code == 404:
             raise DatasourceException(f"Datasource {id} not found")
@@ -182,7 +183,7 @@ class Datasource(object):
         """
         if self.container == xarray.Dataset:
             mapper = self._connector._zarr_proxy(self.id)
-            return xarray.open_zarr(mapper)
+            return xarray.open_zarr(mapper, consolidated=True)
         elif self.container == geopandas.GeoDataFrame:
             tmpfile = self._connector._data_request(self.id, "application/parquet")
             return geopandas.read_parquet(tmpfile.name)

@@ -9,3 +9,4 @@ autodoc_pydantic
 
 pytest
 pytest-runner
+pytest-asyncio

@@ -17,7 +17,7 @@ from oceanum import cli
 @pytest.fixture
 def conn():
     """Connection fixture"""
-    return Connector(os.environ["DATAMESH_KEY"], gateway="http://localhost:8000")
+    return Connector(os.environ["DATAMESH_KEY"])
 
 
 def test_load_features(conn):
@@ -25,6 +25,16 @@ def test_load_features(conn):
     for dataset in cat:
         if dataset.container == geopandas.GeoDataFrame:
             ds = dataset.load()
+            assert isinstance(ds, geopandas.GeoDataFrame)
+            break
+
+
+@pytest.mark.asyncio
+async def test_load_features_async(conn):
+    cat = await conn.get_catalog_async()
+    for dataset in cat:
+        if dataset.container == geopandas.GeoDataFrame:
+            ds = await conn.load_datasource_async(dataset.id)
             assert isinstance(ds, geopandas.GeoDataFrame)
             break
 
@@ -38,11 +48,31 @@ def test_load_dataset(conn):
             break
 
 
+@pytest.mark.asyncio
+async def test_load_dataset_async(conn):
+    cat = await conn.get_catalog_async()
+    for dataset in cat:
+        if dataset.container == xarray.Dataset:
+            ds = await conn.load_datasource_async(dataset.id)
+            assert isinstance(ds, xarray.Dataset)
+            break
+
+
 def test_load_table(conn):
     cat = conn.get_catalog()
     for dataset in cat:
         if dataset.container == pandas.DataFrame:
             ds = dataset.load()
+            assert isinstance(ds, pandas.DataFrame)
+            break
+
+
+@pytest.mark.asyncio
+async def test_load_table_async(conn):
+    cat = await conn.get_catalog_async()
+    for dataset in cat:
+        if dataset.container == pandas.DataFrame:
+            ds = await conn.load_datasource_async(dataset.id)
             assert isinstance(ds, pandas.DataFrame)
             break
 

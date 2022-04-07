@@ -7,6 +7,8 @@ import xarray
 import geopandas
 import pandas
 from urllib.parse import urlparse
+import asyncio
+from functools import wraps, partial
 
 from ..utils.response import ResponseFile
 from .datasource import Datasource
@@ -22,6 +24,17 @@ class DatameshConnectError(Exception):
 
 class DatameshQueryError(Exception):
     pass
+
+
+def asyncwrapper(func):
+    @wraps(func)
+    async def run(*args, loop=None, executor=None, **kwargs):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        pfunc = partial(func, *args, **kwargs)
+        return await loop.run_in_executor(executor, pfunc)
+
+    return run
 
 
 class Connector(object):
@@ -112,6 +125,25 @@ class Connector(object):
         else:
             return resp.content
 
+    def _query(self, query):
+        if not isinstance(query, Query):
+            query = Query(**query)
+        ds = self.get_datasource(query.datasource)
+        transfer_format = (
+            "application/x-netcdf4"
+            if ds.container == xarray.Dataset
+            else "application/parquet"
+        )
+        resp = self._query_request(query, data_format=transfer_format)
+        with io.BytesIO() as f:
+            f.write(resp)
+            if ds.container == xarray.Dataset:
+                return xarray.open_dataset(f, engine="h5py")
+            elif ds.container == geopandas.GeoDataFrame:
+                return geopandas.read_parquet(f)
+            else:
+                return pandas.read_parquet(f)
+
     def get_catalog(self, filter={}):
         """Get datamesh catalog
 
@@ -120,6 +152,22 @@ class Connector(object):
 
         Returns:
             :obj:`oceanum.datamesh.Catalog`: A datamesh catalog instance
+        """
+        cat = Catalog._init(
+            self,
+        )
+        return cat
+
+    async def get_catalog_async(self, filter={}):
+        """Get datamesh catalog asynchronously
+
+        Args:
+            filter (dict, optional): Set of filters to apply. Defaults to {}.
+            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
+            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
+
+        Returns:
+            Coroutine<:obj:`oceanum.datamesh.Catalog`>: A datamesh catalog instance
         """
         cat = Catalog._init(
             self,
@@ -140,6 +188,23 @@ class Connector(object):
         """
         return Datasource._init(self, datasource_id)
 
+    @asyncwrapper
+    def get_datasource_async(self, datasource_id):
+        """Get a Datasource instance from the datamesh asynchronously. This does not load the actual data.
+
+        Args:
+            datasource_id (string): Unique datasource id
+            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
+            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
+
+        Returns:
+            Coroutine<:obj:`oceanum.datamesh.Datasource`>: A datasource instance
+
+        Raises:
+            DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
+        """
+        return Datasource._init(self, datasource_id)
+
     def load_datasource(self, datasource_id, use_dask=True):
         """Load a datasource into the work environment
 
@@ -153,6 +218,23 @@ class Connector(object):
         ds = self.get_datasource(datasource_id)
         return ds.load()
 
+    @asyncwrapper
+    def load_datasource_async(self, datasource_id, use_dask=True):
+        """Load a datasource asynchronously into the work environment
+
+        Args:
+            datasource_id (string): Unique datasource id
+            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
+            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
+
+
+        Returns:
+            coroutine<Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]>: The datasource container
+        """
+        ds = self.get_datasource(datasource_id)
+        return ds.load()
+
     def query(self, query):
         """Make a datamesh query
 
@@ -162,21 +244,18 @@ class Connector(object):
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
+        return self._query(query)
 
-        if not isinstance(query, Query):
-            query = Query(**query)
-        ds = self.get_datasource(query.datasource)
-        transfer_format = (
-            "application/x-netcdf4"
-            if ds.container == xarray.Dataset
-            else "application/parquet"
-        )
-        resp = self._query_request(query, data_format=transfer_format)
-        with io.BytesIO() as f:
-            f.write(resp)
-            if ds.container == xarray.Dataset:
-                return xarray.open_dataset(f, engine="h5py")
-            elif ds.container == geopandas.GeoDataFrame:
-                return geopandas.read_parquet(f)
-            else:
-                return pandas.read_parquet(f)
+    @asyncwrapper
+    async def query_async(self, query):
+        """Make a datamesh query asynchronously
+
+        Args:
+            query (Union[:obj:`oceanum.datamesh.Query`, dict]): Datamesh query as a query object or a valid query dictionary
+            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
+            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
+
+        Returns:
+            Coroutine<Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]>: The datasource container
+        """
+        return self._query(query)
