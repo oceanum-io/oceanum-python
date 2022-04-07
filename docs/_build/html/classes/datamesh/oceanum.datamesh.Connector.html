@@ -243,6 +243,27 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.get_catalog_async">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">get_catalog_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.get_catalog_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.get_catalog_async" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get datamesh catalog asynchronously</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filter</strong> (<em>dict</em><em>, </em><em>optional</em>) – Set of filters to apply. Defaults to {}.</p></li>
+<li><p><strong>loop</strong> – event loop. default=None will use <code class="xref py py-obj docutils literal notranslate"><span class="pre">asyncio.get_running_loop()</span></code></p></li>
+<li><p><strong>executor</strong> – <code class="xref py py-obj docutils literal notranslate"><span class="pre">concurrent.futures.Executor</span></code> instance. default=None will use the default executor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A datamesh catalog instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Coroutine&lt;<a class="reference internal" href="oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog" title="oceanum.datamesh.Catalog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Catalog</span></code></a>&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.Connector.get_datasource">
 <span class="sig-name descname"><span class="pre">get_datasource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.get_datasource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.get_datasource" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a Datasource instance from the datamesh. This does not load the actual data.</p>
@@ -255,6 +276,30 @@
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource" title="oceanum.datamesh.Datasource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Datasource</span></code></a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>DatameshConnectError</strong> – Datasource cannot be found or is not authorized for the datamesh key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.get_datasource_async">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">get_datasource_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.get_datasource_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.get_datasource_async" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a Datasource instance from the datamesh asynchronously. This does not load the actual data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datasource_id</strong> (<em>string</em>) – Unique datasource id</p></li>
+<li><p><strong>loop</strong> – event loop. default=None will use <code class="xref py py-obj docutils literal notranslate"><span class="pre">asyncio.get_running_loop()</span></code></p></li>
+<li><p><strong>executor</strong> – <code class="xref py py-obj docutils literal notranslate"><span class="pre">concurrent.futures.Executor</span></code> instance. default=None will use the default executor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A datasource instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Coroutine&lt;<a class="reference internal" href="oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource" title="oceanum.datamesh.Datasource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Datasource</span></code></a>&gt;</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>DatameshConnectError</strong> – Datasource cannot be found or is not authorized for the datamesh key</p>
@@ -283,6 +328,28 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.load_datasource_async">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">load_datasource_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.load_datasource_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.load_datasource_async" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a datasource asynchronously into the work environment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datasource_id</strong> (<em>string</em>) – Unique datasource id</p></li>
+<li><p><strong>use_dask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Load datasource as a dask enabled datasource if possible. Defaults to True.</p></li>
+<li><p><strong>loop</strong> – event loop. default=None will use <code class="xref py py-obj docutils literal notranslate"><span class="pre">asyncio.get_running_loop()</span></code></p></li>
+<li><p><strong>executor</strong> – <code class="xref py py-obj docutils literal notranslate"><span class="pre">concurrent.futures.Executor</span></code> instance. default=None will use the default executor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The datasource container</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>coroutine&lt;Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.Connector.query">
 <span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a datamesh query</p>
@@ -295,6 +362,27 @@
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Connector.query_async">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">query_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.query_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.query_async" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a datamesh query asynchronously</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> (Union[<a class="reference internal" href="oceanum.datamesh.Query.html#oceanum.datamesh.Query" title="oceanum.datamesh.Query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Query</span></code></a>, dict]) – Datamesh query as a query object or a valid query dictionary</p></li>
+<li><p><strong>loop</strong> – event loop. default=None will use <code class="xref py py-obj docutils literal notranslate"><span class="pre">asyncio.get_running_loop()</span></code></p></li>
+<li><p><strong>executor</strong> – <code class="xref py py-obj docutils literal notranslate"><span class="pre">concurrent.futures.Executor</span></code> instance. default=None will use the default executor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The datasource container</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Coroutine&lt;Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]&gt;</p>
 </dd>
 </dl>
 </dd></dl>

@@ -223,6 +223,34 @@ This class behaves like an immutable dictionary with the datasource ids as keys<
 <dt class="sig sig-object py" id="oceanum.datamesh.Catalog.load">
 <span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/catalog.html#Catalog.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Catalog.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load datasource</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> – Datasource id</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The datasource container</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Catalog.load_async">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">load_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/catalog.html#Catalog.load_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Catalog.load_async" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load datasource asynchronously</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> – Datasource id</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The datasource container</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Couroutine&lt;Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]&gt;</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -238,6 +266,26 @@ This class behaves like an immutable dictionary with the datasource ids as keys<
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>IndexError</strong> – Datasource not in catalog</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.Catalog.query_async">
+<em class="property"><span class="pre">async</span> </em><span class="sig-name descname"><span class="pre">query_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/catalog.html#Catalog.query_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Catalog.query_async" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make an asynchronous query on the catalog</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>query</strong> (Union[<a class="reference internal" href="oceanum.datamesh.Query.html#oceanum.datamesh.Query" title="oceanum.datamesh.Query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Query</span></code></a>, dict]) – Datamesh query as a query object or a valid query dictionary</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The datasource container</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Coroutine&lt;Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]&gt;</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>IndexError</strong> – Datasource not in catalog</p>

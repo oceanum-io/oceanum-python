@@ -155,8 +155,13 @@
 <span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">import</span> <span class="nn">geopandas</span>
 <span class="kn">import</span> <span class="nn">xarray</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
 <span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">shape</span>
 <span class="kn">from</span> <span class="nn">.query</span> <span class="kn">import</span> <span class="n">Query</span>
+
+
+<span class="k">class</span> <span class="nc">DatasourceException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
 
 
 <span class="k">def</span> <span class="nf">parse_period</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
@@ -183,14 +188,14 @@
     <span class="sd">&quot;&quot;&quot;Datasource class&quot;&quot;&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">connector</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">connector</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">asynchronous</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">meta</span> <span class="o">=</span> <span class="n">connector</span><span class="o">.</span><span class="n">_metadata_request</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">DatasourceException</span><span class="p">(</span><span class="s2">&quot;Not found&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">DatasourceException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Datasource </span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">meta</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">DatasourceException</span><span class="p">(</span><span class="s2">&quot;Not Authorized&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">DatasourceException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Datasource </span><span class="si">{</span><span class="nb">id</span><span class="si">}</span><span class="s2"> not Authorized&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">meta</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">DatameshException</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">DatasourceException</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
         <span class="n">meta_dict</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
         <span class="n">ds</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="n">meta_dict</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">meta_dict</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]})</span>
         <span class="n">ds</span><span class="o">.</span><span class="n">_connector</span> <span class="o">=</span> <span class="n">connector</span>
@@ -250,11 +255,12 @@
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">    Datasource +</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">]</span>
+<span class="s2">    </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">]</span>
 <span class="s2">        Extent: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="si">}</span><span class="s2"></span>
 <span class="s2">        Timerange: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tstart</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tend</span><span class="si">}</span><span class="s2"></span>
-<span class="s2">        </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;attributes&quot;</span>
+<span class="s2">        </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span><span class="si">}</span><span class="s2"> attributes</span>
 <span class="s2">        </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s2">&quot;properties&quot;</span> <span class="k">if</span> <span class="s2">&quot;g&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinates</span> <span class="k">else</span> <span class="s2">&quot;variables&quot;</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">        Container: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
 <span class="s2">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">___repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -309,7 +315,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;list[float]: Bounding box of datasource geographical extent&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geometry</span><span class="o">.</span><span class="n">extent</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geometry</span><span class="o">.</span><span class="n">bounds</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -329,7 +335,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
             <span class="n">mapper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">_zarr_proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_zarr</span><span class="p">(</span><span class="n">mapper</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_zarr</span><span class="p">(</span><span class="n">mapper</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">:</span>
             <span class="n">tmpfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">_data_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;application/parquet&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">tmpfile</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>

@@ -150,7 +150,8 @@
               <div>
                 
   <h1>Source code for oceanum.datamesh.query</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">orjson</span>
+<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">orjson</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
@@ -159,8 +160,27 @@
 <span class="kn">from</span> <span class="nn">geojson_pydantic</span> <span class="kn">import</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">FeatureCollection</span>
 
 
+<span class="k">def</span> <span class="nf">_orjson_dumps</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+
+
 <span class="k">class</span> <span class="nc">QueryError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">Timestamp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__get_validators__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validate</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;datetime or time string required&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="s2">&quot;UTC&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">to_datetime64</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="s2">&quot;Timestamp format not valid&quot;</span>
 
 
 <span class="k">class</span> <span class="nc">GeoFilterType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -168,6 +188,10 @@
     <span class="n">feature</span> <span class="o">=</span> <span class="s2">&quot;feature&quot;</span>
     <span class="n">radius</span> <span class="o">=</span> <span class="s2">&quot;radius&quot;</span>
     <span class="n">bbox</span> <span class="o">=</span> <span class="s2">&quot;bbox&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">TimeFilterType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="nb">range</span> <span class="o">=</span> <span class="s2">&quot;range&quot;</span>
 
 
 <span class="k">class</span> <span class="nc">RequestType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -178,6 +202,10 @@
     <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;data&quot;</span>  <span class="c1"># Return all data</span>
 
 
+<span class="k">class</span> <span class="nc">ResampleType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
+
+
 <span class="k">class</span> <span class="nc">DatasourceGeom</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Datasource ID&quot;</span><span class="p">)</span>
     <span class="n">parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -185,7 +213,7 @@
     <span class="p">)</span>
 
 
-<div class="viewcode-block" id="GeoFilter"><a class="viewcode-back" href="../../../_generated/oceanum.datamesh.query.GeoFilter.html#oceanum.datamesh.query.GeoFilter">[docs]</a><span class="k">class</span> <span class="nc">GeoFilter</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="GeoFilter"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.query.GeoFilter.html#oceanum.datamesh.GeoFilter">[docs]</a><span class="k">class</span> <span class="nc">GeoFilter</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;GeoFilter class</span>
 <span class="sd">    Describes a spatial subset or interpolation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -215,6 +243,37 @@
     <span class="p">)</span></div>
 
 
+<span class="k">class</span> <span class="nc">TimeFilter</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;TimeFilter class</span>
+<span class="sd">    Describes a temporal subset or interpolation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">type</span><span class="p">:</span> <span class="n">TimeFilterType</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Timefilter type&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">TimeFilterType</span><span class="o">.</span><span class="n">range</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Type of the timefilter. Can be one of:</span>
+<span class="s2">            - &#39;range&#39;: Select times within a range</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">times</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Timestamp</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Selection times&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            - For type=&#39;range&#39;, [timestart, tend].</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">resolution</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Temporal resolution of data&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;native&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Maximum resolution of the data for temporal downsampling. Only valid with range type&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">resample</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ResampleType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Temporal resampling method&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">ResampleType</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Resampling method applied when reducing tempral resolution. Only valid with range type&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
 <span class="c1"># Geofilter selection process</span>
 <span class="c1"># a features select can either be a Feature/FeatureCollection or the geometry of another datasource</span>
 <span class="c1"># grid    ∩  bbox -&gt; subgrid (optional resolution)</span>
@@ -226,22 +285,7 @@
 <span class="c1"># df      ∩  features -&gt; subset of df within (resolution) of features</span>
 
 
-<span class="k">class</span> <span class="nc">Timestamp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">):</span>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">__get_validators__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
-        <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validate</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;datetime string required&quot;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="s2">&quot;UTC&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">to_datetime64</span><span class="p">()</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="s2">&quot;Timestamp format not valid&quot;</span>
-
-
-<div class="viewcode-block" id="Query"><a class="viewcode-back" href="../../../_generated/oceanum.datamesh.query.Query.html#oceanum.datamesh.query.Query">[docs]</a><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="Query"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query">[docs]</a><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Datamesh query</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -264,10 +308,10 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;List of requested variables.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">timefilter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Timestamp</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">timefilter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TimeFilter</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Time filter&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Start and end of requested time period&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Temporal filter or interplator&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">geofilter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeoFilter</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Spatial filter or interpolator&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
@@ -290,7 +334,7 @@
 
     <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
         <span class="n">json_loads</span> <span class="o">=</span> <span class="n">orjson</span><span class="o">.</span><span class="n">loads</span>
-        <span class="n">json_dumps</span> <span class="o">=</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span>
+        <span class="n">json_dumps</span> <span class="o">=</span> <span class="n">_orjson_dumps</span>
         <span class="n">json_encoders</span> <span class="o">=</span> <span class="p">{</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">:</span> <span class="nb">str</span><span class="p">}</span></div>
 </pre></div>
 

@@ -214,8 +214,26 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids</span></div>
 
 <div class="viewcode-block" id="Catalog.load"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Load datasource&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Datasource</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">()</span></div>
+        <span class="sd">&quot;&quot;&quot;Load datasource</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            id: Datasource id</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">load_datasource</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Catalog.load_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.load_async">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">load_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load datasource asynchronously</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            id: Datasource id</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Couroutine&lt;Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]&gt;: The datasource container</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">load_datasource_async</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Catalog.query"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Make a query on the catalog</span>
@@ -232,7 +250,24 @@
         <span class="k">if</span> <span class="n">query</span><span class="p">[</span><span class="s2">&quot;datasource&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ids</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Datasource </span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;datasource&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not in catalog&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Catalog.query_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.query_async">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">query_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make an asynchronous query on the catalog</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query (Union[:obj:`oceanum.datamesh.Query`, dict]): Datamesh query as a query object or a valid query dictionary</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Coroutine&lt;Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]&gt;: The datasource container</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            IndexError: Datasource not in catalog</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">query</span><span class="p">[</span><span class="s2">&quot;datasource&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ids</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Datasource </span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;datasource&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not in catalog&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">query_async</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div></div>
 </pre></div>
 
               </div>

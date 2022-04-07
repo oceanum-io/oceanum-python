@@ -155,17 +155,38 @@
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">fsspec</span>
+<span class="kn">import</span> <span class="nn">xarray</span>
+<span class="kn">import</span> <span class="nn">geopandas</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span><span class="p">,</span> <span class="n">partial</span>
 
 <span class="kn">from</span> <span class="nn">..utils.response</span> <span class="kn">import</span> <span class="n">ResponseFile</span>
 <span class="kn">from</span> <span class="nn">.datasource</span> <span class="kn">import</span> <span class="n">Datasource</span>
 <span class="kn">from</span> <span class="nn">.catalog</span> <span class="kn">import</span> <span class="n">Catalog</span>
+<span class="kn">from</span> <span class="nn">.query</span> <span class="kn">import</span> <span class="n">Query</span>
 
 <span class="n">DEFAULT_CONFIG</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;DATAMESH_SERVICE&quot;</span><span class="p">:</span> <span class="s2">&quot;https://datamesh.oceanum.io&quot;</span><span class="p">}</span>
 
 
 <span class="k">class</span> <span class="nc">DatameshConnectError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">DatameshQueryError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">asyncwrapper</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">executor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">loop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+        <span class="n">pfunc</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="n">executor</span><span class="p">,</span> <span class="n">pfunc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">run</span>
 
 
 <div class="viewcode-block" id="Connector"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector">[docs]</a><span class="k">class</span> <span class="nc">Connector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -249,13 +270,31 @@
     <span class="k">def</span> <span class="nf">_query_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">):</span>
         <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="n">data_format</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_auth_headers</span><span class="p">}</span>
         <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_gateway</span><span class="si">}</span><span class="s2">/oceanql/&quot;</span><span class="p">,</span>
-            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_gateway</span><span class="si">}</span><span class="s2">/oceanql/&quot;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">query</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">DatameshConnectError</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">DatameshQueryError</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+
+    <span class="k">def</span> <span class="nf">_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">Query</span><span class="p">):</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">**</span><span class="n">query</span><span class="p">)</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datasource</span><span class="p">(</span><span class="n">query</span><span class="o">.</span><span class="n">datasource</span><span class="p">)</span>
+        <span class="n">transfer_format</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;application/x-netcdf4&quot;</span>
+            <span class="k">if</span> <span class="n">ds</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span>
+            <span class="k">else</span> <span class="s2">&quot;application/parquet&quot;</span>
+        <span class="p">)</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_request</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="n">transfer_format</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ds</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;h5py&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">ds</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Connector.get_catalog"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="p">{}):</span>
         <span class="sd">&quot;&quot;&quot;Get datamesh catalog</span>
@@ -265,6 +304,22 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :obj:`oceanum.datamesh.Catalog`: A datamesh catalog instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="n">Catalog</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">cat</span></div>
+
+<div class="viewcode-block" id="Connector.get_catalog_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_catalog_async">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_catalog_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Get datamesh catalog asynchronously</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filter (dict, optional): Set of filters to apply. Defaults to {}.</span>
+<span class="sd">            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`</span>
+<span class="sd">            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Coroutine&lt;:obj:`oceanum.datamesh.Catalog`&gt;: A datamesh catalog instance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cat</span> <span class="o">=</span> <span class="n">Catalog</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -283,12 +338,24 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ds</span> <span class="o">=</span> <span class="n">Datasource</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">ds</span><span class="o">.</span><span class="n">_exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="n">DatameshConnectError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Datasource </span><span class="si">{</span><span class="n">datasource_id</span><span class="si">}</span><span class="s2"> does not exist or is not authorized&quot;</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">ds</span></div>
+        <span class="k">return</span> <span class="n">Datasource</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Connector.get_datasource_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_datasource_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
+    <span class="k">def</span> <span class="nf">get_datasource_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a Datasource instance from the datamesh asynchronously. This does not load the actual data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            datasource_id (string): Unique datasource id</span>
+<span class="sd">            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`</span>
+<span class="sd">            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Coroutine&lt;:obj:`oceanum.datamesh.Datasource`&gt;: A datasource instance</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Datasource</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Connector.load_datasource"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.load_datasource">[docs]</a>    <span class="k">def</span> <span class="nf">load_datasource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load a datasource into the work environment</span>
@@ -303,6 +370,23 @@
         <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datasource</span><span class="p">(</span><span class="n">datasource_id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">load</span><span class="p">()</span></div>
 
+<div class="viewcode-block" id="Connector.load_datasource_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.load_datasource_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
+    <span class="k">def</span> <span class="nf">load_datasource_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load a datasource asynchronously into the work environment</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            datasource_id (string): Unique datasource id</span>
+<span class="sd">            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.</span>
+<span class="sd">            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`</span>
+<span class="sd">            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor</span>
+
+
+<span class="sd">        Returns:</span>
+<span class="sd">            coroutine&lt;Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]&gt;: The datasource container</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datasource</span><span class="p">(</span><span class="n">datasource_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">load</span><span class="p">()</span></div>
+
 <div class="viewcode-block" id="Connector.query"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Make a datamesh query</span>
 
@@ -312,16 +396,21 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">Query</span><span class="p">):</span>
-            <span class="n">query</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-        <span class="n">transfer_format</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;application/x-netcdf4&quot;</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="s2">&quot;xarray.Dataset&quot;</span>
-            <span class="k">else</span> <span class="s2">&quot;application/parquet&quot;</span>
-        <span class="p">)</span>
+<div class="viewcode-block" id="Connector.query_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.query_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">query_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a datamesh query asynchronously</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_request</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="n">transfer_format</span><span class="p">)</span></div></div>
+<span class="sd">        Args:</span>
+<span class="sd">            query (Union[:obj:`oceanum.datamesh.Query`, dict]): Datamesh query as a query object or a valid query dictionary</span>
+<span class="sd">            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`</span>
+<span class="sd">            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Coroutine&lt;Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]&gt;: The datasource container</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div></div>
 </pre></div>
 
               </div>

@@ -22,6 +22,8 @@
    .. automethod:: __init__
    .. automethod:: keys
    .. automethod:: load
+   .. automethod:: load_async
    .. automethod:: query
+   .. automethod:: query_async
    
    

@@ -21,8 +21,12 @@
    
    .. automethod:: __init__
    .. automethod:: get_catalog
+   .. automethod:: get_catalog_async
    .. automethod:: get_datasource
+   .. automethod:: get_datasource_async
    .. automethod:: load_datasource
+   .. automethod:: load_datasource_async
    .. automethod:: query
+   .. automethod:: query_async
    
    
