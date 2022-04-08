@@ -206,7 +206,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            token (string): Your datamesh access token. Defaults to os.environ.get(&quot;DATAMESH_TOKEN&quot;, None).</span>
 <span class="sd">            service (string, optional): URL of datamesh service. Defaults to os.environ.get(&quot;DATAMESH_SERVICE&quot;, &quot;https://datamesh.oceanum.io&quot;).</span>
-<span class="sd">            gateway (string, optional): URL of gateway service. Defaults to os.environ.get(&quot;DATAMESH_GATEWAY&quot;, &quot;https://gateway.datamesh.oceanum.io&quot;).</span>
+<span class="sd">            gateway (string, optional): URL of gateway service. Defaults to os.environ.get(&quot;DATAMESH_GATEWAY&quot;, &quot;https://gateway.&lt;datamesh_service_domain&gt;&quot;).</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: Missing or invalid arguments</span>
