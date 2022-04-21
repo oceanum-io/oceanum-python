@@ -136,10 +136,11 @@ class Connector(object):
             else "application/parquet"
         )
         resp = self._query_request(query, data_format=transfer_format)
-        with io.BytesIO() as f:
+        with tempfile.SpooledTemporaryFile() as f:
             f.write(resp)
+            f.seek(0)
             if ds.container == xarray.Dataset:
-                return xarray.open_dataset(f, engine="h5py")
+                return xarray.open_dataset(f, engine="h5netcdf").load()
             elif ds.container == geopandas.GeoDataFrame:
                 return geopandas.read_parquet(f)
             else:

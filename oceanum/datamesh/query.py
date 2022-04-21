@@ -42,14 +42,6 @@ class TimeFilterType(str, Enum):
     range = "range"
 
 
-class RequestType(Enum):
-    """Request Type"""
-
-    schema = "schema"  # Just return schema with no data
-    coords = "coords"  # Return schema with coordinate arrays
-    data = "data"  # Return all data
-
-
 class ResampleType(str, Enum):
     mean = "mean"
 
@@ -164,20 +156,10 @@ class Query(BaseModel):
     geofilter: Optional[GeoFilter] = Field(
         title="Spatial filter or interpolator", default=None
     )
-    spatialref: Optional[str] = Field(
+    crs: Optional[Union[str, int]] = Field(
         title="Spatial reference for filter and output",
         default="EPSG:4326",
         description="Valid CRS string for returned data",
-    )
-    request: Optional[RequestType] = Field(
-        title="Request type",
-        default=RequestType.data,
-        description="""
-        Type of request: can be one of:
-            - 'data': Return complete data request (default)
-            - 'schema': Only return datasource schema
-            - 'coords': Only return schema and coordinates
-        """,
     )
 
     class Config:
