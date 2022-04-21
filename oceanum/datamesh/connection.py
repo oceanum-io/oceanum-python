@@ -45,7 +45,7 @@ class Connector(object):
 
     def __init__(
         self,
-        token=os.environ.get("DATAMESH_TOKEN", None),
+        token=None,
         service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
         gateway=None,
     ):
@@ -60,11 +60,12 @@ class Connector(object):
             ValueError: Missing or invalid arguments
         """
         if token is None:
-            raise ValueError(
-                "A valid key must be supplied as a connection constructor argument"
-            )
-        else:
-            self._token = token
+            token = os.environ.get("DATAMESH_TOKEN", None)
+            if token is None:
+                raise ValueError(
+                    "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
+                )
+        self._token = token
         url = urlparse(service)
         self._proto = url.scheme
         self._host = url.hostname
