@@ -1,1 +1,2 @@
 autodoc-pydantic
+pydata-sphinx-theme
