@@ -160,11 +160,11 @@
 <span class="kn">from</span> <span class="nn">.query</span> <span class="kn">import</span> <span class="n">Query</span>
 
 
-<span class="k">class</span> <span class="nc">DatasourceException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">pass</span>
+<div class="viewcode-block" id="DatasourceException"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.DatasourceException">[docs]</a><span class="k">class</span> <span class="nc">DatasourceException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 
 
-<span class="k">def</span> <span class="nf">parse_period</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_period"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.parse_period">[docs]</a><span class="k">def</span> <span class="nf">parse_period</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">period</span><span class="p">:</span>
         <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
             <span class="sa">r</span><span class="s2">&quot;^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:.\d+)?)S)?$&quot;</span><span class="p">,</span>
@@ -181,10 +181,10 @@
             <span class="n">hours</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">m</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span>
             <span class="n">minutes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days</span><span class="p">,</span> <span class="n">hours</span><span class="o">=</span><span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days</span><span class="p">,</span> <span class="n">hours</span><span class="o">=</span><span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="n">minutes</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Datasource"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource">[docs]</a><span class="k">class</span> <span class="nc">Datasource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Datasource"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Datasource">[docs]</a><span class="k">class</span> <span class="nc">Datasource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Datasource class&quot;&quot;&quot;</span>
 
     <span class="nd">@classmethod</span>
@@ -327,7 +327,7 @@
         <span class="sd">&quot;&quot;&quot;Datasource global attributes&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;attrs&quot;</span><span class="p">,</span> <span class="p">{})</span>
 
-<div class="viewcode-block" id="Datasource.load"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Datasource.load"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Datasource.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load the datasource into an in memory container or open zarr dataset</span>
 
 <span class="sd">        For datasources which load into DataFrames or GeoDataFrames, this returns an in memory instance of the DataFrame.</span>

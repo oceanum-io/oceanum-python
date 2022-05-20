@@ -1,6 +1,0 @@
-oceanum.datamesh.datasource.Datasource.container
-================================================
-
-.. currentmodule:: oceanum.datamesh.datasource
-
-.. autoproperty:: Datasource.container

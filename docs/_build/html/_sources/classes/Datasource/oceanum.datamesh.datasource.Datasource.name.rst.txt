@@ -1,6 +1,0 @@
-oceanum.datamesh.datasource.Datasource.name
-===========================================
-
-.. currentmodule:: oceanum.datamesh.datasource
-
-.. autoproperty:: Datasource.name

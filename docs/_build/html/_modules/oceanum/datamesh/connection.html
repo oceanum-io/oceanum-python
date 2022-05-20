@@ -170,15 +170,15 @@
 <span class="n">DEFAULT_CONFIG</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;DATAMESH_SERVICE&quot;</span><span class="p">:</span> <span class="s2">&quot;https://datamesh.oceanum.io&quot;</span><span class="p">}</span>
 
 
-<span class="k">class</span> <span class="nc">DatameshConnectError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">pass</span>
+<div class="viewcode-block" id="DatameshConnectError"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.DatameshConnectError">[docs]</a><span class="k">class</span> <span class="nc">DatameshConnectError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 
 
-<span class="k">class</span> <span class="nc">DatameshQueryError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">pass</span>
+<div class="viewcode-block" id="DatameshQueryError"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.DatameshQueryError">[docs]</a><span class="k">class</span> <span class="nc">DatameshQueryError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 
 
-<span class="k">def</span> <span class="nf">asyncwrapper</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+<div class="viewcode-block" id="asyncwrapper"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.asyncwrapper">[docs]</a><span class="k">def</span> <span class="nf">asyncwrapper</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">executor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">loop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -186,10 +186,10 @@
         <span class="n">pfunc</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span><span class="n">executor</span><span class="p">,</span> <span class="n">pfunc</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">run</span>
+    <span class="k">return</span> <span class="n">run</span></div>
 
 
-<div class="viewcode-block" id="Connector"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector">[docs]</a><span class="k">class</span> <span class="nc">Connector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Connector"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector">[docs]</a><span class="k">class</span> <span class="nc">Connector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Datamesh connector class.</span>
 
 <span class="sd">    All datamesh operations are methods of this class</span>
@@ -197,7 +197,7 @@
 
 <div class="viewcode-block" id="Connector.__init__"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">token</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DATAMESH_TOKEN&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">service</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DATAMESH_SERVICE&quot;</span><span class="p">,</span> <span class="n">DEFAULT_CONFIG</span><span class="p">[</span><span class="s2">&quot;DATAMESH_SERVICE&quot;</span><span class="p">]),</span>
         <span class="n">gateway</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -212,11 +212,12 @@
 <span class="sd">            ValueError: Missing or invalid arguments</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;A valid key must be supplied as a connection constructor argument&quot;</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_token</span> <span class="o">=</span> <span class="n">token</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DATAMESH_TOKEN&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN&quot;</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_token</span> <span class="o">=</span> <span class="n">token</span>
         <span class="n">url</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">service</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_proto</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">scheme</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">hostname</span>
@@ -287,16 +288,17 @@
             <span class="k">else</span> <span class="s2">&quot;application/parquet&quot;</span>
         <span class="p">)</span>
         <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_request</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="n">transfer_format</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">SpooledTemporaryFile</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">ds</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;h5py&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;h5netcdf&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
             <span class="k">elif</span> <span class="n">ds</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Connector.get_catalog"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="p">{}):</span>
+<div class="viewcode-block" id="Connector.get_catalog"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="p">{}):</span>
         <span class="sd">&quot;&quot;&quot;Get datamesh catalog</span>
 
 <span class="sd">        Args:</span>
@@ -310,7 +312,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">cat</span></div>
 
-<div class="viewcode-block" id="Connector.get_catalog_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_catalog_async">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_catalog_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="p">{}):</span>
+<div class="viewcode-block" id="Connector.get_catalog_async"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.get_catalog_async">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_catalog_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="p">{}):</span>
         <span class="sd">&quot;&quot;&quot;Get datamesh catalog asynchronously</span>
 
 <span class="sd">        Args:</span>
@@ -326,7 +328,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">cat</span></div>
 
-<div class="viewcode-block" id="Connector.get_datasource"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_datasource">[docs]</a>    <span class="k">def</span> <span class="nf">get_datasource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">):</span>
+<div class="viewcode-block" id="Connector.get_datasource"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.get_datasource">[docs]</a>    <span class="k">def</span> <span class="nf">get_datasource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a Datasource instance from the datamesh. This does not load the actual data.</span>
 
 <span class="sd">        Args:</span>
@@ -340,7 +342,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Datasource</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Connector.get_datasource_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_datasource_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
+<div class="viewcode-block" id="Connector.get_datasource_async"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.get_datasource_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
     <span class="k">def</span> <span class="nf">get_datasource_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a Datasource instance from the datamesh asynchronously. This does not load the actual data.</span>
 
@@ -357,7 +359,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Datasource</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Connector.load_datasource"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.load_datasource">[docs]</a>    <span class="k">def</span> <span class="nf">load_datasource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Connector.load_datasource"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.load_datasource">[docs]</a>    <span class="k">def</span> <span class="nf">load_datasource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load a datasource into the work environment</span>
 
 <span class="sd">        Args:</span>
@@ -370,7 +372,7 @@
         <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datasource</span><span class="p">(</span><span class="n">datasource_id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">load</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Connector.load_datasource_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.load_datasource_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
+<div class="viewcode-block" id="Connector.load_datasource_async"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.load_datasource_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
     <span class="k">def</span> <span class="nf">load_datasource_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load a datasource asynchronously into the work environment</span>
 
@@ -387,7 +389,7 @@
         <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datasource</span><span class="p">(</span><span class="n">datasource_id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">load</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Connector.query"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+<div class="viewcode-block" id="Connector.query"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Make a datamesh query</span>
 
 <span class="sd">        Args:</span>
@@ -398,7 +400,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Connector.query_async"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.query_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
+<div class="viewcode-block" id="Connector.query_async"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.query_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">query_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Make a datamesh query asynchronously</span>
 

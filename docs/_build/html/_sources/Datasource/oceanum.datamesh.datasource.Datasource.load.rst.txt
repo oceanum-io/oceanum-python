@@ -1,6 +1,0 @@
-oceanum.datamesh.datasource.Datasource.load
-===========================================
-
-.. currentmodule:: oceanum.datamesh.datasource
-
-.. automethod:: Datasource.load

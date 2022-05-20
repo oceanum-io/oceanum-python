@@ -1,6 +1,0 @@
-oceanum.datamesh.connection.Connector.host
-==========================================
-
-.. currentmodule:: oceanum.datamesh.connection
-
-.. autoproperty:: Connector.host

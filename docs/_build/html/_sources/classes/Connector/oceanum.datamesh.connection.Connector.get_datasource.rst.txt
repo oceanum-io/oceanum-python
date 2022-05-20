@@ -1,6 +1,0 @@
-oceanum.datamesh.connection.Connector.get\_datasource
-=====================================================
-
-.. currentmodule:: oceanum.datamesh.connection
-
-.. automethod:: Connector.get_datasource

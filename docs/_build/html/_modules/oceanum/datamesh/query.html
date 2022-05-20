@@ -164,56 +164,48 @@
     <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
 
 
-<span class="k">class</span> <span class="nc">QueryError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="k">pass</span>
+<div class="viewcode-block" id="QueryError"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.QueryError">[docs]</a><span class="k">class</span> <span class="nc">QueryError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 
 
-<span class="k">class</span> <span class="nc">Timestamp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">):</span>
+<div class="viewcode-block" id="Timestamp"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Timestamp">[docs]</a><span class="k">class</span> <span class="nc">Timestamp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">):</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">__get_validators__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validate</span>
 
-    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.validate"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Timestamp.validate">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;datetime or time string required&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="s2">&quot;UTC&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">to_datetime64</span><span class="p">()</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="s2">&quot;Timestamp format not valid&quot;</span>
+            <span class="k">raise</span> <span class="s2">&quot;Timestamp format not valid&quot;</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">GeoFilterType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<div class="viewcode-block" id="GeoFilterType"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.GeoFilterType">[docs]</a><span class="k">class</span> <span class="nc">GeoFilterType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="c1"># datasource = &quot;datasource&quot;</span>
     <span class="n">feature</span> <span class="o">=</span> <span class="s2">&quot;feature&quot;</span>
     <span class="n">radius</span> <span class="o">=</span> <span class="s2">&quot;radius&quot;</span>
-    <span class="n">bbox</span> <span class="o">=</span> <span class="s2">&quot;bbox&quot;</span>
+    <span class="n">bbox</span> <span class="o">=</span> <span class="s2">&quot;bbox&quot;</span></div>
 
 
-<span class="k">class</span> <span class="nc">TimeFilterType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-    <span class="nb">range</span> <span class="o">=</span> <span class="s2">&quot;range&quot;</span>
+<div class="viewcode-block" id="TimeFilterType"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.TimeFilterType">[docs]</a><span class="k">class</span> <span class="nc">TimeFilterType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="nb">range</span> <span class="o">=</span> <span class="s2">&quot;range&quot;</span></div>
 
 
-<span class="k">class</span> <span class="nc">RequestType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Request Type&quot;&quot;&quot;</span>
-
-    <span class="n">schema</span> <span class="o">=</span> <span class="s2">&quot;schema&quot;</span>  <span class="c1"># Just return schema with no data</span>
-    <span class="n">coords</span> <span class="o">=</span> <span class="s2">&quot;coords&quot;</span>  <span class="c1"># Return schema with coordinate arrays</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;data&quot;</span>  <span class="c1"># Return all data</span>
+<div class="viewcode-block" id="ResampleType"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.ResampleType">[docs]</a><span class="k">class</span> <span class="nc">ResampleType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span></div>
 
 
-<span class="k">class</span> <span class="nc">ResampleType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-    <span class="n">mean</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
-
-
-<span class="k">class</span> <span class="nc">DatasourceGeom</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="DatasourceGeom"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.DatasourceGeom">[docs]</a><span class="k">class</span> <span class="nc">DatasourceGeom</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Datasource ID&quot;</span><span class="p">)</span>
     <span class="n">parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Optional parameters to access datasource&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">{}</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GeoFilter"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.query.GeoFilter.html#oceanum.datamesh.GeoFilter">[docs]</a><span class="k">class</span> <span class="nc">GeoFilter</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="GeoFilter"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.GeoFilter">[docs]</a><span class="k">class</span> <span class="nc">GeoFilter</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;GeoFilter class</span>
 <span class="sd">    Describes a spatial subset or interpolation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -243,7 +235,7 @@
     <span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">TimeFilter</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="TimeFilter"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.TimeFilter">[docs]</a><span class="k">class</span> <span class="nc">TimeFilter</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;TimeFilter class</span>
 <span class="sd">    Describes a temporal subset or interpolation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -271,7 +263,7 @@
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Temporal resampling method&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="n">ResampleType</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Resampling method applied when reducing tempral resolution. Only valid with range type&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
 
 
 <span class="c1"># Geofilter selection process</span>
@@ -285,7 +277,7 @@
 <span class="c1"># df      ∩  features -&gt; subset of df within (resolution) of features</span>
 
 
-<div class="viewcode-block" id="Query"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query">[docs]</a><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="Query"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Query">[docs]</a><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Datamesh query</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -316,20 +308,10 @@
     <span class="n">geofilter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeoFilter</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Spatial filter or interpolator&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">)</span>
-    <span class="n">spatialref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">crs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Spatial reference for filter and output&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Valid CRS string for returned data&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">request</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RequestType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Request type&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="n">RequestType</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        Type of request: can be one of:</span>
-<span class="s2">            - &#39;data&#39;: Return complete data request (default)</span>
-<span class="s2">            - &#39;schema&#39;: Only return datasource schema</span>
-<span class="s2">            - &#39;coords&#39;: Only return schema and coordinates</span>
-<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>

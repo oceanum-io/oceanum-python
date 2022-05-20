@@ -63,7 +63,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
-    url="https://gitlab.com/oceanum/oceanum",
+    url="https://github.com/oceanum/oceanum-python",
     version="0.4.2",
     zip_safe=False,
 )
