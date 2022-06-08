@@ -18,7 +18,7 @@ from oceanum import cli
 def conn():
     """Connection fixture"""
     return Connector(
-        os.environ["DATAMESH_KEY"], gateway="https://gateway.datamesh.oceanum.tech"
+        os.environ["DATAMESH_KEY"], gateway="https://gateway.datamesh.oceanum.io"
     )
 
 

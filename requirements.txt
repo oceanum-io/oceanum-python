@@ -4,6 +4,7 @@ numpy
 pandas
 geopandas
 xarray
+zarr
 shapely
 orjson
 requests

@@ -1,6 +1,7 @@
 import os
 import io
 import tempfile
+import hashlib
 import requests
 import fsspec
 import xarray
@@ -10,7 +11,6 @@ from urllib.parse import urlparse
 import asyncio
 from functools import wraps, partial
 
-from ..utils.response import ResponseFile
 from .datasource import Datasource
 from .catalog import Catalog
 from .query import Query
@@ -74,6 +74,7 @@ class Connector(object):
             "X-DATAMESH-TOKEN": self._token,
         }
         self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
+        self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
 
     @property
     def host(self):
@@ -106,7 +107,8 @@ class Connector(object):
             raise DatameshConnectError(str(e))
         return mapper
 
-    def _data_request(self, datasource_id, data_format="application/json"):
+    def _data_request(self, datasource_id, data_format="application/json", cache=False):
+        tmpfile = os.path.join(self._cachedir.name, datasource_id)
         resp = requests.get(
             f"{self._gateway}/data/{datasource_id}",
             headers={"Accept": data_format, **self._auth_headers},
@@ -114,9 +116,12 @@ class Connector(object):
         if not resp.status_code == 200:
             raise DatameshConnectError(resp.text)
         else:
-            return ResponseFile(resp.content)
+            with open(tmpfile, "wb") as f:
+                f.write(resp.content)
+            return tmpfile
 
-    def _query_request(self, query, data_format="application/json"):
+    def _query_request(self, query, data_format="application/json", cache=False):
+        qhash = hashlib.sha224(query.json().encode()).hexdigest()
         headers = {"Accept": data_format, **self._auth_headers}
         resp = requests.post(
             f"{self._gateway}/oceanql/", headers=headers, data=query.json()
@@ -124,7 +129,10 @@ class Connector(object):
         if not resp.status_code == 200:
             raise DatameshQueryError(resp.text)
         else:
-            return resp.content
+            tmpfile = os.path.join(self._cachedir.name, qhash)
+            with open(tmpfile, "wb") as f:
+                f.write(resp.content)
+            return tmpfile
 
     def _query(self, query):
         if not isinstance(query, Query):
@@ -135,16 +143,13 @@ class Connector(object):
             if ds.container == xarray.Dataset
             else "application/parquet"
         )
-        resp = self._query_request(query, data_format=transfer_format)
-        with tempfile.SpooledTemporaryFile() as f:
-            f.write(resp)
-            f.seek(0)
-            if ds.container == xarray.Dataset:
-                return xarray.open_dataset(f, engine="h5netcdf").load()
-            elif ds.container == geopandas.GeoDataFrame:
-                return geopandas.read_parquet(f)
-            else:
-                return pandas.read_parquet(f)
+        f = self._query_request(query, data_format=transfer_format)
+        if ds.container == xarray.Dataset:
+            return xarray.open_dataset(f, engine="h5netcdf").load()
+        elif ds.container == geopandas.GeoDataFrame:
+            return geopandas.read_parquet(f)
+        else:
+            return pandas.read_parquet(f)
 
     def get_catalog(self, filter={}):
         """Get datamesh catalog

@@ -186,7 +186,7 @@ class Datasource(object):
             return xarray.open_zarr(mapper, consolidated=True)
         elif self.container == geopandas.GeoDataFrame:
             tmpfile = self._connector._data_request(self.id, "application/parquet")
-            return geopandas.read_parquet(tmpfile.name)
+            return geopandas.read_parquet(tmpfile)
         elif self.container == pandas.DataFrame:
             tmpfile = self._connector._data_request(self.id, "application/parquet")
-            return pandas.read_parquet(tmpfile.name)
+            return pandas.read_parquet(tmpfile)

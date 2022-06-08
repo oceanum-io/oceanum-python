@@ -18,7 +18,7 @@ Library for oceanum.io services
 
 
 * MIT license
-* Documentation: https://oceanum.readthedocs.io.
+* Documentation: https://oceanum-python.readthedocs.io.
 
 
 Features
