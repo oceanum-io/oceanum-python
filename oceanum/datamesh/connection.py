@@ -145,7 +145,7 @@ class Connector(object):
         )
         f = self._query_request(query, data_format=transfer_format)
         if ds.container == xarray.Dataset:
-            return xarray.open_dataset(f, engine="h5netcdf").load()
+            return xarray.open_dataset(f, engine="h5netcdf", decode_coords="all").load()
         elif ds.container == geopandas.GeoDataFrame:
             return geopandas.read_parquet(f)
         else:
