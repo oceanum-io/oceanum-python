@@ -21,6 +21,7 @@ requirements = [
     "geopandas",
     "xarray",
     "zarr",
+    "h5netcdf",
     "shapely",
     "orjson",
     "requests",
@@ -67,6 +68,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/oceanum/oceanum-python",
-    version="0.4.4",
+    version="0.4.4-2",
     zip_safe=False,
 )

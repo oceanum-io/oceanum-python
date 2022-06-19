@@ -5,6 +5,7 @@ pandas
 geopandas
 xarray
 zarr
+h5netcdf
 shapely
 orjson
 requests
