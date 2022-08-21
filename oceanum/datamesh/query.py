@@ -114,6 +114,26 @@ class TimeFilter(BaseModel):
     )
 
 
+class AggregateOps(str, Enum):
+    mean = "mean"
+    min = "min"
+    max = "max"
+    std = "std"
+    sum = "sum"
+
+
+class Aggregate(BaseModel):
+    operations: List[AggregateOps] = Field(
+        title="Aggregate operations to perform",
+        default=[AggregateOps.mean],
+        description="List of aggregation operators to apply, from " + ','.join(AggregateOps.__members__.keys()),
+    ),
+    spatial: Optional[bool] = Field(title="Aggregate over spatial filter", default=True,description="Aggregate over spatial dimensions (default True)")
+    temporal: Optional[bool] = Field(
+        title="Aggregate over temporal filter", default=True, description="Aggregate over temporal dimension (default True)"
+    )
+
+
 # Geofilter selection process
 # a features select can either be a Feature/FeatureCollection or the geometry of another datasource
 # grid    ∩  bbox -> subgrid (optional resolution)
@@ -158,8 +178,13 @@ class Query(BaseModel):
     )
     crs: Optional[Union[str, int]] = Field(
         title="Spatial reference for filter and output",
-        default="EPSG:4326",
+        default=None,
         description="Valid CRS string for returned data",
+    )
+    aggregate: Optional[Aggregate]=Field(
+        title="Aggregation operators to apply",
+        default=None,
+        description="Optional aggregation operators to apply to query after filtering"
     )
 
     class Config:

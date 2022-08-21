@@ -21,3 +21,11 @@ def test_query_timefilter():
         datasource="test",
         timefilter={"times": ["2000-01-01T00:00:00", "2001-01-01T00:00:00Z"]},
     )
+
+
+def test_query_aggregate():
+    q = Query(
+        datasource="test",
+        timefilter={"times": ["2000-01-01T00:00:00", "2001-01-01T00:00:00Z"]},
+        aggregate={"operations": ["sum", "mean"]},
+    )

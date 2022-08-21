@@ -7,6 +7,7 @@ import fsspec
 import xarray
 import geopandas
 import pandas
+import warnings
 from urllib.parse import urlparse
 import asyncio
 from functools import wraps, partial
@@ -126,8 +127,10 @@ class Connector(object):
         resp = requests.post(
             f"{self._gateway}/oceanql/", headers=headers, data=query.json()
         )
-        if not resp.status_code == 200:
+        if resp.status_code >= 400:
             raise DatameshQueryError(resp.text)
+        if resp.status_code == 204:
+            return None
         else:
             tmpfile = os.path.join(self._cachedir.name, qhash)
             with open(tmpfile, "wb") as f:
@@ -144,6 +147,9 @@ class Connector(object):
             else "application/parquet"
         )
         f = self._query_request(query, data_format=transfer_format)
+        if f is None:
+            warnings.warn("Query returned no data")
+            return None
         if ds.container == xarray.Dataset:
             return xarray.open_dataset(f, engine="h5netcdf", decode_coords="all").load()
         elif ds.container == geopandas.GeoDataFrame:
