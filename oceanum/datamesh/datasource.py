@@ -152,6 +152,8 @@ class Datasource(object):
             return geopandas.GeoDataFrame
         elif "x" in self._coordinates and "y" in self._coordinates:
             return xarray.Dataset
+        elif len(self._coordinates) > 2:
+            return xarray.Dataset
         else:
             return pandas.DataFrame
 

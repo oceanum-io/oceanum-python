@@ -17,9 +17,7 @@ from oceanum import cli
 @pytest.fixture
 def conn():
     """Connection fixture"""
-    return Connector(
-        os.environ["DATAMESH_KEY"], gateway="https://gateway.datamesh.oceanum.tech"
-    )
+    return Connector(os.environ["DATAMESH_KEY"])
 
 
 def test_query_features(conn):
