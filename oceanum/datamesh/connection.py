@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 import asyncio
 from functools import wraps, partial
 
-from .datasource import Datasource
+from .datasource import Datasource, _get_schema, _guess_coordinates, _get_geometry
 from .catalog import Catalog
 from .query import Query
 
@@ -25,6 +25,9 @@ class DatameshConnectError(Exception):
 
 class DatameshQueryError(Exception):
     pass
+
+
+class DatameshWriteError(Exception)
 
 
 def asyncwrapper(func):
@@ -121,6 +124,22 @@ class Connector(object):
                 f.write(resp.content)
             return tmpfile
 
+    def _data_write(self, datasource_id, data, data_format="application/json", overwrite=False):
+        if overwrite:
+            resp = requests.put(
+                f"{self._gateway}/data/{datasource_id}",
+                data=f.read(),
+                headers={"Content-Type": data_format, **self._auth_headers},
+            )
+        else:
+            resp = requests.patch(
+                f"{self._gateway}/data/{datasource_id}",
+                data=f.read(),
+                headers={"Content-Type": data_format, **self._auth_headers},
+            )
+        if not resp.status_code == 200:
+            raise DatameshConnectError(resp.text)
+
     def _query_request(self, query, data_format="application/json", cache=False):
         qhash = hashlib.sha224(query.json().encode()).hexdigest()
         headers = {"Accept": data_format, **self._auth_headers}
@@ -171,7 +190,8 @@ class Connector(object):
         )
         return cat
 
-    async def get_catalog_async(self, filter={}):
+    @asyncwrapper
+    def get_catalog_async(self, filter={}):
         """Get datamesh catalog asynchronously
 
         Args:
@@ -182,10 +202,7 @@ class Connector(object):
         Returns:
             Coroutine<:obj:`oceanum.datamesh.Catalog`>: A datamesh catalog instance
         """
-        cat = Catalog._init(
-            self,
-        )
-        return cat
+        return self.get_catalog(filter)
 
     def get_datasource(self, datasource_id):
         """Get a Datasource instance from the datamesh. This does not load the actual data.
@@ -199,7 +216,16 @@ class Connector(object):
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
-        return Datasource._init(self, datasource_id)
+        meta = self._metadata_request(id)
+        if meta.status_code == 404:
+            raise DatameshConnectError(f"Datasource {id} not found")
+        elif meta.status_code == 401:
+            raise DatameshConnectError(f"Datasource {id} not Authorized")
+        elif meta.status_code != 200:
+            raise DatameshConnectError(meta.text)
+        meta_dict = meta.json()
+        props = {"geometry": meta_dict["geometry"], **meta_dict["properties"]}
+        return Datasource.parse_obj(props)
 
     @asyncwrapper
     def get_datasource_async(self, datasource_id):
@@ -216,10 +242,12 @@ class Connector(object):
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
-        return Datasource._init(self, datasource_id)
+        return self.get_datasource(datasource_id)
 
     def load_datasource(self, datasource_id, use_dask=True):
-        """Load a datasource into the work environment
+        """Load a datasource into the work environment.
+        For datasources which load into DataFrames or GeoDataFrames, this returns an in memory instance of the DataFrame.
+        For datasources which load into an xarray Dataset, an open zarr backed dataset is returned.
 
         Args:
             datasource_id (string): Unique datasource id
@@ -229,7 +257,17 @@ class Connector(object):
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
         ds = self.get_datasource(datasource_id)
-        return ds.load()
+        if ds.container == xarray.Dataset:
+            mapper = self._zarr_proxy(self.id)
+            return xarray.open_zarr(
+                mapper, consolidated=True, decode_coords="all", mask_and_scale=True
+            )
+        elif ds.container == geopandas.GeoDataFrame:
+            tmpfile = self._data_request(self.id, "application/parquet")
+            return geopandas.read_parquet(tmpfile)
+        elif ds.container == pandas.DataFrame:
+            tmpfile = self._data_request(self.id, "application/parquet")
+            return pandas.read_parquet(tmpfile)
 
     @asyncwrapper
     def load_datasource_async(self, datasource_id, use_dask=True):
@@ -245,8 +283,7 @@ class Connector(object):
         Returns:
             coroutine<Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]>: The datasource container
         """
-        ds = self.get_datasource(datasource_id)
-        return ds.load()
+        return self.load_datasource(datasource_id, use_dask)
 
     def query(self, query):
         """Make a datamesh query
@@ -272,3 +309,68 @@ class Connector(object):
             Coroutine<Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]>: The datasource container
         """
         return self._query(query)
+
+    def write_datasource(
+        self, datasource_id, data, overwrite=False, **properties
+    ):
+        """Write a datasource to datamesh from the work environment
+
+        Args:
+            datasource_id (string): Unique datasource id
+            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]): The data to be written to datamesh
+            append (string, optional): Coordinate to append on. default=None
+            overwrite (bool, optional): Overwrite existing datasource. default=False
+            **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource`
+
+        Returns:
+            :obj:`oceanum.datamesh.Datasource`: The datasource instance that was written to
+        """
+        try:
+            ds = self.get_datasource(datasource_id)
+            for key in properties:
+                setattr(ds, key, properties[key])
+        except DatameshConnectError:
+            properties["geometry"] = properties.get("geometry", _get_geometry(data))
+            properties["schema"] = properties.get("schema", _get_schema(data))
+            properties["coordinates"] = properties.get(
+                "coordinates", _guess_coordinates(data)
+            )
+            ds = Datasource(**properties)
+        self._post_metadata(ds)
+        with tempfile.NamedTemporaryFile("w+b", delete=False) as f:
+            try:
+                if isinstance(data, xarray.Dataset):
+                    data.to_netcdf(f.name, invalid=True)
+                    f.seek(0)
+                    self._data_write(ds.id,f,"application/x-netcdf4",overwrite)
+                else:
+                    data.to_parquet(f, index=True)
+                    f.seek(0)
+                    self._data_write(ds.id,f,"application/parquet",overwrite)
+            except Exception as e:
+                raise DatameshWriteError(e)
+            finally:
+                os.remove(f.name)
+        return ds
+        
+
+
+    @asyncwrapper
+    def write_datasource_async(
+        self, datasource_id, data, append=None, overwrite=False, **properties
+    ):
+        """Write a datasource to datamesh from the work environment asynchronously
+
+        Args:
+            datasource_id (string): Unique datasource id
+            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]): The data to be written to datamesh
+            append (string, optional): Coordinate to append on. default=None
+            overwrite (bool, optional): Overwrite existing datasource. default=False
+            **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource` constructor
+
+        Returns:
+            Coroutine<:obj:`oceanum.datamesh.Datasource`>: The datasource instance that was written to
+        """
+        return self.write_datasource(
+            datasource_id, data, append, overwrite, **properties
+        )

@@ -17,7 +17,7 @@ from oceanum import cli
 @pytest.fixture
 def conn():
     """Connection fixture"""
-    return Connector(os.environ["DATAMESH_KEY"])
+    return Connector(os.environ["DATAMESH_TOKEN"])
 
 
 def test_load_features(conn):
