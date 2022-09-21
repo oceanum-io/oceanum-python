@@ -8,13 +8,14 @@ import xarray
 import geopandas
 import pandas
 import warnings
+import tempfile
 from urllib.parse import urlparse
 import asyncio
 from functools import wraps, partial
 
-from .datasource import Datasource, _get_schema, _guess_coordinates, _get_geometry
+from .datasource import Datasource, _datasource_props, _datasource_driver
 from .catalog import Catalog
-from .query import Query
+from .query import Query, Stage, Container
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
@@ -27,7 +28,8 @@ class DatameshQueryError(Exception):
     pass
 
 
-class DatameshWriteError(Exception)
+class DatameshWriteError(Exception):
+    pass
 
 
 def asyncwrapper(func):
@@ -72,7 +74,7 @@ class Connector(object):
         self._token = token
         url = urlparse(service)
         self._proto = url.scheme
-        self._host = url.hostname
+        self._host = url.netloc
         self._auth_headers = {
             "Authorization": "Token " + self._token,
             "X-DATAMESH-TOKEN": self._token,
@@ -99,7 +101,40 @@ class Connector(object):
             f"{self._proto}://{self._host}/datasource/{datasource_id}",
             headers=self._auth_headers,
         )
+        if resp.status_code == 404:
+            raise DatameshConnectError(f"Datasource {datasource_id} not found")
+        elif resp.status_code == 401:
+            raise DatameshConnectError(f"Datasource {datasource_id} not Authorized")
+        elif resp.status_code != 200:
+            raise DatameshConnectError(resp.text)
         return resp
+
+    def _metadata_write(self, datasource):
+        if datasource._exists:
+            resp = requests.patch(
+                f"{self._proto}://{self._host}/datasource/{datasource.id}/",
+                data=datasource.json(by_alias=True),
+                headers={**self._auth_headers, "Content-Type": "application/json"},
+            )
+
+        else:
+            resp = requests.post(
+                f"{self._proto}://{self._host}/datasource/",
+                data=datasource.json(by_alias=True),
+                headers={**self._auth_headers, "Content-Type": "application/json"},
+            )
+        if resp.status_code >= 300:
+            raise DatameshConnectError(resp.text)
+        return resp
+
+    def _delete(self, datasource_id):
+        resp = requests.delete(
+            f"{self._gateway}/data/{datasource_id}",
+            headers=self._auth_headers,
+        )
+        if resp.status_code >= 300:
+            raise DatameshConnectError(resp.text)
+        return True
 
     def _zarr_proxy(self, datasource_id):
         try:
@@ -124,57 +159,76 @@ class Connector(object):
                 f.write(resp.content)
             return tmpfile
 
-    def _data_write(self, datasource_id, data, data_format="application/json", overwrite=False):
+    def _data_write(
+        self,
+        datasource_id,
+        data,
+        data_format="application/json",
+        append=None,
+        overwrite=False,
+    ):
         if overwrite:
             resp = requests.put(
-                f"{self._gateway}/data/{datasource_id}",
-                data=f.read(),
+                f"{self._gateway}/data/{datasource_id}/",
+                data=data,
                 headers={"Content-Type": data_format, **self._auth_headers},
             )
         else:
+            headers = {"Content-Type": data_format, **self._auth_headers}
+            if append:
+                headers["X-Append"] = append
             resp = requests.patch(
-                f"{self._gateway}/data/{datasource_id}",
-                data=f.read(),
-                headers={"Content-Type": data_format, **self._auth_headers},
+                f"{self._gateway}/data/{datasource_id}/",
+                data=data,
+                headers=headers,
             )
         if not resp.status_code == 200:
             raise DatameshConnectError(resp.text)
+        return Datasource(**resp.json())
 
-    def _query_request(self, query, data_format="application/json", cache=False):
+    def _stage_request(self, query, cache=False):
         qhash = hashlib.sha224(query.json().encode()).hexdigest()
-        headers = {"Accept": data_format, **self._auth_headers}
+
         resp = requests.post(
-            f"{self._gateway}/oceanql/", headers=headers, data=query.json()
+            f"{self._gateway}/oceanql/stage/",
+            headers=self._auth_headers,
+            data=query.json(),
         )
         if resp.status_code >= 400:
             raise DatameshQueryError(resp.text)
-        if resp.status_code == 204:
-            return None
         else:
-            tmpfile = os.path.join(self._cachedir.name, qhash)
-            with open(tmpfile, "wb") as f:
-                f.write(resp.content)
-            return tmpfile
+            return Stage(**resp.json())
 
-    def _query(self, query):
+    def _query(self, query, use_dask=True):
         if not isinstance(query, Query):
             query = Query(**query)
-        ds = self.get_datasource(query.datasource)
-        transfer_format = (
-            "application/x-netcdf4"
-            if ds.container == xarray.Dataset
-            else "application/parquet"
-        )
-        f = self._query_request(query, data_format=transfer_format)
-        if f is None:
-            warnings.warn("Query returned no data")
-            return None
-        if ds.container == xarray.Dataset:
-            return xarray.open_dataset(f, engine="h5netcdf", decode_coords="all").load()
-        elif ds.container == geopandas.GeoDataFrame:
-            return geopandas.read_parquet(f)
+        stage = self._stage_request(query)
+        if use_dask and (stage.container == Container.Dataset):
+            mapper = self._zarr_proxy(stage.qhash)
+            return xarray.open_zarr(
+                mapper, consolidated=True, decode_coords="all", mask_and_scale=True
+            )
         else:
-            return pandas.read_parquet(f)
+            transfer_format = (
+                "application/x-netcdf4"
+                if stage.container == Container.Dataset
+                else "application/parquet"
+            )
+            headers = {"Accept": transfer_format, **self._auth_headers}
+            resp = requests.post(
+                f"{self._gateway}/oceanql/", headers=headers, data=query.json()
+            )
+            if resp.status_code >= 400:
+                raise DatameshQueryError(resp.text)
+            else:
+                # tmpfile = os.path.join(self._cachedir.name, stage.qhash)
+                with tempfile.NamedTemporaryFile("wb") as f:
+                    f.write(resp.content)
+                    f.seek(0)
+                    if stage.container == Container.GeoDataFrame:
+                        return geopandas.read_parquet(f.name)
+                    else:
+                        return pandas.read_parquet(f.name)
 
     def get_catalog(self, filter={}):
         """Get datamesh catalog
@@ -216,16 +270,14 @@ class Connector(object):
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
-        meta = self._metadata_request(id)
-        if meta.status_code == 404:
-            raise DatameshConnectError(f"Datasource {id} not found")
-        elif meta.status_code == 401:
-            raise DatameshConnectError(f"Datasource {id} not Authorized")
-        elif meta.status_code != 200:
-            raise DatameshConnectError(meta.text)
+        meta = self._metadata_request(datasource_id)
         meta_dict = meta.json()
-        props = {"geometry": meta_dict["geometry"], **meta_dict["properties"]}
-        return Datasource.parse_obj(props)
+        props = {
+            "id": datasource_id,
+            "geom": meta_dict["geometry"],
+            **meta_dict["properties"],
+        }
+        return Datasource(**props)
 
     @asyncwrapper
     def get_datasource_async(self, datasource_id):
@@ -256,17 +308,17 @@ class Connector(object):
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
-        ds = self.get_datasource(datasource_id)
-        if ds.container == xarray.Dataset:
-            mapper = self._zarr_proxy(self.id)
+        stage = self._stage_request(Query(datasource=datasource_id))
+        if stage.container == Container.Dataset:
+            mapper = self._zarr_proxy(datasource_id)
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
-        elif ds.container == geopandas.GeoDataFrame:
-            tmpfile = self._data_request(self.id, "application/parquet")
+        elif stage.container == Container.GeoDataFrame:
+            tmpfile = self._data_request(datasource_id, "application/parquet")
             return geopandas.read_parquet(tmpfile)
-        elif ds.container == pandas.DataFrame:
-            tmpfile = self._data_request(self.id, "application/parquet")
+        elif stage.container == Container.DataFrame:
+            tmpfile = self._data_request(datasource_id, "application/parquet")
             return pandas.read_parquet(tmpfile)
 
     @asyncwrapper
@@ -285,11 +337,12 @@ class Connector(object):
         """
         return self.load_datasource(datasource_id, use_dask)
 
-    def query(self, query):
+    def query(self, query, use_dask=True):
         """Make a datamesh query
 
         Args:
             query (Union[:obj:`oceanum.datamesh.Query`, dict]): Datamesh query as a query object or a valid query dictionary
+            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
 
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
@@ -297,27 +350,35 @@ class Connector(object):
         return self._query(query)
 
     @asyncwrapper
-    async def query_async(self, query):
+    async def query_async(self, query, use_dask=True):
         """Make a datamesh query asynchronously
 
         Args:
             query (Union[:obj:`oceanum.datamesh.Query`, dict]): Datamesh query as a query object or a valid query dictionary
+            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
             loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
             executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
 
         Returns:
             Coroutine<Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]>: The datasource container
         """
-        return self._query(query)
+        return self._query(query, use_dask)
 
     def write_datasource(
-        self, datasource_id, data, overwrite=False, **properties
+        self,
+        datasource_id,
+        data,
+        geometry=None,
+        append=None,
+        overwrite=False,
+        **properties,
     ):
         """Write a datasource to datamesh from the work environment
 
         Args:
             datasource_id (string): Unique datasource id
             data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]): The data to be written to datamesh
+            geometry (:obj:`oceanum.datasource.Geometry`, optional): GeoJSON geometry of the datasource
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource`
@@ -327,33 +388,47 @@ class Connector(object):
         """
         try:
             ds = self.get_datasource(datasource_id)
-            for key in properties:
-                setattr(ds, key, properties[key])
-        except DatameshConnectError:
-            properties["geometry"] = properties.get("geometry", _get_geometry(data))
-            properties["schema"] = properties.get("schema", _get_schema(data))
-            properties["coordinates"] = properties.get(
-                "coordinates", _guess_coordinates(data)
-            )
-            ds = Datasource(**properties)
-        self._post_metadata(ds)
+        except DatameshConnectError as e:
+            overwrite = True
         with tempfile.NamedTemporaryFile("w+b", delete=False) as f:
             try:
                 if isinstance(data, xarray.Dataset):
-                    data.to_netcdf(f.name, invalid=True)
+                    data.to_netcdf(f.name)
                     f.seek(0)
-                    self._data_write(ds.id,f,"application/x-netcdf4",overwrite)
+                    ds = self._data_write(
+                        datasource_id,
+                        f.read(),
+                        "application/x-netcdf4",
+                        append,
+                        overwrite,
+                    )
                 else:
                     data.to_parquet(f, index=True)
                     f.seek(0)
-                    self._data_write(ds.id,f,"application/parquet",overwrite)
+                    ds = self._data_write(
+                        datasource_id,
+                        f.read(),
+                        "application/parquet",
+                        append,
+                        overwrite,
+                    )
+                ds._exists = True
             except Exception as e:
                 raise DatameshWriteError(e)
             finally:
                 os.remove(f.name)
-        return ds
-        
 
+            for key in properties:
+                setattr(ds, key, properties[key])
+            if geometry:
+                ds.geom = geometry
+            try:
+                self._metadata_write(ds)
+            except:
+                raise DatameshWriteError(
+                    "Cannot register datasource {datasource_id}: {e}"
+                )
+        return ds
 
     @asyncwrapper
     def write_datasource_async(
@@ -364,6 +439,7 @@ class Connector(object):
         Args:
             datasource_id (string): Unique datasource id
             data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]): The data to be written to datamesh
+            geometry (:obj:`oceanum.datasource.Geometry`): GeoJSON geometry of the datasource
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource` constructor
@@ -374,3 +450,26 @@ class Connector(object):
         return self.write_datasource(
             datasource_id, data, append, overwrite, **properties
         )
+
+    def delete_datasource(self, datasource_id):
+        """Delete a datasource from datamesh. This will delete the datamesh registration and any stored data.
+
+        Args:
+            datasource_id (string): Unique datasource id
+
+        Returns:
+            boolean: Return True for successfully deleted datasource
+        """
+        return self._delete(datasource_id)
+
+    @asyncwrapper
+    def delete_datasource_async(self, datasource_id):
+        """Asynchronously delete a datasource from datamesh. This will delete the datamesh registration and any stored data.
+
+        Args:
+            datasource_id (string): Unique datasource id
+
+        Returns:
+            boolean: Return True for successfully deleted datasource
+        """
+        return self._delete(datasource_id)

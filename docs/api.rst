@@ -20,11 +20,10 @@ End-user classes
     Catalog
     Query
 
-Internal classes
+.. Internal classes
 
-.. autosummary::
-   :toctree: classes/datamesh
-    query.GeoFilter
+.. .. autosummary::
+..    :toctree: classes/datamesh
 
 .. 
     automodule:: oceanum.datamesh.connection

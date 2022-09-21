@@ -54,9 +54,9 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"oceanum"
-copyright = u"2022, Oceanum Developers"
-author = u"Oceanum Developers"
+project = "oceanum"
+copyright = "2022, Oceanum Developers"
+author = "Oceanum Developers"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -136,8 +136,8 @@ latex_documents = [
     (
         master_doc,
         "oceanum.tex",
-        u"oceanum Documentation",
-        u"Oceanum Developers",
+        "oceanum Documentation",
+        "Oceanum Developers",
         "manual",
     ),
 ]
@@ -147,7 +147,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "oceanum", u"oceanum Documentation", [author], 1)]
+man_pages = [(master_doc, "oceanum", "oceanum Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------
@@ -159,7 +159,7 @@ texinfo_documents = [
     (
         master_doc,
         "oceanum",
-        u"oceanum Documentation",
+        "oceanum Documentation",
         author,
         "oceanum",
         "Python library for Oceanum.io.",
@@ -168,5 +168,8 @@ texinfo_documents = [
 ]
 
 autoclass_content = "class"
+
+autodoc_pydantic_model_show_json = False
+autodoc_pydantic_model_show_config_summary = False
 
 # autodoc_default_options = {"autosummary": True, "autosummary-members": True}

@@ -10,7 +10,6 @@ oceanum.datamesh.catalog module
 .. automodule:: oceanum.datamesh.catalog
    :members:
    :undoc-members:
-   :show-inheritance:
 
 oceanum.datamesh.connection module
 ----------------------------------
@@ -23,10 +22,13 @@ oceanum.datamesh.connection module
 oceanum.datamesh.datasource module
 ----------------------------------
 
-.. automodule:: oceanum.datamesh.datasource
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. .. automodule:: oceanum.datamesh.datasource
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:
+.. autopydantic_model:: oceanum.datamesh.datasource.Datasource
+   :model-show-json: True
+   :model-show-config-summary: False
 
 oceanum.datamesh.query module
 -----------------------------

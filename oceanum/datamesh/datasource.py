@@ -1,13 +1,17 @@
 from dateutil.parser import parse
 import datetime
+import re
 import pandas
 import geopandas
 import xarray
 import asyncio
-from datetime import datetime
-from shapely.geometry import shape
-from pydantic import BaseModel, Field, AnyHttpUrl
-from typing import Optional, Dict, Union, List
+from shapely.geometry import shape, mapping, Point, MultiPoint, Polygon
+from shapely.geometry.base import BaseGeometry
+from pydantic import BaseModel, Field, AnyHttpUrl, PrivateAttr, constr
+from pydantic.json import timedelta_isoformat
+from pydantic_geojson import PointModel, MultiPointModel, PolygonModel
+from typing_extensions import Annotated
+from typing import Optional, Dict, Union, List, NamedTuple
 from enum import Enum
 from .query import Query, Timestamp
 
@@ -44,17 +48,59 @@ class Timeperiod(datetime.timedelta):
             raise "Period string not valid"
 
 
-class Geometry(dict):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+LonField = Annotated[
+    Union[float, int],
+    Field(
+        title="Coordinate longitude",
+        ge=-180,
+        le=360,
+    ),
+]
 
-    @classmethod
-    def validate(cls, geojson):
-        try:
-            return shape(geojson)
-        except:
-            raise "Invalid geometry"
+LatField = Annotated[
+    Union[float, int],
+    Field(
+        title="Coordinate latitude",
+        ge=-90,
+        le=90,
+    ),
+]
+
+
+class Coordinates(NamedTuple):
+    lon: LonField
+    lat: LatField
+
+
+class PointGeometry(PointModel):
+    coordinates: Coordinates
+
+
+class MultiPointGeometry(MultiPointModel):
+    coordinates: List[Coordinates]
+
+
+class PolygonGeometry(PolygonModel):
+    coordinates: List[List[Coordinates]]
+
+
+# class Geometry(BaseModel):
+#     @classmethod
+#     def __get_validators__(cls):
+#         yield cls.validate
+
+#     @classmethod
+#     def validate(cls, geojson):
+#         try:
+#             geom = shape(geojson)
+#             assert (
+#                 isinstance(geom, Point)
+#                 or isinstance(geom, MultiPoint)
+#                 or isinstance(geom, Polygon)
+#             )
+#             return geom
+#         except:
+#             raise "Invalid geometry"
 
 
 class Schema(BaseModel):
@@ -73,8 +119,8 @@ class Coordinates(Enum):
     Month = "m"
     Time = "t"
     Vertical = "z"
-    HorizontalNorth = "y"
-    HorizontalEast = "x"
+    Northing = "y"
+    Easting = "x"
     Station = "s"  # (locations assumed stationary, datasource multigeometry coordinate indexed by station coordinate)
     Geometry = "g"  # (Abstract coordinate - a 2 or 3D geometry that defines a feature location)
     Frequency = "f"
@@ -84,30 +130,60 @@ class Coordinates(Enum):
     Otherk = "k"
 
 
+COORD_MAPPING = {
+    "lon": Coordinates.Easting,
+    "x": Coordinates.Easting,
+    "lat": Coordinates.Northing,
+    "y": Coordinates.Northing,
+    "dep": Coordinates.Vertical,
+    "lev": Coordinates.Vertical,
+    "z": Coordinates.Vertical,
+    "ens": Coordinates.Ensemble,
+    "tim": Coordinates.Time,
+    "ban": Coordinates.Rasterband,
+    "mon": Coordinates.Month,
+    "sta": Coordinates.Station,
+    "sit": Coordinates.Station,
+    "fre": Coordinates.Frequency,
+    "dir": Coordinates.Direction,
+    "cat": Coordinates.Category,
+    "sea": Coordinates.Season,
+    "geo": Coordinates.Geometry,
+}
+
+
 class Datasource(BaseModel):
     """Datasource"""
 
-    datasource_id: str = Field(
-        title="Datasource ID", description="Unique ID for the datasource"
+    id: str = Field(
+        title="Datasource ID",
+        description="Unique ID for the datasource",
+        max_length=80,
+        strip_whitespace=True,
+        to_lower=True,
+        regex=r"^[a-z0-9-_]+$",
     )
     name: str = Field(
-        title="Datasource name", description="Human readable name for the datasource"
+        title="Datasource name",
+        description="Human readable name for the datasource",
+        max_length=64,
     )
     description: Optional[str] = Field(
         title="Datasource description",
         description="Description of datasource",
-        default=None,
+        default="",
+        max_length=500,
     )
-    geometry: Geometry = Field(
+    geom: Union[PolygonGeometry, MultiPointGeometry, PointGeometry] = Field(
         title="Datasource geometry",
         description="Valid geoJSON geometry describing the spatial extent of the datasource",
     )
-    tstart: Optional[Timestamp] = Field(
+    tstart: Optional[datetime.datetime] = Field(
         title="Start time of datasource",
         description="Earliest time in datasource. Must be a valid ISO8601 datetime string",
         default=None,
     )
-    tend: Optional[Timestamp] = Field(
+    tend: Optional[datetime.datetime] = Field(
         title="End time of datasource",
         description="Latest time in datasource. Must be a valid ISO8601 datetime string",
         default=None,
@@ -125,8 +201,11 @@ class Datasource(BaseModel):
     info: Optional[dict] = Field(
         title="Datasource metadata",
         description="Additional datasource descriptive metadata",
+        default="",
     )
-    schema: Schema = Field(title="Schema", description="Datasource schema")
+    dataschema: Schema = Field(
+        alias="schema", title="Schema", description="Datasource schema"
+    )
     coordinates: Dict[Coordinates, str] = Field(
         title="Coordinate keys",
         description="Coordinates in datasource, referenced by standard keys",
@@ -136,11 +215,24 @@ class Datasource(BaseModel):
         description="URL to further details about the datasource",
         default=None,
     )
-    last_modified: Optional[datetime] = Field(
+    last_modified: Optional[datetime.datetime] = Field(
         title="Last modified time",
         description="Last time datasource was modified",
-        default=datetime.utcnow(),
+        default=datetime.datetime.utcnow(),
+        allow_mutation=False,
     )
+    driver: str = Field(allow_mutation=False)
+    _exists: bool = PrivateAttr(default=False)
+
+    class Config:
+        use_enum_values = True
+        validate_assignment = True
+        json_encoders = {
+            Timeperiod: timedelta_isoformat,
+            Point: mapping,
+            Polygon: mapping,
+            MultiPoint: mapping,
+        }
 
     def __str__(self):
         return f"""
@@ -148,50 +240,68 @@ class Datasource(BaseModel):
         Extent: {self.bounds}
         Timerange: {self.tstart} to {self.tend}
         {len(self.attributes)} attributes
-        {len(self.variables)} {"properties" if "g" in self._coordinates else "variables"}
-        Container: {str(self.container)}
+        {len(self.variables)} {"properties" if "g" in self.coordinates else "variables"}
     """
 
-    @property
-    def container(self):
-        """str: Container type for datasource
-        Is one of:
-            - :obj:`xarray.Dataset`
-            - :obj:`pandas.DataFrame`
-            - :obj:`geopandas.GeoDataFrame`
-        """
-        if "g" in self._coordinates:
-            return geopandas.GeoDataFrame
-        elif "x" in self._coordinates and "y" in self._coordinates:
-            return xarray.Dataset
-        elif len(self._coordinates) > 2:
-            return xarray.Dataset
-        else:
-            return pandas.DataFrame
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def bounds(self):
         """list[float]: Bounding box of datasource geographical extent"""
-        return self._geometry.bounds
+        return self.geometry.bounds
 
     @property
     def variables(self):
         """Datasource variables (or properties)"""
-        return self._schema["data_vars"]
+        return self.dataschema.data_vars
 
     @property
     def attributes(self):
         """Datasource global attributes"""
-        return self._schema.get("attrs", {})
+        return self.dataschema.attrs
+
+    @property
+    def geometry(self):
+        return shape(self.geom.dict())
 
 
-def _get_schema(data):
-    pass
+def _datasource_props(datasource_id, props, _data):
+    properties = {**props}
+    properties["id"] = datasource_id
+    data = _data if isinstance(_data, xarray.Dataset) else _data.to_xarray()
+    if "schema" not in props:
+        properties["schema"] = data.to_dict(data=False)
+    if "coordinates" not in props:  # Try to guess the coordinate mapping
+        coords = {}
+        for c in data.coords:
+            pref = c[:3].lower()
+            if pref in COORD_MAPPING:
+                coords[COORD_MAPPING[pref]] = c
+        properties["coordinates"] = coords
+    if "name" not in props:
+        properties["name"] = re.sub("[_-]", " ", datasource_id.capitalize())
+    if "tstart" not in props:
+        if "time" in data:
+            properties["tstart"] = pandas.Timestamp(
+                min(data["time"]).values
+            ).to_pydatetime()
+        else:
+            properties["tstart"] = datetime.datetime(1970, 1, 1, tzinfo=None)
+    if "tend" not in props:
+        if "time" in data:
+            properties["tend"] = pandas.Timestamp(
+                max(data["time"]).values
+            ).to_pydatetime()
+        else:
+            properties["tend"] = datetime.datetime.utcnow()
+    return properties
 
 
-def _guess_coordinates(data):
-    pass
-
-
-def _get_geometry(data):
-    pass
+def _datasource_driver(data):
+    if isinstance(data, xarray.Dataset):
+        return "onzarr"
+    elif isinstance(data, geopandas.GeoDataFrame):
+        return "postgis"
+    elif isinstance(data, pandas.DataFrame):
+        return "onsql"

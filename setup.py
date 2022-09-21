@@ -40,16 +40,6 @@ test_requirements = [
 setup(
     author="Oceanum Developers",
     author_email="developers@oceanum.science",
-    classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-    ],
     description="Library for oceanum.io services",
     entry_points={
         "console_scripts": [
@@ -68,6 +58,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/oceanum/oceanum-python",
-    version="0.4.9",
+    version="0.5.0",
     zip_safe=False,
 )

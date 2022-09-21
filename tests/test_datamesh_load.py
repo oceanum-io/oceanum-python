@@ -21,60 +21,36 @@ def conn():
 
 
 def test_load_features(conn):
-    cat = conn.get_catalog()
-    for dataset in cat:
-        if dataset.container == geopandas.GeoDataFrame:
-            ds = dataset.load()
-            assert isinstance(ds, geopandas.GeoDataFrame)
-            break
+    ds = conn.load_datasource("oceanum-sizing_giants")
+    assert isinstance(ds, geopandas.GeoDataFrame)
 
 
 @pytest.mark.asyncio
 async def test_load_features_async(conn):
-    cat = await conn.get_catalog_async()
-    for dataset in cat:
-        if dataset.container == geopandas.GeoDataFrame:
-            ds = await conn.load_datasource_async(dataset.id)
-            assert isinstance(ds, geopandas.GeoDataFrame)
-            break
+    ds = await conn.load_datasource_async("oceanum-sizing_giants")
+    assert isinstance(ds, geopandas.GeoDataFrame)
 
 
 def test_load_dataset(conn):
-    cat = conn.get_catalog()
-    for dataset in cat:
-        if dataset.container == xarray.Dataset:
-            ds = dataset.load()
-            assert isinstance(ds, xarray.Dataset)
-            break
+    ds = conn.load_datasource("era5_wind10m")
+    assert isinstance(ds, xarray.Dataset)
 
 
 @pytest.mark.asyncio
 async def test_load_dataset_async(conn):
-    cat = await conn.get_catalog_async()
-    for dataset in cat:
-        if dataset.container == xarray.Dataset:
-            ds = await conn.load_datasource_async(dataset.id)
-            assert isinstance(ds, xarray.Dataset)
-            break
+    ds = await conn.load_datasource_async("era5_wind10m")
+    assert isinstance(ds, xarray.Dataset)
 
 
 def test_load_table(conn):
-    cat = conn.get_catalog()
-    for dataset in cat:
-        if dataset.container == pandas.DataFrame:
-            ds = dataset.load()
-            assert isinstance(ds, pandas.DataFrame)
-            break
+    ds = conn.load_datasource("oceanum-sea-level-rise")
+    assert isinstance(ds, pandas.DataFrame)
 
 
 @pytest.mark.asyncio
 async def test_load_table_async(conn):
-    cat = await conn.get_catalog_async()
-    for dataset in cat:
-        if dataset.container == pandas.DataFrame:
-            ds = await conn.load_datasource_async(dataset.id)
-            assert isinstance(ds, pandas.DataFrame)
-            break
+    ds = await conn.load_datasource_async("oceanum-sea-level-rise")
+    assert isinstance(ds, pandas.DataFrame)
 
 
 def test_command_line_interface():

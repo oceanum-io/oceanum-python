@@ -1,68 +1,77 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index &#8212; oceanum 0.1.0 documentation</title>
-    
-    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
-    
-    <link rel="stylesheet"
-      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+<script>
+  document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+  document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
+</script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+
+
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/pydata-sphinx-theme.css" />
     <link rel="stylesheet" type="text/css" href="_static/autodoc_pydantic.css" />
-    
-    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695">
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="docsearch:language" content="en">
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
-    
-    <div class="container-fluid" id="banner"></div>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+    <div class="bd-header-announcement container-fluid" id="banner">
+      
+
+    </div>
 
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+    <nav class="bd-header navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="bd-header__inner container-xl">
 
   <div id="navbar-start">
     
     
+  
 
-<a class="navbar-brand" href="index.html">
-  <img src="_static/banner_dark.svg" class="logo" alt="logo">
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+    <img src="_static/banner_dark.svg" class="logo__image only-light" alt="Logo image">
+    <img src="_static/banner_dark.svg" class="logo__image only-dark" alt="Logo image">
+  
+  
 </a>
-
-
     
   </div>
 
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+    <span class="fas fa-bars"></span>
   </button>
 
   
@@ -104,6 +113,14 @@
     <div id="navbar-end">
       
       <div class="navbar-end-item">
+        <span id="theme-switch" class="btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
       </div>
@@ -114,13 +131,13 @@
     </nav>
     
 
-    <div class="container-xl">
-      <div class="row">
+    <div class="bd-container container-xl">
+      <div class="bd-container__inner row">
           
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+
+<!-- Only show if we have sidebars configured, else just a small margin  -->
+<div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
+  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
@@ -128,26 +145,25 @@
     
   </div>
 </nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
+  </div>
+  <div class="sidebar-end-items">
+  </div>
+</div>
+
 
           
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-          </div>
-          
+
+
+<div class="bd-sidebar-secondary d-none d-xl-block col-xl-2 bd-toc">
+  
+</div>
+
 
           
           
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <div class="bd-content col-12 col-md-9 col-xl-7">
               
-              <div>
+              <article class="bd-article" role="main">
                 
 
 <h1 id="index">Index</h1>
@@ -173,6 +189,7 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="_">_</h2>
@@ -183,8 +200,6 @@
       <ul>
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.__init__">(oceanum.datamesh.Connector method)</a>
 </li>
-        <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.__init__">(oceanum.datamesh.Datasource method)</a>
-</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -192,12 +207,24 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.asyncwrapper">asyncwrapper() (in module oceanum.datamesh.connection)</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.aggregate">aggregate (oceanum.datamesh.Query attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.aggregate">(oceanum.datamesh.query.Query attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps">AggregateOps (class in oceanum.datamesh.query)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.attributes">attributes (oceanum.datamesh.datasource.Datasource property)</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.asyncwrapper">asyncwrapper() (in module oceanum.datamesh.connection)</a>
 </li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.attributes">attributes (oceanum.datamesh.Datasource property)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.attributes">(oceanum.datamesh.datasource.Datasource property)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -208,8 +235,12 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.bounds">bounds (oceanum.datamesh.datasource.Datasource property)</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.bounds">bounds (oceanum.datamesh.Datasource property)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.bounds">(oceanum.datamesh.datasource.Datasource property)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -228,9 +259,19 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector">(class in oceanum.datamesh.connection)</a>
 </li>
       </ul></li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Container">Container (class in oceanum.datamesh.query)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.container">container (oceanum.datamesh.datasource.Datasource property)</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.container">container (oceanum.datamesh.query.Stage attribute)</a>
+</li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.coordinates">coordinates (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.coordinates">(oceanum.datamesh.datasource.Datasource attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.coords">coords (oceanum.datamesh.query.Stage attribute)</a>
 </li>
       <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.crs">crs (oceanum.datamesh.Query attribute)</a>
 
@@ -244,32 +285,64 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Container.DataFrame">DataFrame (oceanum.datamesh.query.Container attribute)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshConnectError">DatameshConnectError</a>
 </li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshQueryError">DatameshQueryError</a>
 </li>
-      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource">Datasource (class in oceanum.datamesh)</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshWriteError">DatameshWriteError</a>
+</li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.dataschema">dataschema (oceanum.datamesh.Datasource attribute)</a>
 
       <ul>
-        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource">(class in oceanum.datamesh.datasource)</a>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.dataschema">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Container.Dataset">Dataset (oceanum.datamesh.query.Container attribute)</a>
+</li>
       <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.datasource">datasource (oceanum.datamesh.Query attribute)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.datasource">(oceanum.datamesh.query.Query attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.DatasourceException">DatasourceException</a>
-</li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.description">description (oceanum.datamesh.datasource.Datasource property)</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.delete_datasource">delete_datasource() (oceanum.datamesh.connection.Connector method)</a>
 
       <ul>
+        <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.delete_datasource">(oceanum.datamesh.Connector method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.delete_datasource_async">delete_datasource_async() (oceanum.datamesh.connection.Connector method)</a>
+
+      <ul>
+        <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.delete_datasource_async">(oceanum.datamesh.Connector method)</a>
+</li>
+      </ul></li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.description">description (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.description">(oceanum.datamesh.datasource.Datasource attribute)</a>
+</li>
         <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.description">(oceanum.datamesh.Query attribute)</a>
 </li>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.description">(oceanum.datamesh.query.Query attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.details">details (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.details">(oceanum.datamesh.datasource.Datasource attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.dlen">dlen (oceanum.datamesh.query.Stage attribute)</a>
+</li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.driver">driver (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.driver">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -281,11 +354,17 @@
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilterType.feature">feature (oceanum.datamesh.query.GeoFilterType attribute)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.formats">formats (oceanum.datamesh.query.Stage attribute)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Container.GeoDataFrame">GeoDataFrame (oceanum.datamesh.query.Container attribute)</a>
+</li>
       <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.geofilter">geofilter (oceanum.datamesh.Query attribute)</a>
 
       <ul>
@@ -294,18 +373,28 @@
       </ul></li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilterType">GeoFilterType (class in oceanum.datamesh.query)</a>
 </li>
-      <li><a href="classes/datamesh/oceanum.datamesh.query.GeoFilter.html#oceanum.datamesh.query.GeoFilter.geom">geom (oceanum.datamesh.query.GeoFilter attribute)</a>, <a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.geom">[1]</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.geom">geom (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.geom">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.geometry">geometry (oceanum.datamesh.datasource.Datasource property)</a>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.geom">(oceanum.datamesh.query.GeoFilter attribute)</a>
 </li>
+      </ul></li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.geometry">geometry (oceanum.datamesh.Datasource property)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.geometry">(oceanum.datamesh.datasource.Datasource property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.get_catalog">get_catalog() (oceanum.datamesh.connection.Connector method)</a>
 
       <ul>
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_catalog">(oceanum.datamesh.Connector method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.get_catalog_async">get_catalog_async() (oceanum.datamesh.connection.Connector method)</a>
 
       <ul>
@@ -338,12 +427,24 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.DatasourceGeom.id">id (oceanum.datamesh.query.DatasourceGeom attribute)</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.id">id (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.id">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.DatasourceGeom.id">(oceanum.datamesh.query.DatasourceGeom attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.catalog.Catalog.ids">ids (oceanum.datamesh.catalog.Catalog property)</a>
 </li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.info">info (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.info">(oceanum.datamesh.datasource.Datasource attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -362,14 +463,16 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.last_modified">last_modified (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.last_modified">(oceanum.datamesh.datasource.Datasource attribute)</a>
+</li>
+      </ul></li>
       <li><a href="classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.load">load() (oceanum.datamesh.Catalog method)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.catalog.Catalog.load">(oceanum.datamesh.catalog.Catalog method)</a>
-</li>
-        <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.load">(oceanum.datamesh.Datasource method)</a>
-</li>
-        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.load">(oceanum.datamesh.datasource.Datasource method)</a>
 </li>
       </ul></li>
       <li><a href="classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.load_async">load_async() (oceanum.datamesh.Catalog method)</a>
@@ -398,7 +501,15 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.ResampleType.mean">mean (oceanum.datamesh.query.ResampleType attribute)</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.max">max (oceanum.datamesh.query.AggregateOps attribute)</a>
+</li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.mean">mean (oceanum.datamesh.query.AggregateOps attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.ResampleType.mean">(oceanum.datamesh.query.ResampleType attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.min">min (oceanum.datamesh.query.AggregateOps attribute)</a>
 </li>
       <li>
     module
@@ -414,13 +525,7 @@
 </li>
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.connection">oceanum.datamesh.connection</a>
 </li>
-        <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.datasource">oceanum.datamesh.datasource</a>
-</li>
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.query">oceanum.datamesh.query</a>
-</li>
-        <li><a href="oceanum.utils.html#module-oceanum.utils">oceanum.utils</a>
-</li>
-        <li><a href="oceanum.utils.html#module-oceanum.utils.response">oceanum.utils.response</a>
 </li>
       </ul></li>
   </ul></td>
@@ -429,10 +534,10 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.name">name (oceanum.datamesh.datasource.Datasource property)</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.name">name (oceanum.datamesh.Datasource attribute)</a>
 
       <ul>
-        <li><a href="oceanum.utils.html#oceanum.utils.response.ResponseFile.name">(oceanum.utils.response.ResponseFile property)</a>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.name">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -462,6 +567,8 @@
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     oceanum.datamesh.catalog
 
@@ -476,15 +583,6 @@
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.connection">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    oceanum.datamesh.datasource
-
-      <ul>
-        <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.datasource">module</a>
-</li>
-      </ul></li>
       <li>
     oceanum.datamesh.query
 
@@ -492,21 +590,7 @@
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.query">module</a>
 </li>
       </ul></li>
-      <li>
-    oceanum.utils
-
-      <ul>
-        <li><a href="oceanum.utils.html#module-oceanum.utils">module</a>
-</li>
-      </ul></li>
-      <li>
-    oceanum.utils.response
-
-      <ul>
-        <li><a href="oceanum.utils.html#module-oceanum.utils.response">module</a>
-</li>
-      </ul></li>
-      <li><a href="oceanum.utils.html#oceanum.utils.response.ResponseFile.open">open() (oceanum.utils.response.ResponseFile method)</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Aggregate.operations">operations (oceanum.datamesh.query.Aggregate attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -524,14 +608,22 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.parse_period">parse_period() (in module oceanum.datamesh.datasource)</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.parchive">parchive (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.parchive">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.qhash">qhash (oceanum.datamesh.query.Stage attribute)</a>
+</li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.query">query (oceanum.datamesh.query.Stage attribute)</a>
+</li>
       <li><a href="classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.query">query() (oceanum.datamesh.Catalog method)</a>
 
       <ul>
@@ -562,11 +654,7 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilterType.radius">radius (oceanum.datamesh.query.GeoFilterType attribute)</a>
-</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilterType.range">range (oceanum.datamesh.query.TimeFilterType attribute)</a>
-</li>
-      <li><a href="oceanum.utils.html#oceanum.utils.response.ResponseStream.read">read() (oceanum.utils.response.ResponseStream method)</a>
 </li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilter.resample">resample (oceanum.datamesh.query.TimeFilter attribute)</a>
 </li>
@@ -574,23 +662,27 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.ResampleType">ResampleType (class in oceanum.datamesh.query)</a>
 </li>
-      <li><a href="classes/datamesh/oceanum.datamesh.query.GeoFilter.html#oceanum.datamesh.query.GeoFilter.resolution">resolution (oceanum.datamesh.query.GeoFilter attribute)</a>, <a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.resolution">[1]</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.resolution">resolution (oceanum.datamesh.query.GeoFilter attribute)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilter.resolution">(oceanum.datamesh.query.TimeFilter attribute)</a>
 </li>
       </ul></li>
-      <li><a href="oceanum.utils.html#oceanum.utils.response.ResponseFile">ResponseFile (class in oceanum.utils.response)</a>
-</li>
-      <li><a href="oceanum.utils.html#oceanum.utils.response.ResponseStream">ResponseStream (class in oceanum.utils.response)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.utils.html#oceanum.utils.response.ResponseStream.seek">seek() (oceanum.utils.response.ResponseStream method)</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.size">size (oceanum.datamesh.query.Stage attribute)</a>
+</li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Aggregate.spatial">spatial (oceanum.datamesh.query.Aggregate attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.std">std (oceanum.datamesh.query.AggregateOps attribute)</a>
+</li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.sum">sum (oceanum.datamesh.query.AggregateOps attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -598,27 +690,41 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.utils.html#oceanum.utils.response.ResponseStream.tell">tell() (oceanum.utils.response.ResponseStream method)</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.tags">tags (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tags">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tend">tend (oceanum.datamesh.datasource.Datasource property)</a>
+      </ul></li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Aggregate.temporal">temporal (oceanum.datamesh.query.Aggregate attribute)</a>
 </li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.tend">tend (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tend">(oceanum.datamesh.datasource.Datasource attribute)</a>
+</li>
+      </ul></li>
       <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.timefilter">timefilter (oceanum.datamesh.Query attribute)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.timefilter">(oceanum.datamesh.query.Query attribute)</a>
 </li>
       </ul></li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilterType">TimeFilterType (class in oceanum.datamesh.query)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilterType">TimeFilterType (class in oceanum.datamesh.query)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilter.times">times (oceanum.datamesh.query.TimeFilter attribute)</a>
 </li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Timestamp">Timestamp (class in oceanum.datamesh.query)</a>
 </li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tstart">tstart (oceanum.datamesh.datasource.Datasource property)</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.tstart">tstart (oceanum.datamesh.Datasource attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tstart">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
-      <li><a href="classes/datamesh/oceanum.datamesh.query.GeoFilter.html#oceanum.datamesh.query.GeoFilter.type">type (oceanum.datamesh.query.GeoFilter attribute)</a>, <a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.type">[1]</a>
+      </ul></li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.type">type (oceanum.datamesh.query.GeoFilter attribute)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilter.type">(oceanum.datamesh.query.TimeFilter attribute)</a>
@@ -632,9 +738,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Timestamp.validate">validate() (oceanum.datamesh.query.Timestamp class method)</a>
 </li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.variables">variables (oceanum.datamesh.datasource.Datasource property)</a>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.variables">variables (oceanum.datamesh.Datasource property)</a>
 
       <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.variables">(oceanum.datamesh.datasource.Datasource property)</a>
+</li>
         <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.variables">(oceanum.datamesh.Query attribute)</a>
 </li>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.variables">(oceanum.datamesh.query.Query attribute)</a>
@@ -643,38 +751,63 @@
   </ul></td>
 </tr></table>
 
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.write_datasource">write_datasource() (oceanum.datamesh.connection.Connector method)</a>
+
+      <ul>
+        <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.write_datasource">(oceanum.datamesh.Connector method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.write_datasource_async">write_datasource_async() (oceanum.datamesh.connection.Connector method)</a>
+
+      <ul>
+        <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.write_datasource_async">(oceanum.datamesh.Connector method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
 
 
-              </div>
+
+              </article>
               
+
               
-              <!-- Previous / next buttons -->
+              <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
 <div class='prev-next-area'>
 </div>
+              </footer>
               
-          </main>
+          </div>
           
-
       </div>
     </div>
+
   
-    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695"></script>
+
+<footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    <p class="copyright">
     &copy; Copyright 2022, Oceanum Developers.<br>
 </p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.0.1.<br>
-</p>
-    </div>
-    
   </div>
+  
+  <div class="footer-item">
+    <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+</p>
+  </div>
+  
+</div>
 </footer>
   </body>
 </html>

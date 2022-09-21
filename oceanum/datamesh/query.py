@@ -32,9 +32,8 @@ class Timestamp(pd.Timestamp):
 
 
 class GeoFilterType(Enum):
-    # datasource = "datasource"
     feature = "feature"
-    radius = "radius"
+    # radius = "radius"
     bbox = "bbox"
 
 
@@ -65,16 +64,16 @@ class GeoFilter(BaseModel):
         Type of the geofilter. Can be one of:
             - 'feature': Select with a geojson feature
             - 'bbox': Select with a bounding box
-            - 'radius': Select within radius of point
         """,
+        # - 'radius': Select within radius of point
     )
     geom: Union[List, Feature] = Field(
         title="Selection geometry",
         description="""
             - For type='feature', geojson feature.
             - For type='bbox', list[x_min,y_min,x_max,y_max] in CRS units.
-            - For type='radius', list[x0,y0,radius] in CRS units.
         """,
+        # - For type='radius', list[x0,y0,radius] in CRS units.
     )
     resolution: Optional[float] = Field(
         title="Maximum spatial resolution of data",
@@ -198,3 +197,19 @@ class Query(BaseModel):
         json_loads = orjson.loads
         json_dumps = _orjson_dumps
         json_encoders = {np.datetime64: str}
+
+
+class Container(str, Enum):
+    GeoDataFrame = "geodataframe"
+    DataFrame = "dataframe"
+    Dataset = "dataset"
+
+
+class Stage(BaseModel):
+    query: Query = Field(title="OceanQL query")
+    qhash: str = Field(title="Query hash")
+    formats: List[str] = Field(title="Available download formats")
+    size: int = Field(title="Request size")
+    dlen: int = Field(title="Domain size")
+    coords: dict = Field(title="coordinates dictionary")
+    container: Container = Field(title="Data container type")

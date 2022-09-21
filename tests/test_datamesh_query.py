@@ -17,34 +17,22 @@ from oceanum import cli
 @pytest.fixture
 def conn():
     """Connection fixture"""
-    return Connector(os.environ["DATAMESH_TOKEN"], gateway="http://localhost:8000")
+    return Connector(os.environ["DATAMESH_TOKEN"])
 
 
 def test_query_features(conn):
-    cat = conn.get_catalog()
-    for dataset in cat:
-        if dataset.container == geopandas.GeoDataFrame:
-            ds = conn.query({"datasource": dataset.id})
-            assert isinstance(ds, geopandas.GeoDataFrame)
-            break
+    ds = conn.query({"datasource": "oceanum-sizing_giants"})
+    assert isinstance(ds, geopandas.GeoDataFrame)
 
 
-# def test_query_dataset(conn):
-#     cat = conn.get_catalog()
-#     for dataset in cat:
-#         if dataset.container == xarray.Dataset:
-#             ds = dataset.load()
-#             assert isinstance(ds, xarray.Dataset)
-#             break
+def test_query_dataset(conn):
+    ds = conn.query({"datasource": "era5_wind10m"})
+    assert isinstance(ds, xarray.Dataset)
 
 
 def test_query_table(conn):
-    cat = conn.get_catalog()
-    for dataset in cat:
-        if dataset.container == pandas.DataFrame:
-            ds = conn.query({"datasource": dataset.id})
-            assert isinstance(ds, pandas.DataFrame)
-            break
+    ds = conn.query({"datasource": "oceanum-sea-level-rise"})
+    assert isinstance(ds, pandas.DataFrame)
 
 
 def test_command_line_interface():

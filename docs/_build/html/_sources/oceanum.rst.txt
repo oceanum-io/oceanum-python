@@ -8,7 +8,6 @@ Subpackages
    :maxdepth: 4
 
    oceanum.datamesh
-   oceanum.utils
 
 Submodules
 ----------

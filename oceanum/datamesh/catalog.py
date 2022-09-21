@@ -41,7 +41,7 @@ class Catalog(object):
 
     def __getitem__(self, item):
         if item in self._ids:
-            return Datasource._init(self._connector, item)
+            return self._connector.get_datasource(item)
         else:
             raise IndexError(f"Datasource {item} not in catalog")
 

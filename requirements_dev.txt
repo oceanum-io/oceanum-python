@@ -8,5 +8,6 @@ pydata-sphinx-theme
 autodoc_pydantic
 
 pytest
+pytest-env
 pytest-runner
 pytest-asyncio
