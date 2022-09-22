@@ -176,7 +176,7 @@ class Connector(object):
         else:
             headers = {"Content-Type": data_format, **self._auth_headers}
             if append:
-                headers["X-Append"] = append
+                headers["X-Append"] = str(append)
             resp = requests.patch(
                 f"{self._gateway}/data/{datasource_id}/",
                 data=data,
