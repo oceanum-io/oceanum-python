@@ -23,12 +23,19 @@ class Timestamp(pd.Timestamp):
 
     @classmethod
     def validate(cls, v):
-        if not (isinstance(v, str) or isinstance(v, datetime.datetime)):
+        if not (
+            isinstance(v, str)
+            or isinstance(v, datetime.datetime)
+            or isinstance(v, pd.Timestamp)
+        ):
             raise TypeError("datetime or time string required")
         try:
-            return cls(v, tz="UTC").tz_convert(None).to_datetime64()
-        except:
-            raise "Timestamp format not valid"
+            time = cls(v)
+            if not time.tz:
+                time = time.tz_localize("UTC")
+            return time.tz_convert(None).to_datetime64()
+        except Exception as e:
+            raise TypeError(f"Timestamp format not valid: {e}")
 
 
 class GeoFilterType(Enum):

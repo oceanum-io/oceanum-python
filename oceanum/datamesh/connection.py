@@ -169,7 +169,7 @@ class Connector(object):
     ):
         if overwrite:
             resp = requests.put(
-                f"{self._gateway}/data/{datasource_id}/",
+                f"{self._gateway}/data/{datasource_id}",
                 data=data,
                 headers={"Content-Type": data_format, **self._auth_headers},
             )
@@ -178,7 +178,7 @@ class Connector(object):
             if append:
                 headers["X-Append"] = str(append)
             resp = requests.patch(
-                f"{self._gateway}/data/{datasource_id}/",
+                f"{self._gateway}/data/{datasource_id}",
                 data=data,
                 headers=headers,
             )
