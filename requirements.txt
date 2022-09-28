@@ -1,5 +1,4 @@
 fsspec
-geojson_pydantic
 numpy
 pandas
 geopandas
@@ -11,3 +10,4 @@ orjson
 requests
 pyarrow
 python-snappy
+geojson-pydantic

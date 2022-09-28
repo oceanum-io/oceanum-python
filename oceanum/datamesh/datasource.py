@@ -9,7 +9,7 @@ from shapely.geometry import shape, mapping, Point, MultiPoint, Polygon
 from shapely.geometry.base import BaseGeometry
 from pydantic import BaseModel, Field, AnyHttpUrl, PrivateAttr, constr
 from pydantic.json import timedelta_isoformat
-from pydantic_geojson import PointModel, MultiPointModel, PolygonModel
+from geojson_pydantic import Point, MultiPoint, Polygon
 from typing_extensions import Annotated
 from typing import Optional, Dict, Union, List, NamedTuple
 from enum import Enum
@@ -70,37 +70,6 @@ LatField = Annotated[
 class Coordinates(NamedTuple):
     lon: LonField
     lat: LatField
-
-
-class PointGeometry(PointModel):
-    coordinates: Coordinates
-
-
-class MultiPointGeometry(MultiPointModel):
-    coordinates: List[Coordinates]
-
-
-class PolygonGeometry(PolygonModel):
-    coordinates: List[List[Coordinates]]
-
-
-# class Geometry(BaseModel):
-#     @classmethod
-#     def __get_validators__(cls):
-#         yield cls.validate
-
-#     @classmethod
-#     def validate(cls, geojson):
-#         try:
-#             geom = shape(geojson)
-#             assert (
-#                 isinstance(geom, Point)
-#                 or isinstance(geom, MultiPoint)
-#                 or isinstance(geom, Polygon)
-#             )
-#             return geom
-#         except:
-#             raise "Invalid geometry"
 
 
 class Schema(BaseModel):
@@ -174,7 +143,7 @@ class Datasource(BaseModel):
         default="",
         max_length=500,
     )
-    geom: Union[PolygonGeometry, MultiPointGeometry, PointGeometry] = Field(
+    geom: Union[Polygon, MultiPoint, Point] = Field(
         title="Datasource geometry",
         description="Valid geoJSON geometry describing the spatial extent of the datasource",
     )

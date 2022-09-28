@@ -17,7 +17,6 @@ requirements = [
     "click",
     "aiohttp",
     "fsspec",
-    "geojson_pydantic",
     "numpy",
     "pandas",
     "geopandas",
@@ -29,6 +28,7 @@ requirements = [
     "requests",
     "pyarrow",
     "python-snappy",
+    "geojson-pydantic",
 ]
 
 setup_requirements = [
