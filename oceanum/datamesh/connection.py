@@ -196,6 +196,8 @@ class Connector(object):
         )
         if resp.status_code >= 400:
             raise DatameshQueryError(resp.text)
+        elif resp.status_code == 204:
+            return None
         else:
             return Stage(**resp.json())
 
@@ -203,6 +205,9 @@ class Connector(object):
         if not isinstance(query, Query):
             query = Query(**query)
         stage = self._stage_request(query)
+        if stage is None:
+            warnings.warn("No data found for query")
+            return None
         if use_dask and (stage.container == Container.Dataset):
             mapper = self._zarr_proxy(stage.qhash)
             return xarray.open_zarr(
@@ -309,6 +314,9 @@ class Connector(object):
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
         stage = self._stage_request(Query(datasource=datasource_id))
+        if stage is None:
+            warnings.warn("No data found for query")
+            return None
         if stage.container == Container.Dataset:
             mapper = self._zarr_proxy(datasource_id)
             return xarray.open_zarr(
