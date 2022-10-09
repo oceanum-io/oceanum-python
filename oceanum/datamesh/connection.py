@@ -230,6 +230,8 @@ class Connector(object):
                 with tempfile.NamedTemporaryFile("wb") as f:
                     f.write(resp.content)
                     f.seek(0)
+                    if stage.container == Container.Dataset:
+                        return xarray.load_dataset(f.name)
                     if stage.container == Container.GeoDataFrame:
                         return geopandas.read_parquet(f.name)
                     else:
@@ -355,7 +357,7 @@ class Connector(object):
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
-        return self._query(query)
+        return self._query(query, use_dask)
 
     @asyncwrapper
     async def query_async(self, query, use_dask=True):

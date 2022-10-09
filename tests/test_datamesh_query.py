@@ -26,9 +26,21 @@ def test_query_features(conn):
     assert isinstance(ds, geopandas.GeoDataFrame)
 
 
-def test_query_dataset(conn):
+def test_query_dataset_lazy(conn):
     ds = conn.query({"datasource": "era5_wind10m"})
-    assert isinstance(ds, xarray.Dataset)
+    assert isinstance(ds, xarray.Dataset) and len(ds.chunks) == 3
+
+
+def test_query_dataset(conn):
+    tstart = pandas.Timestamp("2000-01-01T00:00:00")
+    tend = pandas.Timestamp("2001-01-01T00:00:00Z")
+    q = Query(
+        datasource="era5_wind10m",
+        timefilter={"times": [tstart, tend]},
+        geofilter={"type": "bbox", "geom": [174, -34, 175, -30]},
+    )
+    ds = conn.query(q, use_dask=False)
+    assert isinstance(ds, xarray.Dataset) and len(ds.chunks) == 0
 
 
 def test_query_table(conn):
