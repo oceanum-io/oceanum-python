@@ -141,7 +141,7 @@ class Datasource(BaseModel):
         title="Datasource description",
         description="Description of datasource",
         default="",
-        max_length=500,
+        max_length=1500,
     )
     geom: Union[Polygon, MultiPoint, Point] = Field(
         title="Datasource geometry",
