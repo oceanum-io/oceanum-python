@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum.datamesh.Datasource &#8212; oceanum 0.1.0 documentation</title>
+    <title>oceanum.datamesh.Datasource &#8212; oceanum 0.5.8 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -218,7 +218,7 @@
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.description" title="oceanum.datamesh.datasource.Datasource.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span> <span class="pre">(Optional[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.details" title="oceanum.datamesh.datasource.Datasource.details"><code class="xref py py-obj docutils literal notranslate"><span class="pre">details</span> <span class="pre">(Optional[pydantic.networks.AnyHttpUrl])</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.driver" title="oceanum.datamesh.datasource.Datasource.driver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">driver</span> <span class="pre">(str)</span></code></a></p></li>
-<li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.geom" title="oceanum.datamesh.datasource.Datasource.geom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geom</span> <span class="pre">(Union[oceanum.datamesh.datasource.PolygonGeometry,</span> <span class="pre">oceanum.datamesh.datasource.MultiPointGeometry,</span> <span class="pre">oceanum.datamesh.datasource.PointGeometry])</span></code></a></p></li>
+<li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.geom" title="oceanum.datamesh.datasource.Datasource.geom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geom</span> <span class="pre">(Union[geojson_pydantic.geometries.Polygon,</span> <span class="pre">geojson_pydantic.geometries.MultiPoint,</span> <span class="pre">geojson_pydantic.geometries.Point])</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.id" title="oceanum.datamesh.datasource.Datasource.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.info" title="oceanum.datamesh.datasource.Datasource.info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">info</span> <span class="pre">(Optional[dict])</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.last_modified" title="oceanum.datamesh.datasource.Datasource.last_modified"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_modified</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
@@ -249,7 +249,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Constraints</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>maxLength</strong> = 500</p></li>
+<li><p><strong>maxLength</strong> = 1500</p></li>
 </ul>
 </dd>
 </dl>
@@ -277,7 +277,7 @@
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.geom">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geom</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">PolygonGeometry</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MultiPointGeometry</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PointGeometry</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.geom" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geom</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Polygon</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MultiPoint</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Point</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.geom" title="Permalink to this definition">#</a></dt>
 <dd><p>Valid geoJSON geometry describing the spatial extent of the datasource</p>
 </dd></dl>
 
@@ -303,7 +303,7 @@
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.last_modified">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2022,</span> <span class="pre">9,</span> <span class="pre">21,</span> <span class="pre">0,</span> <span class="pre">26,</span> <span class="pre">22,</span> <span class="pre">85554)</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2022,</span> <span class="pre">10,</span> <span class="pre">12,</span> <span class="pre">19,</span> <span class="pre">24,</span> <span class="pre">57,</span> <span class="pre">58832)</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
 <dd><p>Last time datasource was modified</p>
 </dd></dl>
 

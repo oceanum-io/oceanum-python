@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>oceanum.datamesh.query &#8212; oceanum 0.1.0 documentation</title>
+    <title>oceanum.datamesh.query &#8212; oceanum 0.5.8 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -191,12 +191,19 @@
 
 <div class="viewcode-block" id="Timestamp.validate"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Timestamp.validate">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">)</span>
+        <span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;datetime or time string required&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="s2">&quot;UTC&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">to_datetime64</span><span class="p">()</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="s2">&quot;Timestamp format not valid&quot;</span></div></div>
+            <span class="n">time</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">time</span><span class="o">.</span><span class="n">tz</span><span class="p">:</span>
+                <span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="s2">&quot;UTC&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">to_datetime64</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timestamp format not valid: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="GeoFilterType"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.GeoFilterType">[docs]</a><span class="k">class</span> <span class="nc">GeoFilterType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>

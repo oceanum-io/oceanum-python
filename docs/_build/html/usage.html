@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Usage &#8212; oceanum 0.1.0 documentation</title>
+    <title>Usage &#8212; oceanum 0.5.8 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -162,9 +162,19 @@
     
     <div class="toc-item">
       
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
 
 <nav id="bd-toc-nav">
-    
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#work-with-datamesh">
+   Work with Datamesh
+  </a>
+ </li>
+</ul>
+
 </nav>
     </div>
     
@@ -192,6 +202,51 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">oceanum.datamesh</span> <span class="k">as</span> <span class="nn">datamesh</span>
 </pre></div>
 </div>
+<section id="work-with-datamesh">
+<h2>Work with Datamesh<a class="headerlink" href="#work-with-datamesh" title="Permalink to this heading">#</a></h2>
+<p>Import and instantiate the Datamesh connector:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oceanum.datamesh</span> <span class="kn">import</span> <span class="n">Connector</span>
+<span class="n">datamesh</span><span class="o">=</span><span class="n">Connector</span><span class="p">(</span><span class="n">token</span><span class="o">=&lt;</span><span class="n">your_datamesh_token</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get your Datamesh token from: <a class="reference external" href="https://home.oceanum.io/account/">https://home.oceanum.io/account/</a></p>
+<p>Get and list a catalog of all datasources:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cat</span><span class="o">=</span><span class="n">datamesh</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get more info on a datasource:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dsrc</span><span class="o">=</span><span class="n">datamesh</span><span class="o">.</span><span class="n">get_datasource</span><span class="p">(</span><span class="s1">&#39;oceanum_wave_glob05_era5_v1_grid&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">dsrc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Look at the variables schema:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">dsrc</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Load the datasource as an xarray dataset:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span><span class="o">=</span><span class="n">datamesh</span><span class="o">.</span><span class="n">load_datasource</span><span class="p">(</span><span class="s1">&#39;oceanum_wave_glob05_era5_v1_grid&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Plot a timeseries from the datsource:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;hs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">longitude</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Make a query using a timefilter and geofilter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dsq</span><span class="o">=</span><span class="n">datamesh</span><span class="o">.</span><span class="n">query</span><span class="p">({</span><span class="s2">&quot;datasource&quot;</span><span class="p">:</span><span class="s2">&quot;oceanum_wave_glob05_era5_v1_grid&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;variables&quot;</span><span class="p">:[</span><span class="s2">&quot;hs&quot;</span><span class="p">,</span><span class="s2">&quot;dp&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;timefilter&quot;</span><span class="p">:{</span><span class="s2">&quot;times&quot;</span><span class="p">:[</span><span class="s2">&quot;2010-01-01&quot;</span><span class="p">,</span><span class="s2">&quot;2011-01-01&quot;</span><span class="p">]},</span>
+                    <span class="s2">&quot;geofilter&quot;</span><span class="p">:{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;feature&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;geom&quot;</span><span class="p">:{</span>
+                            <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;Feature&quot;</span><span class="p">,</span><span class="s2">&quot;geometry&quot;</span><span class="p">:{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;Point&quot;</span><span class="p">,</span><span class="s2">&quot;coordinates&quot;</span><span class="p">:[</span><span class="mf">170.2</span><span class="p">,</span><span class="o">-</span><span class="mf">35.3</span><span class="p">]}</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+               <span class="p">})</span>
+<span class="n">dsq</span><span class="p">[</span><span class="s1">&#39;dp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
