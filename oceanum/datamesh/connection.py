@@ -284,7 +284,9 @@ class Connector(object):
             "geom": meta_dict["geometry"],
             **meta_dict["properties"],
         }
-        return Datasource(**props)
+        ds = Datasource(**props)
+        ds._exists = True
+        return ds
 
     @asyncwrapper
     def get_datasource_async(self, datasource_id):
@@ -387,7 +389,7 @@ class Connector(object):
 
         Args:
             datasource_id (string): Unique datasource id
-            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]): The data to be written to datamesh
+            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`, None]):  The data to be written to datamesh. If data is None, just update metadata properties.
             geometry (:obj:`oceanum.datasource.Geometry`, optional): GeoJSON geometry of the datasource
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
@@ -400,44 +402,45 @@ class Connector(object):
             ds = self.get_datasource(datasource_id)
         except DatameshConnectError as e:
             overwrite = True
-        with tempfile.NamedTemporaryFile("w+b", delete=False) as f:
-            try:
-                if isinstance(data, xarray.Dataset):
-                    data.to_netcdf(f.name)
-                    f.seek(0)
-                    ds = self._data_write(
-                        datasource_id,
-                        f.read(),
-                        "application/x-netcdf4",
-                        append,
-                        overwrite,
-                    )
-                else:
-                    data.to_parquet(f, index=True)
-                    f.seek(0)
-                    ds = self._data_write(
-                        datasource_id,
-                        f.read(),
-                        "application/parquet",
-                        append,
-                        overwrite,
-                    )
-                ds._exists = True
-            except Exception as e:
-                raise DatameshWriteError(e)
-            finally:
-                os.remove(f.name)
-
-            for key in properties:
+        if data is not None:
+            with tempfile.NamedTemporaryFile("w+b", delete=False) as f:
+                try:
+                    if isinstance(data, xarray.Dataset):
+                        data.to_netcdf(f.name)
+                        f.seek(0)
+                        ds = self._data_write(
+                            datasource_id,
+                            f.read(),
+                            "application/x-netcdf4",
+                            append,
+                            overwrite,
+                        )
+                    else:
+                        data.to_parquet(f, index=True)
+                        f.seek(0)
+                        ds = self._data_write(
+                            datasource_id,
+                            f.read(),
+                            "application/parquet",
+                            append,
+                            overwrite,
+                        )
+                    ds._exists = True
+                except Exception as e:
+                    raise DatameshWriteError(e)
+                finally:
+                    os.remove(f.name)
+        elif overwrite:
+            ds = Datasource(id=datasource_id, geom=geometry, **properties)
+        for key in properties:
+            if key not in ["driver", "schema"]:
                 setattr(ds, key, properties[key])
-            if geometry:
-                ds.geom = geometry
-            try:
-                self._metadata_write(ds)
-            except:
-                raise DatameshWriteError(
-                    "Cannot register datasource {datasource_id}: {e}"
-                )
+        if geometry:
+            ds.geom = geometry
+        try:
+            self._metadata_write(ds)
+        except:
+            raise DatameshWriteError("Cannot register datasource {datasource_id}: {e}")
         return ds
 
     @asyncwrapper
@@ -448,7 +451,7 @@ class Connector(object):
 
         Args:
             datasource_id (string): Unique datasource id
-            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]): The data to be written to datamesh
+            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`, None]): The data to be written to datamesh. If data is None, just update metadata properties.
             geometry (:obj:`oceanum.datasource.Geometry`): GeoJSON geometry of the datasource
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False

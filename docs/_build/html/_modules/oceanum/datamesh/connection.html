@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>oceanum.datamesh.connection &#8212; oceanum 0.5.8 documentation</title>
+    <title>oceanum.datamesh.connection &#8212; oceanum 0.5.10 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -452,7 +452,9 @@
             <span class="s2">&quot;geom&quot;</span><span class="p">:</span> <span class="n">meta_dict</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
             <span class="o">**</span><span class="n">meta_dict</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">],</span>
         <span class="p">}</span>
-        <span class="k">return</span> <span class="n">Datasource</span><span class="p">(</span><span class="o">**</span><span class="n">props</span><span class="p">)</span></div>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">Datasource</span><span class="p">(</span><span class="o">**</span><span class="n">props</span><span class="p">)</span>
+        <span class="n">ds</span><span class="o">.</span><span class="n">_exists</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">ds</span></div>
 
 <div class="viewcode-block" id="Connector.get_datasource_async"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.get_datasource_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
     <span class="k">def</span> <span class="nf">get_datasource_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datasource_id</span><span class="p">):</span>
@@ -555,7 +557,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            datasource_id (string): Unique datasource id</span>
-<span class="sd">            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]): The data to be written to datamesh</span>
+<span class="sd">            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`, None]):  The data to be written to datamesh. If data is None, just update metadata properties.</span>
 <span class="sd">            geometry (:obj:`oceanum.datasource.Geometry`, optional): GeoJSON geometry of the datasource</span>
 <span class="sd">            append (string, optional): Coordinate to append on. default=None</span>
 <span class="sd">            overwrite (bool, optional): Overwrite existing datasource. default=False</span>
@@ -568,44 +570,45 @@
             <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datasource</span><span class="p">(</span><span class="n">datasource_id</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">DatameshConnectError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">overwrite</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="s2">&quot;w+b&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
-                    <span class="n">data</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-                    <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_write</span><span class="p">(</span>
-                        <span class="n">datasource_id</span><span class="p">,</span>
-                        <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
-                        <span class="s2">&quot;application/x-netcdf4&quot;</span><span class="p">,</span>
-                        <span class="n">append</span><span class="p">,</span>
-                        <span class="n">overwrite</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-                    <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_write</span><span class="p">(</span>
-                        <span class="n">datasource_id</span><span class="p">,</span>
-                        <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
-                        <span class="s2">&quot;application/parquet&quot;</span><span class="p">,</span>
-                        <span class="n">append</span><span class="p">,</span>
-                        <span class="n">overwrite</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="n">ds</span><span class="o">.</span><span class="n">_exists</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">DatameshWriteError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="k">finally</span><span class="p">:</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="s2">&quot;w+b&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+                        <span class="n">data</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_write</span><span class="p">(</span>
+                            <span class="n">datasource_id</span><span class="p">,</span>
+                            <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
+                            <span class="s2">&quot;application/x-netcdf4&quot;</span><span class="p">,</span>
+                            <span class="n">append</span><span class="p">,</span>
+                            <span class="n">overwrite</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_write</span><span class="p">(</span>
+                            <span class="n">datasource_id</span><span class="p">,</span>
+                            <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
+                            <span class="s2">&quot;application/parquet&quot;</span><span class="p">,</span>
+                            <span class="n">append</span><span class="p">,</span>
+                            <span class="n">overwrite</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="n">ds</span><span class="o">.</span><span class="n">_exists</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">DatameshWriteError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">overwrite</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">Datasource</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">datasource_id</span><span class="p">,</span> <span class="n">geom</span><span class="o">=</span><span class="n">geometry</span><span class="p">,</span> <span class="o">**</span><span class="n">properties</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;driver&quot;</span><span class="p">,</span> <span class="s2">&quot;schema&quot;</span><span class="p">]:</span>
                 <span class="nb">setattr</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">properties</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-            <span class="k">if</span> <span class="n">geometry</span><span class="p">:</span>
-                <span class="n">ds</span><span class="o">.</span><span class="n">geom</span> <span class="o">=</span> <span class="n">geometry</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_metadata_write</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">DatameshWriteError</span><span class="p">(</span>
-                    <span class="s2">&quot;Cannot register datasource </span><span class="si">{datasource_id}</span><span class="s2">: </span><span class="si">{e}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">geometry</span><span class="p">:</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">geom</span> <span class="o">=</span> <span class="n">geometry</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metadata_write</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DatameshWriteError</span><span class="p">(</span><span class="s2">&quot;Cannot register datasource </span><span class="si">{datasource_id}</span><span class="s2">: </span><span class="si">{e}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ds</span></div>
 
 <div class="viewcode-block" id="Connector.write_datasource_async"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.write_datasource_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
@@ -616,7 +619,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            datasource_id (string): Unique datasource id</span>
-<span class="sd">            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]): The data to be written to datamesh</span>
+<span class="sd">            data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`, None]): The data to be written to datamesh. If data is None, just update metadata properties.</span>
 <span class="sd">            geometry (:obj:`oceanum.datasource.Geometry`): GeoJSON geometry of the datasource</span>
 <span class="sd">            append (string, optional): Coordinate to append on. default=None</span>
 <span class="sd">            overwrite (bool, optional): Overwrite existing datasource. default=False</span>

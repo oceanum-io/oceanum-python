@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum.datamesh package &#8212; oceanum 0.5.8 documentation</title>
+    <title>oceanum.datamesh package &#8212; oceanum 0.5.10 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -555,7 +555,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>datasource_id</strong> (<em>string</em>) – Unique datasource id</p></li>
-<li><p><strong>data</strong> (Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]) – The data to be written to datamesh</p></li>
+<li><p><strong>data</strong> (Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>, None]) – The data to be written to datamesh. If data is None, just update metadata properties.</p></li>
 <li><p><strong>geometry</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datasource.Geometry</span></code>, optional) – GeoJSON geometry of the datasource</p></li>
 <li><p><strong>append</strong> (<em>string</em><em>, </em><em>optional</em>) – Coordinate to append on. default=None</p></li>
 <li><p><strong>overwrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Overwrite existing datasource. default=False</p></li>
@@ -579,7 +579,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>datasource_id</strong> (<em>string</em>) – Unique datasource id</p></li>
-<li><p><strong>data</strong> (Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>]) – The data to be written to datamesh</p></li>
+<li><p><strong>data</strong> (Union[<code class="xref py py-obj docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>, None]) – The data to be written to datamesh. If data is None, just update metadata properties.</p></li>
 <li><p><strong>geometry</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datasource.Geometry</span></code>) – GeoJSON geometry of the datasource</p></li>
 <li><p><strong>append</strong> (<em>string</em><em>, </em><em>optional</em>) – Coordinate to append on. default=None</p></li>
 <li><p><strong>overwrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Overwrite existing datasource. default=False</p></li>
@@ -729,7 +729,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 <span class="w">      </span><span class="nt">&quot;last_modified&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last modified time&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last time datasource was modified&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2022-10-12T19:24:57.058832&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2022-10-12T22:11:30.422273&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;date-time&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
@@ -1138,7 +1138,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.last_modified">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2022,</span> <span class="pre">10,</span> <span class="pre">12,</span> <span class="pre">19,</span> <span class="pre">24,</span> <span class="pre">57,</span> <span class="pre">58832)</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2022,</span> <span class="pre">10,</span> <span class="pre">12,</span> <span class="pre">22,</span> <span class="pre">11,</span> <span class="pre">30,</span> <span class="pre">422273)</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
 <dd><p>Last time datasource was modified</p>
 </dd></dl>
 

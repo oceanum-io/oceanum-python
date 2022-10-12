@@ -54,3 +54,35 @@ def test_write_dataset(conn, dataset):
     ds = conn.load_datasource(datasource_id)
     assert (ds == dataset).all()["u10"]
     conn.delete_datasource(datasource_id)
+
+
+def test_write_metadata(conn, dataframe):
+    datasource_id = "test-write-dataframe"
+    conn.write_datasource(
+        datasource_id,
+        None,
+        name=datasource_id,
+        coordinates={},
+        driver="null",
+        geometry={"type": "Point", "coordinates": [174, -39]},
+        schema={"attrs": {}, "dims": {}, "coords": {}, "data_vars": {}},
+        tstart="2020-01-01T00:00:00Z",
+    )
+    ds = conn.get_datasource(datasource_id)
+    assert ds.name == datasource_id
+    conn.delete_datasource(datasource_id)
+
+
+def test_update_metadata(conn, dataframe):
+    datasource_id = "test-write-dataframe2"
+    conn.write_datasource(
+        datasource_id, dataframe, {"type": "Point", "coordinates": [174, -39]}
+    )
+    conn.write_datasource(
+        datasource_id,
+        None,
+        name="new name",
+    )
+    ds = conn.get_datasource(datasource_id)
+    assert ds.name == "new name"
+    conn.delete_datasource(datasource_id)
