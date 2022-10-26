@@ -71,7 +71,7 @@ def test_all_properties(dataframe):
     ds = Datasource(
         id="test123",
         name="Test datasource",
-        geom={"type": "Point", "coordinates": [174, -40]},
+        geom=shapely.geometry.shape({"type": "Point", "coordinates": [174, -40]}),
         schema=dataframe.to_xarray().to_dict(data=False),
         coordinates={"t": "time"},
         info={"some": "info"},

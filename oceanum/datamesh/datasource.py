@@ -5,15 +5,17 @@ import pandas
 import geopandas
 import xarray
 import asyncio
-from shapely.geometry import shape, mapping, Point, MultiPoint, Polygon
-from shapely.geometry.base import BaseGeometry
+import shapely
 from pydantic import BaseModel, Field, AnyHttpUrl, PrivateAttr, constr
 from pydantic.json import timedelta_isoformat
-from geojson_pydantic import Point, MultiPoint, Polygon
 from typing_extensions import Annotated
 from typing import Optional, Dict, Union, List, NamedTuple
 from enum import Enum
 from .query import Query, Timestamp
+
+
+def geojson(shape):
+    return shape.__geo_interface__
 
 
 class DatasourceException(Exception):
@@ -67,9 +69,26 @@ LatField = Annotated[
 ]
 
 
-class Coordinates(NamedTuple):
-    lon: LonField
-    lat: LatField
+class Geometry:
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, geometry):
+        if isinstance(geometry, dict):
+            try:
+                geometry = shapely.geometry.shape(geometry)
+            except:
+                "Not a valid GeoJSON dictionary"
+        if (
+            isinstance(geometry, shapely.geometry.Point)
+            or isinstance(geometry, shapely.geometry.MultiPoint)
+            or isinstance(geometry, shapely.geometry.Polygon)
+        ):
+            return geometry
+        else:
+            raise "Geometry must be Point, MultiPoint or Polygon"
 
 
 class Schema(BaseModel):
@@ -143,9 +162,16 @@ class Datasource(BaseModel):
         default="",
         max_length=1500,
     )
-    geom: Union[Polygon, MultiPoint, Point] = Field(
+    parameters: Optional[dict] = (
+        Field(
+            title="Datasource parameters",
+            description="Additional parameters for accessing datasource",
+            default={},
+        ),
+    )
+    geom: Geometry = Field(
         title="Datasource geometry",
-        description="Valid geoJSON geometry describing the spatial extent of the datasource",
+        description="Valid shapely or geoJSON geometry describing the spatial extent of the datasource",
     )
     tstart: Optional[datetime.datetime] = Field(
         title="Start time of datasource",
@@ -198,9 +224,9 @@ class Datasource(BaseModel):
         validate_assignment = True
         json_encoders = {
             Timeperiod: timedelta_isoformat,
-            Point: mapping,
-            Polygon: mapping,
-            MultiPoint: mapping,
+            shapely.geometry.Point: geojson,
+            shapely.geometry.MultiPoint: geojson,
+            shapely.geometry.Polygon: geojson,
         }
 
     def __str__(self):
@@ -232,7 +258,7 @@ class Datasource(BaseModel):
 
     @property
     def geometry(self):
-        return shape(self.geom.dict())
+        return self.geom
 
 
 def _datasource_props(datasource_id, props, _data):

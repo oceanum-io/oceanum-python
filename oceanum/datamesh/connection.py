@@ -1,5 +1,7 @@
 import os
 import io
+import json
+import datetime
 import tempfile
 import hashlib
 import requests
@@ -30,6 +32,14 @@ class DatameshQueryError(Exception):
 
 class DatameshWriteError(Exception):
     pass
+
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    raise TypeError("Type %s not serializable" % type(obj))
 
 
 def asyncwrapper(func):
@@ -136,11 +146,14 @@ class Connector(object):
             raise DatameshConnectError(resp.text)
         return True
 
-    def _zarr_proxy(self, datasource_id):
+    def _zarr_proxy(self, datasource_id, parameters={}):
         try:
             mapper = fsspec.get_mapper(
                 f"{self._gateway}/zarr/{datasource_id}",
-                headers=self._auth_headers,
+                headers={
+                    **self._auth_headers,
+                    "X-PARAMETERS": json.dumps(parameters, default=json_serial),
+                },
             )
         except Exception as e:
             raise DatameshConnectError(str(e))
@@ -305,24 +318,27 @@ class Connector(object):
         """
         return self.get_datasource(datasource_id)
 
-    def load_datasource(self, datasource_id, use_dask=True):
+    def load_datasource(self, datasource_id, parameters={}, use_dask=True):
         """Load a datasource into the work environment.
         For datasources which load into DataFrames or GeoDataFrames, this returns an in memory instance of the DataFrame.
         For datasources which load into an xarray Dataset, an open zarr backed dataset is returned.
 
         Args:
             datasource_id (string): Unique datasource id
+            parameters (dict): Additional datasource parameters
             use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
 
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
-        stage = self._stage_request(Query(datasource=datasource_id))
+        stage = self._stage_request(
+            Query(datasource=datasource_id, parameters=parameters)
+        )
         if stage is None:
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset:
-            mapper = self._zarr_proxy(datasource_id)
+            mapper = self._zarr_proxy(datasource_id, parameters)
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
