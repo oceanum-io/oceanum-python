@@ -162,12 +162,10 @@ class Datasource(BaseModel):
         default="",
         max_length=1500,
     )
-    parameters: Optional[dict] = (
-        Field(
-            title="Datasource parameters",
-            description="Additional parameters for accessing datasource",
-            default={},
-        ),
+    parameters: Optional[dict] = Field(
+        title="Datasource parameters",
+        description="Additional parameters for accessing datasource",
+        default={},
     )
     geom: Geometry = Field(
         title="Datasource geometry",

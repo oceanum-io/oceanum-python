@@ -82,6 +82,7 @@ def test_all_properties(dataframe):
         parchive="P7DT",
         driver="dum",
     )
+    ds.json()
 
 
 def test_fail_id(dataframe):
