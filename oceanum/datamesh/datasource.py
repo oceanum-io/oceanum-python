@@ -88,7 +88,7 @@ class Geometry:
         ):
             return geometry
         else:
-            raise "Geometry must be Point, MultiPoint or Polygon"
+            raise BaseException("Geometry must be Point, MultiPoint or Polygon")
 
 
 class Schema(BaseModel):
@@ -196,7 +196,7 @@ class Datasource(BaseModel):
         description="Additional datasource descriptive metadata",
         default="",
     )
-    dataschema: Schema = Field(
+    dataschema: Optional[Schema] = Field(
         alias="schema", title="Schema", description="Datasource schema"
     )
     coordinates: Dict[Coordinates, str] = Field(
@@ -228,13 +228,20 @@ class Datasource(BaseModel):
         }
 
     def __str__(self):
-        return f"""
-    {self.name} [{self.id}]
-        Extent: {self.bounds}
-        Timerange: {self.tstart} to {self.tend}
-        {len(self.attributes)} attributes
-        {len(self.variables)} {"properties" if "g" in self.coordinates else "variables"}
-    """
+        if self.dataschema:
+            return f"""
+        {self.name} [{self.id}]
+            Extent: {self.bounds}
+            Timerange: {self.tstart} to {self.tend}
+            {len(self.attributes)} attributes
+            {len(self.variables)} {"properties" if "g" in self.coordinates else "variables"}
+        """
+        else:
+            return f"""
+        {self.name} [{self.id}]
+            Extent: {self.bounds}
+            Timerange: {self.tstart} to {self.tend}
+        """
 
     def __repr__(self):
         return self.__str__()
@@ -252,7 +259,7 @@ class Datasource(BaseModel):
     @property
     def attributes(self):
         """Datasource global attributes"""
-        return self.dataschema.attrs
+        return self.dataschema.attrs if self.dataschema else None
 
     @property
     def geometry(self):

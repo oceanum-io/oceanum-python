@@ -7,19 +7,6 @@ class Catalog(object):
     This class behaves like an immutable dictionary with the datasource ids as keys
     """
 
-    @classmethod
-    def _init(cls, connector):
-        meta = connector._metadata_request()
-        if meta.status_code == 404:
-            raise DatasourceException("Not found")
-        elif meta.status_code == 401:
-            raise DatasourceException("Not Authorized")
-        elif meta.status_code != 200:
-            raise DatameshException(meta.text)
-        cat = cls(meta.json())
-        cat._connector = connector
-        return cat
-
     def __init__(self, json):
         """Constructor for Catalog class"""
         self._geojson = FeatureCollection(**json)
@@ -36,12 +23,13 @@ class Catalog(object):
             datasources
         )
 
-    def __repr__(self):
-        return self._geojson
-
     def __getitem__(self, item):
         if item in self._ids:
-            return self._connector.get_datasource(item)
+            index = self._ids.index(item)
+            feature = self._geojson.features[index]
+            return Datasource(
+                id=feature.id, geom=feature.geometry.dict(), **feature.properties
+            )
         else:
             raise IndexError(f"Datasource {item} not in catalog")
 
@@ -95,7 +83,7 @@ class Catalog(object):
         Raises:
             IndexError: Datasource not in catalog
         """
-        if query["datasource"] not in self.ids:
+        if query.datasource not in self.ids:
             raise IndexError(f"Datasource {query['datasource']} not in catalog")
         else:
             return self._connection.query(query)

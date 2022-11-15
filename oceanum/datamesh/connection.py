@@ -9,6 +9,7 @@ import fsspec
 import xarray
 import geopandas
 import pandas
+import shapely
 import warnings
 import tempfile
 from urllib.parse import urlparse
@@ -17,7 +18,7 @@ from functools import wraps, partial
 
 from .datasource import Datasource, _datasource_props, _datasource_driver
 from .catalog import Catalog
-from .query import Query, Stage, Container
+from .query import Query, Stage, Container, TimeFilter, GeoFilter
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
@@ -106,10 +107,11 @@ class Connector(object):
         resp = requests.get(f"{self._proto}://{self._host}", headers=self._auth_headers)
         return rest.status_code == 200
 
-    def _metadata_request(self, datasource_id=""):
+    def _metadata_request(self, datasource_id="", params={}):
         resp = requests.get(
             f"{self._proto}://{self._host}/datasource/{datasource_id}",
             headers=self._auth_headers,
+            params=params,
         )
         if resp.status_code == 404:
             raise DatameshConnectError(f"Datasource {datasource_id} not found")
@@ -239,29 +241,44 @@ class Connector(object):
             if resp.status_code >= 400:
                 raise DatameshQueryError(resp.text)
             else:
-                # tmpfile = os.path.join(self._cachedir.name, stage.qhash)
-                with tempfile.NamedTemporaryFile("wb") as f:
+                with tempfile.NamedTemporaryFile("wb", delete=False) as f:
                     f.write(resp.content)
                     f.seek(0)
                     if stage.container == Container.Dataset:
-                        return xarray.load_dataset(f.name)
-                    if stage.container == Container.GeoDataFrame:
-                        return geopandas.read_parquet(f.name)
+                        ds = xarray.load_dataset(f.name)
+                    elif stage.container == Container.GeoDataFrame:
+                        ds = geopandas.read_parquet(f.name)
                     else:
-                        return pandas.read_parquet(f.name)
+                        ds = pandas.read_parquet(f.name)
+                os.unlink(f.name)
+                return ds
 
-    def get_catalog(self, filter={}):
+    def get_catalog(self, search=None, timefilter=None, geofilter=None):
         """Get datamesh catalog
 
         Args:
-            filter (dict, optional): Set of filters to apply. Defaults to {}.
+            search (string, optional): Search string for filtering datasources
+            timefilter (Union[:obj:`oceanum.datamesh.query.TimeFilter`, list], Optional): Time filter as valid Query TimeFilter or list of [start,end]
+            geofilter (Union[:obj:`oceanum.datamesh.query.GeoFilter`, dict, shapely.geometry], Optional): Spatial filter as valid Query Geofilter or geojson geometry as dict or shapely Geometry
 
         Returns:
             :obj:`oceanum.datamesh.Catalog`: A datamesh catalog instance
         """
-        cat = Catalog._init(
-            self,
-        )
+        query = {}
+        if search:
+            query["search"] = search.replace(" ", ",")
+        if timefilter:
+            times = TimeFilter(times=timefilter).times
+            query["in_trange"] = f"{times[0]}Z,{times[1]}Z"
+        if geofilter:
+            if isinstance(geofilter, GeoFilter):
+                geos = geofilter.geom
+            else:
+                geos = shapely.geometry.shape(geofilter)
+            query["geom_intersects"] = str(geofilter)
+        meta = self._metadata_request(params=query)
+        cat = Catalog(meta.json())
+        cat._connector = self
         return cat
 
     @asyncwrapper
@@ -350,7 +367,7 @@ class Connector(object):
             return pandas.read_parquet(tmpfile)
 
     @asyncwrapper
-    def load_datasource_async(self, datasource_id, use_dask=True):
+    def load_datasource_async(self, datasource_id, parameters={}, use_dask=True):
         """Load a datasource asynchronously into the work environment
 
         Args:
@@ -363,7 +380,7 @@ class Connector(object):
         Returns:
             coroutine<Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]>: The datasource container
         """
-        return self.load_datasource(datasource_id, use_dask)
+        return self.load_datasource(datasource_id, parameters, use_dask)
 
     def query(self, query, use_dask=True):
         """Make a datamesh query

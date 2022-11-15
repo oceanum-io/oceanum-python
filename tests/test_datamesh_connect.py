@@ -26,7 +26,7 @@ def test_catalog(conn):
 
 
 @pytest.mark.asyncio
-async def test_catalog(conn):
+async def test_catalog_async(conn):
     cat = await conn.get_catalog_async()
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
