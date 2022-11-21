@@ -316,6 +316,7 @@ class Connector(object):
         }
         ds = Datasource(**props)
         ds._exists = True
+        ds._detail = True
         return ds
 
     @asyncwrapper

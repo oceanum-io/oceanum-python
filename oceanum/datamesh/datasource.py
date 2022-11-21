@@ -197,7 +197,10 @@ class Datasource(BaseModel):
         default="",
     )
     dataschema: Optional[Schema] = Field(
-        alias="schema", title="Schema", description="Datasource schema"
+        alias="schema",
+        title="Schema",
+        description="Datasource schema",
+        default=Schema(attrs={}, dims=[], coords={}, data_vars={}),
     )
     coordinates: Dict[Coordinates, str] = Field(
         title="Coordinate keys",
@@ -216,6 +219,7 @@ class Datasource(BaseModel):
     )
     driver: str = Field(allow_mutation=False)
     _exists: bool = PrivateAttr(default=False)
+    _detail: bool = PrivateAttr(default=False)
 
     class Config:
         use_enum_values = True
@@ -228,7 +232,7 @@ class Datasource(BaseModel):
         }
 
     def __str__(self):
-        if self.dataschema:
+        if self._detail:
             return f"""
         {self.name} [{self.id}]
             Extent: {self.bounds}
