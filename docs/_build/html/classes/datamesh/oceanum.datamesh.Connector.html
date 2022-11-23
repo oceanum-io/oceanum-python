@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum.datamesh.Connector &#8212; oceanum 0.5.10 documentation</title>
+    <title>oceanum.datamesh.Connector &#8212; oceanum 0.6.1 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -278,11 +278,15 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.Connector.get_catalog">
-<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.get_catalog" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timefilter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geofilter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.get_catalog" title="Permalink to this definition">#</a></dt>
 <dd><p>Get datamesh catalog</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filter</strong> (<em>dict</em><em>, </em><em>optional</em>) – Set of filters to apply. Defaults to {}.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>search</strong> (<em>string</em><em>, </em><em>optional</em>) – Search string for filtering datasources</p></li>
+<li><p><strong>timefilter</strong> (Union[<a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.query.TimeFilter" title="oceanum.datamesh.query.TimeFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.query.TimeFilter</span></code></a>, list], Optional) – Time filter as valid Query TimeFilter or list of [start,end]</p></li>
+<li><p><strong>geofilter</strong> (Union[<a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter" title="oceanum.datamesh.query.GeoFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.query.GeoFilter</span></code></a>, dict, shapely.geometry], Optional) – Spatial filter as valid Query Geofilter or geojson geometry as dict or shapely Geometry</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A datamesh catalog instance</p>
@@ -360,7 +364,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.Connector.load_datasource">
-<span class="sig-name descname"><span class="pre">load_datasource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.load_datasource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.load_datasource" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">load_datasource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.load_datasource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.load_datasource" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a datasource into the work environment.
 For datasources which load into DataFrames or GeoDataFrames, this returns an in memory instance of the DataFrame.
 For datasources which load into an xarray Dataset, an open zarr backed dataset is returned.</p>
@@ -368,6 +372,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>datasource_id</strong> (<em>string</em>) – Unique datasource id</p></li>
+<li><p><strong>parameters</strong> (<em>dict</em>) – Additional datasource parameters</p></li>
 <li><p><strong>use_dask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Load datasource as a dask enabled datasource if possible. Defaults to True.</p></li>
 </ul>
 </dd>
@@ -382,7 +387,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.Connector.load_datasource_async">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_datasource_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.load_datasource_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.load_datasource_async" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_datasource_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.load_datasource_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.load_datasource_async" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a datasource asynchronously into the work environment</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

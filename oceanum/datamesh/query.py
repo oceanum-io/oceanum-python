@@ -85,7 +85,7 @@ class GeoFilter(BaseModel):
     resolution: Optional[float] = Field(
         title="Maximum spatial resolution of data",
         default=0.0,
-        description="Maximum resolution of the data for downsampling in CRS units",
+        description="Maximum resolution of the data for downsampling in CRS units. Only works for feature datasources.",
     )
 
 

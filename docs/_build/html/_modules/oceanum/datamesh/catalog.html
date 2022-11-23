@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>oceanum.datamesh.catalog &#8212; oceanum 0.5.10 documentation</title>
+    <title>oceanum.datamesh.catalog &#8212; oceanum 0.6.1 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -175,19 +175,6 @@
 <span class="sd">    This class behaves like an immutable dictionary with the datasource ids as keys</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">connector</span><span class="p">):</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="n">connector</span><span class="o">.</span><span class="n">_metadata_request</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">DatasourceException</span><span class="p">(</span><span class="s2">&quot;Not found&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">meta</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">DatasourceException</span><span class="p">(</span><span class="s2">&quot;Not Authorized&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">meta</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">DatameshException</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-        <span class="n">cat</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-        <span class="n">cat</span><span class="o">.</span><span class="n">_connector</span> <span class="o">=</span> <span class="n">connector</span>
-        <span class="k">return</span> <span class="n">cat</span>
-
 <div class="viewcode-block" id="Catalog.__init__"><a class="viewcode-back" href="../../../classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Constructor for Catalog class&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_geojson</span> <span class="o">=</span> <span class="n">FeatureCollection</span><span class="p">(</span><span class="o">**</span><span class="n">json</span><span class="p">)</span>
@@ -204,12 +191,13 @@
             <span class="n">datasources</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geojson</span>
-
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connector</span><span class="o">.</span><span class="n">get_datasource</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geojson</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">Datasource</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">feature</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">geom</span><span class="o">=</span><span class="n">feature</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">dict</span><span class="p">(),</span> <span class="o">**</span><span class="n">feature</span><span class="o">.</span><span class="n">properties</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Datasource </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2"> not in catalog&quot;</span><span class="p">)</span>
 
@@ -263,7 +251,7 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            IndexError: Datasource not in catalog</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">query</span><span class="p">[</span><span class="s2">&quot;datasource&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ids</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">query</span><span class="o">.</span><span class="n">datasource</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ids</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Datasource </span><span class="si">{</span><span class="n">query</span><span class="p">[</span><span class="s1">&#39;datasource&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not in catalog&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
