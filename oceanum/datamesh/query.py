@@ -26,6 +26,7 @@ class Timestamp(pd.Timestamp):
         if not (
             isinstance(v, str)
             or isinstance(v, datetime.datetime)
+            or isinstance(v, datetime.date)
             or isinstance(v, pd.Timestamp)
         ):
             raise TypeError("datetime or time string required")
