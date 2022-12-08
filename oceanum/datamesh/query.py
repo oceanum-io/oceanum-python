@@ -165,7 +165,10 @@ class Query(BaseModel):
     """
 
     datasource: str = Field(
-        title="The id of the datasource", description="Datasource ID"
+        title="The id of the datasource",
+        description="Datasource ID",
+        min_length=3,
+        max_length=80,
     )
     parameters: Optional[Dict] = Field(
         title="Datasource parameters",

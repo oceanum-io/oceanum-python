@@ -146,6 +146,7 @@ class Datasource(BaseModel):
     id: str = Field(
         title="Datasource ID",
         description="Unique ID for the datasource",
+        min_length=3,
         max_length=80,
         strip_whitespace=True,
         to_lower=True,
@@ -200,7 +201,7 @@ class Datasource(BaseModel):
         alias="schema",
         title="Schema",
         description="Datasource schema",
-        default=Schema(attrs={}, dims=[], coords={}, data_vars={}),
+        default=None,
     )
     coordinates: Dict[Coordinates, str] = Field(
         title="Coordinate keys",
@@ -257,13 +258,13 @@ class Datasource(BaseModel):
 
     @property
     def variables(self):
-        """Datasource variables (or properties)"""
-        return self.dataschema.data_vars
+        """Datasource variables (or properties). Note that these are None (undefined) for a summary dataset."""
+        return self.dataschema.data_vars if self._detail else None
 
     @property
     def attributes(self):
-        """Datasource global attributes"""
-        return self.dataschema.attrs if self.dataschema else None
+        """Datasource global attributes. Note that these are None (undefined) for a summary dataset."""
+        return self.dataschema.attrs if self._detail else None
 
     @property
     def geometry(self):
