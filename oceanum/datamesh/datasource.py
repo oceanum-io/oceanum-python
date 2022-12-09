@@ -93,9 +93,9 @@ class Geometry:
 
 class Schema(BaseModel):
     attrs: Optional[dict] = Field(title="Global attributes")
-    dims: dict = Field(title="Dimensions")
-    coords: dict = Field(title="Coordinates")
-    data_vars: dict = Field(title="Data variables")
+    dims: Optional[dict] = Field(title="Dimensions")
+    coords: Optional[dict] = Field(title="Coordinates")
+    data_vars: Optional[dict] = Field(title="Data variables")
 
 
 class Coordinates(Enum):
@@ -201,7 +201,7 @@ class Datasource(BaseModel):
         alias="schema",
         title="Schema",
         description="Datasource schema",
-        default=None,
+        default=Schema(attrs={}, dims=[], coords={}, data_vars={}),
     )
     coordinates: Dict[Coordinates, str] = Field(
         title="Coordinate keys",

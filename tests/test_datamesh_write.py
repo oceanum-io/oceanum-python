@@ -19,7 +19,7 @@ HERE = os.path.dirname(__file__)
 @pytest.fixture
 def conn():
     """Connection fixture"""
-    return Connector(os.environ["DATAMESH_TOKEN"])
+    return Connector()
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_write_dataframe(conn, dataframe):
 
 def test_write_dataset(conn, dataset):
     datasource_id = "test-write-dataset"
-    conn.write_datasource(datasource_id, dataset, append="time")
+    conn.write_datasource(datasource_id, dataset, overwrite=True)
     ds = conn.load_datasource(datasource_id)
     assert (ds == dataset).all()["u10"]
     conn.delete_datasource(datasource_id)

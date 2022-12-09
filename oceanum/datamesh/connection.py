@@ -19,6 +19,14 @@ from functools import wraps, partial
 from .datasource import Datasource, _datasource_props, _datasource_driver
 from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter
+from .zarr import ZarrClient
+
+try:
+    import xarray_video as xv
+
+    _VIDEO_SUPPORT = True
+except:
+    _VIDEO_SUPPORT = False
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
@@ -200,6 +208,31 @@ class Connector(object):
         if not resp.status_code == 200:
             raise DatameshConnectError(resp.text)
         return Datasource(**resp.json())
+
+    def _zarr_write(
+        self,
+        datasource_id,
+        data,
+        append=None,
+        overwrite=False,
+    ):
+        if overwrite is True:
+            append = None
+        store = ZarrClient(self, datasource_id)
+        if _VIDEO_SUPPORT:
+            data.video.to_zarr(
+                store,
+                mode="w" if overwrite else "a",
+                append_dim=append,
+                consolidated=True,
+            )
+        else:
+            data.to_zarr(
+                store,
+                mode="w" if overwrite else "a",
+                append_dim=append,
+                consolidated=True,
+            )
 
     def _stage_request(self, query, cache=False):
         qhash = hashlib.sha224(query.json().encode()).hexdigest()
@@ -451,12 +484,9 @@ class Connector(object):
             with tempfile.NamedTemporaryFile("w+b", delete=False) as f:
                 try:
                     if isinstance(data, xarray.Dataset):
-                        data.to_netcdf(f.name)
-                        f.seek(0)
-                        ds = self._data_write(
+                        self._zarr_write(
                             datasource_id,
-                            f.read(),
-                            "application/x-netcdf4",
+                            data,
                             append,
                             overwrite,
                         )
