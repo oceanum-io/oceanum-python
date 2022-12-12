@@ -55,7 +55,7 @@ setup(
     keywords="oceanum",
     documentation="https://oceanum-python.readthedocs.io",
     name="oceanum",
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests", "docs"]),
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
