@@ -7,7 +7,7 @@ class ZarrClient(MutableMapping):
     def __init__(self, connection, datasource, method="post"):
         self.datasource = datasource
         self.method = method
-        self.headers = connection._auth_headers
+        self.headers = {**connection._auth_headers, "cache-control": "no-transform"}
         self.gateway = connection._gateway + "/zarr"
 
     def __getitem__(self, item):

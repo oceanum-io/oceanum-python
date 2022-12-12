@@ -17,9 +17,7 @@ HERE = os.path.dirname(__file__)
 @pytest.fixture
 def conn():
     """Connection fixture"""
-    return Connector(
-        "ccd8ac3daf2a68a10aacb909128f3f67bc3663a4", gateway="http://localhost:8000"
-    )
+    return Connector()
 
 
 @pytest.fixture

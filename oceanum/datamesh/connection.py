@@ -490,6 +490,7 @@ class Connector(object):
                             append,
                             overwrite,
                         )
+                        ds = self.get_datasource(datasource_id)
                     else:
                         data.to_parquet(f, index=True)
                         f.seek(0)
