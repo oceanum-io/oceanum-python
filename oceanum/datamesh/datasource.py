@@ -218,6 +218,12 @@ class Datasource(BaseModel):
         default=datetime.datetime.utcnow(),
         allow_mutation=False,
     )
+    args: Optional[dict] = Field(
+        alias="driver_args",
+        title="Driver arguments",
+        description="Driver arguments for datasource. These are driver dependent.",
+        allow_mutation=False,
+    )
     driver: str = Field(allow_mutation=False)
     _exists: bool = PrivateAttr(default=False)
     _detail: bool = PrivateAttr(default=False)
