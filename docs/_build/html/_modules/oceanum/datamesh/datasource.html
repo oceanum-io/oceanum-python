@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>oceanum.datamesh.datasource &#8212; oceanum 0.6.1 documentation</title>
+    <title>oceanum.datamesh.datasource &#8212; oceanum 0.7.2 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -34,6 +34,7 @@
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -261,12 +262,14 @@
 
 <span class="k">class</span> <span class="nc">Schema</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">attrs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Global attributes&quot;</span><span class="p">)</span>
-    <span class="n">dims</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Dimensions&quot;</span><span class="p">)</span>
-    <span class="n">coords</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Coordinates&quot;</span><span class="p">)</span>
-    <span class="n">data_vars</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Data variables&quot;</span><span class="p">)</span>
+    <span class="n">dims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Dimensions&quot;</span><span class="p">)</span>
+    <span class="n">coords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Coordinates&quot;</span><span class="p">)</span>
+    <span class="n">data_vars</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Data variables&quot;</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">Coordinates</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Coordinate keys&quot;&quot;&quot;</span>
+
     <span class="n">Ensemble</span> <span class="o">=</span> <span class="s2">&quot;e&quot;</span>
     <span class="n">Rasterband</span> <span class="o">=</span> <span class="s2">&quot;b&quot;</span>
     <span class="n">Category</span> <span class="o">=</span> <span class="s2">&quot;c&quot;</span>
@@ -314,6 +317,7 @@
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Datasource ID&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Unique ID for the datasource&quot;</span><span class="p">,</span>
+        <span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
         <span class="n">max_length</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
         <span class="n">strip_whitespace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">to_lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -372,7 +376,9 @@
     <span class="p">)</span>
     <span class="n">coordinates</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Coordinates</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Coordinate keys&quot;</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Coordinates in datasource, referenced by standard keys&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;Coordinates in datasource, referenced by standard coordinate keys. The dictionary maps coordinates to the variables in the datasource.</span>
+<span class="s2">        </span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">details</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AnyHttpUrl</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Details&quot;</span><span class="p">,</span>
@@ -383,6 +389,12 @@
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Last modified time&quot;</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Last time datasource was modified&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+        <span class="n">allow_mutation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">driver_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;args&quot;</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Driver arguments&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Driver arguments for datasource. These are driver dependent.&quot;</span><span class="p">,</span>
         <span class="n">allow_mutation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">driver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">allow_mutation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -425,13 +437,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Datasource variables (or properties)&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataschema</span><span class="o">.</span><span class="n">data_vars</span>
+        <span class="sd">&quot;&quot;&quot;Datasource variables (or properties). Note that these are None (undefined) for a summary dataset.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataschema</span><span class="o">.</span><span class="n">data_vars</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detail</span> <span class="k">else</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Datasource global attributes&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataschema</span><span class="o">.</span><span class="n">attrs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataschema</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="sd">&quot;&quot;&quot;Datasource global attributes. Note that these are None (undefined) for a summary dataset.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataschema</span><span class="o">.</span><span class="n">attrs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detail</span> <span class="k">else</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -509,7 +521,7 @@
   
   <div class="footer-item">
     <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
   </div>
   

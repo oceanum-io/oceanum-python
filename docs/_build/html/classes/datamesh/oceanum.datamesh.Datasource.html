@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum.datamesh.Datasource &#8212; oceanum 0.6.1 documentation</title>
+    <title>oceanum.datamesh.Datasource &#8212; oceanum 0.7.2 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -35,6 +35,7 @@
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -184,9 +185,205 @@
     
     <div class="toc-item">
       
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
 
 <nav id="bd-toc-nav">
-    
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     Datasource
+    </span>
+   </code>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.coordinates">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.coordinates
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.dataschema">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.dataschema
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.description">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.description
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.details">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.details
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.driver">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.driver
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.driver_args">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.driver_args
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.geom">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.geom
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.id">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.id
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.info">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.info
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.last_modified">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.last_modified
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.name">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.name
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.parameters">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.parameters
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.parchive">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.parchive
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.tags">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.tags
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.tend">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.tend
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.tstart">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.tstart
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.attributes">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.attributes
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.bounds">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.bounds
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.geometry">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.geometry
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.Datasource.variables">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       Datasource.variables
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
 </nav>
     </div>
     
@@ -218,6 +415,7 @@
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.description" title="oceanum.datamesh.datasource.Datasource.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span> <span class="pre">(Optional[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.details" title="oceanum.datamesh.datasource.Datasource.details"><code class="xref py py-obj docutils literal notranslate"><span class="pre">details</span> <span class="pre">(Optional[pydantic.networks.AnyHttpUrl])</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.driver" title="oceanum.datamesh.datasource.Datasource.driver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">driver</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.driver_args" title="oceanum.datamesh.datasource.Datasource.driver_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">driver_args</span> <span class="pre">(Optional[dict])</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.geom" title="oceanum.datamesh.datasource.Datasource.geom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geom</span> <span class="pre">(oceanum.datamesh.datasource.Geometry)</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.id" title="oceanum.datamesh.datasource.Datasource.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.info" title="oceanum.datamesh.datasource.Datasource.info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">info</span> <span class="pre">(Optional[dict])</span></code></a></p></li>
@@ -234,7 +432,7 @@
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.coordinates">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coordinates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Coordinates</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.coordinates" title="Permalink to this definition">#</a></dt>
-<dd><p>Coordinates in datasource, referenced by standard keys</p>
+<dd><p>Coordinates in datasource, referenced by standard coordinate keys. The dictionary maps coordinates to the variables in the datasource.</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -277,6 +475,12 @@
 <dd></dd></dl>
 
 <dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.Datasource.driver_args">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">driver_args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'args')</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.driver_args" title="Permalink to this definition">#</a></dt>
+<dd><p>Driver arguments for datasource. These are driver dependent.</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.geom">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geom</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Geometry</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.geom" title="Permalink to this definition">#</a></dt>
 <dd><p>Valid shapely or geoJSON geometry describing the spatial extent of the datasource</p>
@@ -290,6 +494,7 @@
 <dt class="field-odd">Constraints</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>maxLength</strong> = 80</p></li>
+<li><p><strong>minLength</strong> = 3</p></li>
 <li><p><strong>pattern</strong> = ^[a-z0-9-_]+$</p></li>
 </ul>
 </dd>
@@ -304,7 +509,7 @@
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.last_modified">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2022,</span> <span class="pre">11,</span> <span class="pre">23,</span> <span class="pre">0,</span> <span class="pre">34,</span> <span class="pre">10,</span> <span class="pre">741500)</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">1,</span> <span class="pre">10,</span> <span class="pre">19,</span> <span class="pre">33,</span> <span class="pre">53,</span> <span class="pre">557867)</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
 <dd><p>Last time datasource was modified</p>
 </dd></dl>
 
@@ -354,7 +559,7 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.attributes">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attributes</span></span><a class="headerlink" href="#oceanum.datamesh.Datasource.attributes" title="Permalink to this definition">#</a></dt>
-<dd><p>Datasource global attributes</p>
+<dd><p>Datasource global attributes. Note that these are None (undefined) for a summary dataset.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -376,7 +581,7 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.variables">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variables</span></span><a class="headerlink" href="#oceanum.datamesh.Datasource.variables" title="Permalink to this definition">#</a></dt>
-<dd><p>Datasource variables (or properties)</p>
+<dd><p>Datasource variables (or properties). Note that these are None (undefined) for a summary dataset.</p>
 </dd></dl>
 
 </dd></dl>
@@ -428,7 +633,7 @@
   
   <div class="footer-item">
     <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
   </div>
   

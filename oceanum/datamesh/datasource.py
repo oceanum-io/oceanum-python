@@ -99,6 +99,8 @@ class Schema(BaseModel):
 
 
 class Coordinates(Enum):
+    """Coordinate keys"""
+
     Ensemble = "e"
     Rasterband = "b"
     Category = "c"
@@ -205,7 +207,9 @@ class Datasource(BaseModel):
     )
     coordinates: Dict[Coordinates, str] = Field(
         title="Coordinate keys",
-        description="Coordinates in datasource, referenced by standard keys",
+        description=f"""Coordinates in datasource, referenced by standard coordinate keys. The dictionary maps coordinates to the variables in the datasource.
+        
+        """,
     )
     details: Optional[AnyHttpUrl] = Field(
         title="Details",
@@ -218,8 +222,8 @@ class Datasource(BaseModel):
         default=datetime.datetime.utcnow(),
         allow_mutation=False,
     )
-    args: Optional[dict] = Field(
-        alias="driver_args",
+    driver_args: Optional[dict] = Field(
+        alias="args",
         title="Driver arguments",
         description="Driver arguments for datasource. These are driver dependent.",
         allow_mutation=False,
