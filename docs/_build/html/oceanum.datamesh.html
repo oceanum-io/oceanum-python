@@ -1671,7 +1671,7 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coordinate keys&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coordinates in datasource, referenced by standard coordinate keys. The dictionary maps coordinates to the variables in the datasource.\n        \n        &quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;\n        Coordinates in datasource, referenced by standard coordinate keys. The dictionary keys map to coordinates variables in the datasource.\n            Ensemble: \&quot;e\&quot;\n            Rasterband: \&quot;b\&quot;\n            Category: \&quot;c\&quot;\n            Quantile: \&quot;q\&quot;\n            Season: \&quot;s\&quot;\n            Month: \&quot;m\&quot;\n            Time: \&quot;t\&quot;\n            Vertical: \&quot;z\&quot;\n            Northing: \&quot;y\&quot;\n            Easting: \&quot;x\&quot;\n            Station: \&quot;s\&quot;  (Locations assumed stationary, datasource with a multigeometry indexed by station coordinate)\n            Geometry: \&quot;g\&quot;  (Abstract coordinate - a 2 or 3D geometry that defines a feature location)\n            Frequency: \&quot;f\&quot;\n            Direction:\&quot;d\&quot;\n\n        Example {\&quot;t\&quot;:\&quot;time\&quot;,\&quot;x\&quot;:\&quot;longitude\&quot;,\&quot;y\&quot;:\&quot;latitude\&quot;}\n        &quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;additionalProperties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
@@ -1688,7 +1688,7 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <span class="w">      </span><span class="nt">&quot;last_modified&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last modified time&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last time datasource was modified&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-01-10T19:33:53.557867&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-01-10T19:39:50.742000&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;date-time&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
@@ -1760,7 +1760,24 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.coordinates">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coordinates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Coordinates</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.coordinates" title="Permalink to this definition">#</a></dt>
-<dd><p>Coordinates in datasource, referenced by standard coordinate keys. The dictionary maps coordinates to the variables in the datasource.</p>
+<dd><dl class="simple">
+<dt>Coordinates in datasource, referenced by standard coordinate keys. The dictionary keys map to coordinates variables in the datasource.</dt><dd><p>Ensemble: “e”
+Rasterband: “b”
+Category: “c”
+Quantile: “q”
+Season: “s”
+Month: “m”
+Time: “t”
+Vertical: “z”
+Northing: “y”
+Easting: “x”
+Station: “s”  (Locations assumed stationary, datasource with a multigeometry indexed by station coordinate)
+Geometry: “g”  (Abstract coordinate - a 2 or 3D geometry that defines a feature location)
+Frequency: “f”
+Direction:”d”</p>
+</dd>
+</dl>
+<p>Example {“t”:”time”,”x”:”longitude”,”y”:”latitude”}</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1837,7 +1854,7 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.last_modified">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">1,</span> <span class="pre">10,</span> <span class="pre">19,</span> <span class="pre">33,</span> <span class="pre">53,</span> <span class="pre">557867)</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">1,</span> <span class="pre">10,</span> <span class="pre">19,</span> <span class="pre">39,</span> <span class="pre">50,</span> <span class="pre">742000)</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
 <dd><p>Last time datasource was modified</p>
 </dd></dl>
 

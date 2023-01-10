@@ -432,7 +432,24 @@
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.coordinates">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coordinates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Coordinates</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.coordinates" title="Permalink to this definition">#</a></dt>
-<dd><p>Coordinates in datasource, referenced by standard coordinate keys. The dictionary maps coordinates to the variables in the datasource.</p>
+<dd><dl class="simple">
+<dt>Coordinates in datasource, referenced by standard coordinate keys. The dictionary keys map to coordinates variables in the datasource.</dt><dd><p>Ensemble: “e”
+Rasterband: “b”
+Category: “c”
+Quantile: “q”
+Season: “s”
+Month: “m”
+Time: “t”
+Vertical: “z”
+Northing: “y”
+Easting: “x”
+Station: “s”  (Locations assumed stationary, datasource with a multigeometry indexed by station coordinate)
+Geometry: “g”  (Abstract coordinate - a 2 or 3D geometry that defines a feature location)
+Frequency: “f”
+Direction:”d”</p>
+</dd>
+</dl>
+<p>Example {“t”:”time”,”x”:”longitude”,”y”:”latitude”}</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -509,7 +526,7 @@
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.Datasource.last_modified">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">1,</span> <span class="pre">10,</span> <span class="pre">19,</span> <span class="pre">33,</span> <span class="pre">53,</span> <span class="pre">557867)</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">1,</span> <span class="pre">10,</span> <span class="pre">19,</span> <span class="pre">39,</span> <span class="pre">50,</span> <span class="pre">742000)</span></em><a class="headerlink" href="#oceanum.datamesh.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
 <dd><p>Last time datasource was modified</p>
 </dd></dl>
 

@@ -376,8 +376,24 @@
     <span class="p">)</span>
     <span class="n">coordinates</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Coordinates</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Coordinate keys&quot;</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;Coordinates in datasource, referenced by standard coordinate keys. The dictionary maps coordinates to the variables in the datasource.</span>
-<span class="s2">        </span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Coordinates in datasource, referenced by standard coordinate keys. The dictionary keys map to coordinates variables in the datasource.</span>
+<span class="s2">            Ensemble: &quot;e&quot;</span>
+<span class="s2">            Rasterband: &quot;b&quot;</span>
+<span class="s2">            Category: &quot;c&quot;</span>
+<span class="s2">            Quantile: &quot;q&quot;</span>
+<span class="s2">            Season: &quot;s&quot;</span>
+<span class="s2">            Month: &quot;m&quot;</span>
+<span class="s2">            Time: &quot;t&quot;</span>
+<span class="s2">            Vertical: &quot;z&quot;</span>
+<span class="s2">            Northing: &quot;y&quot;</span>
+<span class="s2">            Easting: &quot;x&quot;</span>
+<span class="s2">            Station: &quot;s&quot;  (Locations assumed stationary, datasource with a multigeometry indexed by station coordinate)</span>
+<span class="s2">            Geometry: &quot;g&quot;  (Abstract coordinate - a 2 or 3D geometry that defines a feature location)</span>
+<span class="s2">            Frequency: &quot;f&quot;</span>
+<span class="s2">            Direction:&quot;d&quot;</span>
+
+<span class="s2">        Example {&quot;t&quot;:&quot;time&quot;,&quot;x&quot;:&quot;longitude&quot;,&quot;y&quot;:&quot;latitude&quot;}</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">details</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AnyHttpUrl</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
