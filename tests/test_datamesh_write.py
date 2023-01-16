@@ -7,10 +7,12 @@ import pytest
 import pandas
 import geopandas
 import xarray
+import numpy
 
 from click.testing import CliRunner
 
 from oceanum.datamesh import Connector, Datasource
+from oceanum.datamesh.exceptions import DatameshWriteError
 from oceanum import cli
 
 HERE = os.path.dirname(__file__)
@@ -53,6 +55,30 @@ def test_write_dataset(conn, dataset):
     conn.write_datasource(datasource_id, dataset, overwrite=True)
     ds = conn.load_datasource(datasource_id)
     assert (ds == dataset).all()["u10"]
+    conn.delete_datasource(datasource_id)
+
+
+def test_append_dataset(conn, dataset):
+    datasource_id = "test-write-dataset"
+    dataset2 = dataset.copy()
+    dataset2["time"] = dataset["time"] + numpy.timedelta64(1, "D")
+    conn.write_datasource(datasource_id, dataset, overwrite=True)
+    conn.write_datasource(datasource_id, dataset2, append="time")
+    ds = conn.load_datasource(datasource_id)
+    assert len(ds["u10"]) == 73
+    assert (ds["u10"][:10] == dataset["u10"][:10]).all()
+    conn.delete_datasource(datasource_id)
+
+
+def test_append_dataset_fail(conn, dataset):
+    datasource_id = "test-write-dataset"
+    dataset2 = dataset.copy()
+    dataset2["time"] = pandas.date_range(
+        dataset["time"][10].values, dataset["time"][20].values, 49
+    ).values
+    conn.write_datasource(datasource_id, dataset, overwrite=True)
+    with pytest.raises(DatameshWriteError):
+        conn.write_datasource(datasource_id, dataset2, append="time")
     conn.delete_datasource(datasource_id)
 
 
