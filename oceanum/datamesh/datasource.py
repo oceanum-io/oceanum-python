@@ -243,6 +243,7 @@ class Datasource(BaseModel):
         title="Driver arguments",
         description="Driver arguments for datasource. These are driver dependent.",
         allow_mutation=False,
+        default={},
     )
     driver: str = Field(allow_mutation=False)
     _exists: bool = PrivateAttr(default=False)
