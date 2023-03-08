@@ -94,7 +94,7 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
 
                 drop_coords = [c for c in data.coords if c != append]
                 replace_section = data.isel(
-                    **{append: slice(0, len(replace_range))}
+                    **{append_dim: slice(0, len(replace_range))}
                 ).drop(drop_coords)
                 replace_slice = slice(replace_range[0], replace_range[-1] + 1)
                 # Fail if we are replacing an internal section and ends of coordinates do not match
@@ -111,7 +111,9 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
                     region={append_dim: replace_slice},
                 )
             if len(data[append]) > len(replace_range):
-                append_chunk = data.isel(**{append: slice(len(replace_range), None)})
+                append_chunk = data.isel(
+                    **{append_dim: slice(len(replace_range), None)}
+                )
                 _to_zarr(
                     append_chunk,
                     store,
