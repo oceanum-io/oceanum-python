@@ -111,13 +111,9 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
                     region={append_dim: replace_slice},
                 )
             if len(data[append]) > len(replace_range):
-<<<<<<< HEAD
                 append_chunk = data.isel(
                     **{append_dim: slice(len(replace_range), None)}
                 )
-=======
-                append_chunk = data.isel(**{append: slice(len(replace_range), None)})
->>>>>>> 08207a29f230b7f7bb66e3abe1760910d030dad9
                 _to_zarr(
                     append_chunk,
                     store,
