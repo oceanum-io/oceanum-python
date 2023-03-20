@@ -112,7 +112,9 @@ class TimeFilter(BaseModel):
     resolution: Optional[str] = Field(
         title="Temporal resolution of data",
         default="native",
-        description="Maximum resolution of the data for temporal downsampling. Only valid with range type",
+        description=""""
+            Maximum resolution of the data for temporal downsampling. 
+            Must be a valid pandas [DateOffset.freqstr](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.tseries.offsets.DateOffset.freqstr.html#pandas.tseries.offsets.DateOffset.freqstr). Only valid with range type""",
     )
     resample: Optional[ResampleType] = Field(
         title="Temporal resampling method",
