@@ -29,3 +29,28 @@ def test_query_aggregate():
         timefilter={"times": ["2000-01-01T00:00:00", "2001-01-01T00:00:00Z"]},
         aggregate={"operations": ["sum", "mean"]},
     )
+
+
+def test_query_geofilter():
+    q = Query(
+        datasource="test",
+        geofilter={
+            "type": "feature",
+            "geom": {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [114.59562876453432, -28.77320223799819],
+                            [114.59885236328529, -28.77290277153547],
+                            [114.59911343041955, -28.77161672273214],
+                            [114.59586208356448, -28.771921278480875],
+                            [114.59562876453431, -28.77320223799819],
+                        ]
+                    ],
+                },
+                "properties": {},
+            },
+        },
+    )
