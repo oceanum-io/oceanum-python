@@ -2,6 +2,7 @@ fsspec
 numpy
 pandas
 geopandas
+dask
 xarray
 zarr
 h5netcdf
