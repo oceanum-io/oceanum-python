@@ -256,7 +256,7 @@ class Connector(object):
         """
         query = {}
         if search:
-            query["search"] = search.replace(" ", ",")
+            query["search"] = search
         if timefilter:
             times = TimeFilter(times=timefilter).times
             query["in_trange"] = f"{times[0]}Z,{times[1]}Z"
@@ -473,7 +473,7 @@ class Connector(object):
         try:
             self._metadata_write(ds)
         except:
-            raise DatameshWriteError("Cannot register datasource {datasource_id}: {e}")
+            raise DatameshWriteError(f"Cannot register datasource {datasource_id}: {e}")
         return ds
 
     @asyncwrapper
