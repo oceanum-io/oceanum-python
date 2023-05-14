@@ -2,7 +2,7 @@ import datetime
 import orjson
 import pandas as pd
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Union, List
 from enum import Enum
 from geojson_pydantic import Feature, FeatureCollection
@@ -88,6 +88,19 @@ class GeoFilter(BaseModel):
         default=0.0,
         description="Maximum resolution of the data for downsampling in CRS units. Only works for feature datasources.",
     )
+
+    @validator("geom", pre=True)
+    def validate_geom(cls, v):
+        if isinstance(v, list):
+            if len(v) != 4:
+                raise ValueError(
+                    "bbox must be a list of length 4 [x_min,y_min,x_max,y_max]"
+                )
+        elif isinstance(v, dict):
+            if "properties" not in v:
+                v["properties"] = {}
+            v = Feature(**v)
+        return v
 
 
 class TimeFilter(BaseModel):
