@@ -94,7 +94,7 @@ class GeoFilter(BaseModel):
         if isinstance(v, list):
             if len(v) != 4:
                 raise ValueError(
-                    "bbox must be a list of length 4 [x_min,y_min,x_max,y_max]"
+                    "bbox must be a list of length 4: [x_min,y_min,x_max,y_max]"
                 )
         elif isinstance(v, dict):
             if "properties" not in v:
