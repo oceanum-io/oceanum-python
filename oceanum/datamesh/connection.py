@@ -108,7 +108,8 @@ class Connector(object):
         elif resp.status_code == 401:
             raise DatameshConnectError(f"Datasource {datasource_id} not Authorized")
         elif resp.status_code != 200:
-            raise DatameshConnectError(resp.text)
+            msg = resp.json()["detail"]
+            raise DatameshConnectError(msg)
         return resp
 
     def _metadata_write(self, datasource):
@@ -126,7 +127,8 @@ class Connector(object):
                 headers={**self._auth_headers, "Content-Type": "application/json"},
             )
         if resp.status_code >= 300:
-            raise DatameshConnectError(resp.text)
+            msg = resp.json()["detail"]
+            raise DatameshConnectError(msg)
         return resp
 
     def _delete(self, datasource_id):
@@ -135,7 +137,8 @@ class Connector(object):
             headers=self._auth_headers,
         )
         if resp.status_code >= 300:
-            raise DatameshConnectError(resp.text)
+            msg = resp.json()["detail"]
+            raise DatameshConnectError(msg)
         return True
 
     def _zarr_proxy(self, datasource_id, parameters={}):
@@ -158,7 +161,8 @@ class Connector(object):
             headers={"Accept": data_format, **self._auth_headers},
         )
         if not resp.status_code == 200:
-            raise DatameshConnectError(resp.text)
+            msg = resp.json()["detail"]
+            raise DatameshConnectError(msg)
         else:
             with open(tmpfile, "wb") as f:
                 f.write(resp.content)
@@ -188,7 +192,8 @@ class Connector(object):
                 headers=headers,
             )
         if not resp.status_code == 200:
-            raise DatameshConnectError(resp.text)
+            msg = resp.json()["detail"]
+            raise DatameshConnectError(msg)
         return Datasource(**resp.json())
 
     def _stage_request(self, query, cache=False):
@@ -200,7 +205,8 @@ class Connector(object):
             data=query.json(),
         )
         if resp.status_code >= 400:
-            raise DatameshQueryError(resp.text)
+            msg = resp.json()["detail"]
+            raise DatameshQueryError(msg)
         elif resp.status_code == 204:
             return None
         else:
@@ -229,7 +235,8 @@ class Connector(object):
                 f"{self._gateway}/oceanql/", headers=headers, data=query.json()
             )
             if resp.status_code >= 400:
-                raise DatameshQueryError(resp.text)
+                msg = resp.json()["detail"]
+                raise DatameshQueryError(msg)
             else:
                 with tempfile.NamedTemporaryFile("wb", delete=False) as f:
                     f.write(resp.content)
