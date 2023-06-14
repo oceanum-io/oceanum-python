@@ -1,5 +1,6 @@
 import requests
 import re
+import time
 import xarray
 import numpy
 from collections.abc import MutableMapping
@@ -15,17 +16,27 @@ except:
 
 
 class ZarrClient(MutableMapping):
-    def __init__(self, connection, datasource, method="post"):
+    def __init__(self, connection, datasource, method="post", retries=5):
         self.datasource = datasource
         self.method = method
         self.headers = {**connection._auth_headers, "cache-control": "no-transform"}
         self.gateway = connection._gateway + "/zarr"
+        self.retries = retries
+
+    def _get(self, path):
+        retries = 0
+        while retries < self.retries:
+            try:
+                resp = requests.get(path, headers=self.headers)
+            except requests.RequestException:
+                time.sleep(0.1 * 2**retries)
+                retries += 1
+            else:
+                return resp
 
     def __getitem__(self, item):
-        resp = requests.get(
-            f"{self.gateway}/{self.datasource}/{item}", headers=self.headers
-        )
-        if resp.status_code != 200:
+        resp = self._get(f"{self.gateway}/{self.datasource}/{item}")
+        if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
 
@@ -49,7 +60,9 @@ class ZarrClient(MutableMapping):
         )
 
     def __iter__(self):
-        resp = requests.get(f"{self.gateway}/{self.datasource}", headers=self.headers)
+        resp = self._get(f"{self.gateway}/{self.datasource}")
+        if not resp:
+            return
         ex = re.compile(r"""<(a|A)\s+(?:[^>]*?\s+)?(href|HREF)=["'](?P<url>[^"']+)""")
         links = [u[2] for u in ex.findall(resp.text)]
         for link in links:
