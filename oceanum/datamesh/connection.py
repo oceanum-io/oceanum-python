@@ -1,5 +1,6 @@
 import os
 import io
+import re
 import json
 import datetime
 import tempfile
@@ -440,6 +441,10 @@ class Connector(object):
         Returns:
             :obj:`oceanum.datamesh.Datasource`: The datasource instance that was written to
         """
+        if not re.match("^[a-z0-9_-]*$", datasource_id):
+            raise DatameshWriteError(
+                "Datasource ID must only contain lowercase letters, numbers, dashes and underscores"
+            )
         try:
             ds = self.get_datasource(datasource_id)
         except DatameshConnectError as e:
