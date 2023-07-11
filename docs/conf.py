@@ -93,12 +93,29 @@ todo_include_todos = False
 #
 html_theme = "pydata_sphinx_theme"
 html_logo = "banner_dark.svg"
+html_favicon = "oceanum-favicon.ico"
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    "collapse_navigation": True,
+    "show_nav_level": 2,
+    "secondary_sidebar_items": ["page-toc", "edit-this-page", "sourcelink"],
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/oceanum-io/oceanum-python",
+            "icon": "fab fa-github",
+            "type": "fontawesome",
+        }
+   ]
+}
+
+html_sidebars = {
+  "**": ["globaltoc.html"],
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
