@@ -57,6 +57,7 @@ def test_datasource_properties(dataframe):
         coordinates={"t": "time"},
         driver="dum",
     )
+    ds._detail = True
     assert ds.bounds == (
         173.0,
         -40,

@@ -16,6 +16,7 @@ import tempfile
 from urllib.parse import urlparse
 import asyncio
 from functools import wraps, partial
+from contextlib import contextmanager
 
 from .datasource import Datasource, _datasource_props, _datasource_driver
 from .catalog import Catalog
@@ -43,6 +44,17 @@ def asyncwrapper(func):
         return await loop.run_in_executor(executor, pfunc)
 
     return run
+
+
+# Windows compatibility tempfile
+@contextmanager
+def tempFile(mode="wb"):
+    file = tempfile.NamedTemporaryFile(mode, delete=False)
+    try:
+        yield file
+    finally:
+        file.close()
+        os.unlink(file.name)
 
 
 class Connector(object):
@@ -239,7 +251,7 @@ class Connector(object):
                 msg = resp.json()["detail"]
                 raise DatameshQueryError(msg)
             else:
-                with tempfile.NamedTemporaryFile("wb", delete=False) as f:
+                with tempFile("wb") as f:
                     f.write(resp.content)
                     f.seek(0)
                     if stage.container == Container.Dataset:
@@ -248,7 +260,6 @@ class Connector(object):
                         ds = geopandas.read_parquet(f.name)
                     else:
                         ds = pandas.read_parquet(f.name)
-                os.unlink(f.name)
                 return ds
 
     def get_catalog(self, search=None, timefilter=None, geofilter=None):
@@ -450,17 +461,17 @@ class Connector(object):
         except DatameshConnectError as e:
             overwrite = True
         if data is not None:
-            with tempfile.NamedTemporaryFile("w+b", delete=False) as f:
-                try:
-                    if isinstance(data, xarray.Dataset):
-                        ds = zarr_write(
-                            self,
-                            datasource_id,
-                            data,
-                            append,
-                            overwrite,
-                        )
-                    else:
+            try:
+                if isinstance(data, xarray.Dataset):
+                    ds = zarr_write(
+                        self,
+                        datasource_id,
+                        data,
+                        append,
+                        overwrite,
+                    )
+                else:
+                    with tempFile("w+b") as f:
                         data.to_parquet(f, index=True)
                         f.seek(0)
                         ds = self._data_write(
@@ -470,11 +481,9 @@ class Connector(object):
                             append,
                             overwrite,
                         )
-                    ds._exists = True
-                except Exception as e:
-                    raise DatameshWriteError(e)
-                finally:
-                    os.remove(f.name)
+                ds._exists = True
+            except Exception as e:
+                raise DatameshWriteError(e)
         elif overwrite:
             ds = Datasource(id=datasource_id, geom=geometry, **properties)
         for key in properties:
