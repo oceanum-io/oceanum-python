@@ -140,7 +140,10 @@ class Connector(object):
                 headers={**self._auth_headers, "Content-Type": "application/json"},
             )
         if resp.status_code >= 300:
-            msg = resp.json()["detail"]
+            try:
+                msg = resp.json()["detail"]
+            except:
+                msg = resp.text
             raise DatameshConnectError(msg)
         return resp
 
