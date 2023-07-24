@@ -210,7 +210,7 @@ class Connector(object):
         return Datasource(**resp.json())
 
     def _stage_request(self, query, cache=False):
-        qhash = hashlib.sha224(query.json().encode()).hexdigest()
+        qhash = hashlib.sha224(query.model_dump_json().encode()).hexdigest()
 
         resp = requests.post(
             f"{self._gateway}/oceanql/stage/",

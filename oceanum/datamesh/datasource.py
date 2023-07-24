@@ -6,7 +6,16 @@ import geopandas
 import xarray
 import asyncio
 import shapely
-from pydantic import BaseModel, Field, AnyHttpUrl, PrivateAttr, constr
+from pydantic import (
+    ConfigDict,
+    BaseModel,
+    Field,
+    AnyHttpUrl,
+    PrivateAttr,
+    constr,
+    BeforeValidator,
+)
+from pydantic_core import core_schema
 from pydantic.json import timedelta_isoformat
 from typing_extensions import Annotated
 from typing import Optional, Dict, Union, List, NamedTuple
@@ -14,40 +23,33 @@ from enum import Enum
 from .query import Query, Timestamp
 
 
-def geojson(shape):
-    return shape.__geo_interface__
-
-
 class DatasourceException(Exception):
     pass
 
 
-class Timeperiod(datetime.timedelta):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+def parse_period(period):
+    try:
+        m = re.match(
+            r"^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:.\d+)?)S)?$",
+            period,
+        )
+        if m is None:
+            raise serializers.ValidationError("invalid ISO 8601 duration string")
+        days = 0
+        hours = 0
+        minutes = 0
+        if m[3]:
+            days = int(m[3])
+        if m[4]:
+            hours = int(m[4])
+        if m[5]:
+            minutes = int(m[5])
+        return datetime.timedelta(days=days, hours=hours, minutes=minutes)
+    except:
+        raise "Period string not valid"
 
-    @classmethod
-    def validate(cls, period):
-        try:
-            m = re.match(
-                r"^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:.\d+)?)S)?$",
-                period,
-            )
-            if m is None:
-                raise serializers.ValidationError("invalid ISO 8601 duration string")
-            days = 0
-            hours = 0
-            minutes = 0
-            if m[3]:
-                days = int(m[3])
-            if m[4]:
-                hours = int(m[4])
-            if m[5]:
-                minutes = int(m[5])
-            return datetime.timedelta(days=days, hours=hours, minutes=minutes)
-        except:
-            raise "Period string not valid"
+
+Timeperiod = Annotated[datetime.timedelta, BeforeValidator(parse_period)]
 
 
 LonField = Annotated[
@@ -69,33 +71,59 @@ LatField = Annotated[
 ]
 
 
-class Geometry:
+class _GeometryAnnotation:
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source, handler):
+        def validate(geometry):
+            if isinstance(geometry, dict):
+                try:
+                    geometry = shapely.geometry.shape(geometry)
+                except:
+                    "Not a valid GeoJSON dictionary"
+            if (
+                isinstance(geometry, shapely.geometry.Point)
+                or isinstance(geometry, shapely.geometry.MultiPoint)
+                or isinstance(geometry, shapely.geometry.Polygon)
+            ):
+                return geometry
+            else:
+                raise BaseException("Geometry must be Point, MultiPoint or Polygon")
+
+        from_geometry_schema = core_schema.no_info_plain_validator_function(validate)
+
+        return core_schema.json_or_python_schema(
+            json_schema=from_geometry_schema,
+            python_schema=core_schema.union_schema(
+                [
+                    core_schema.is_instance_schema(shapely.geometry.Point),
+                    core_schema.is_instance_schema(shapely.geometry.MultiPoint),
+                    core_schema.is_instance_schema(shapely.geometry.Polygon),
+                    from_geometry_schema,
+                ]
+            ),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda x: shapely.to_geojson(x)
+            ),
+        )
 
     @classmethod
-    def validate(cls, geometry):
-        if isinstance(geometry, dict):
-            try:
-                geometry = shapely.geometry.shape(geometry)
-            except:
-                "Not a valid GeoJSON dictionary"
-        if (
-            isinstance(geometry, shapely.geometry.Point)
-            or isinstance(geometry, shapely.geometry.MultiPoint)
-            or isinstance(geometry, shapely.geometry.Polygon)
-        ):
-            return geometry
-        else:
-            raise BaseException("Geometry must be Point, MultiPoint or Polygon")
+    def __get_pydantic_json_schema__(cls, schema, handler):
+        return {"type": "object"}
+
+
+Geometry = Annotated[
+    Union[
+        shapely.geometry.Point, shapely.geometry.MultiPoint, shapely.geometry.Polygon
+    ],
+    _GeometryAnnotation,
+]
 
 
 class Schema(BaseModel):
-    attrs: Optional[dict] = Field(title="Global attributes")
-    dims: Optional[dict] = Field(title="Dimensions")
-    coords: Optional[dict] = Field(title="Coordinates")
-    data_vars: Optional[dict] = Field(title="Data variables")
+    attrs: Optional[dict] = Field(title="Global attributes", default={})
+    dims: Optional[dict] = Field(title="Dimensions", default={})
+    coords: Optional[dict] = Field(title="Coordinates", default={})
+    data_vars: Optional[dict] = Field(title="Data variables", default={})
 
 
 class Coordinates(Enum):
@@ -152,7 +180,7 @@ class Datasource(BaseModel):
         max_length=80,
         strip_whitespace=True,
         to_lower=True,
-        regex=r"^[a-z0-9-_]+$",
+        pattern=r"^[a-z0-9-_]+$",
     )
     name: str = Field(
         title="Datasource name",
@@ -203,7 +231,7 @@ class Datasource(BaseModel):
         alias="schema",
         title="Schema",
         description="Datasource schema",
-        default=Schema(attrs={}, dims=[], coords={}, data_vars={}),
+        default=Schema(attrs={}, dims={}, coords={}, data_vars={}),
     )
     coordinates: Dict[Coordinates, str] = Field(
         title="Coordinate keys",
@@ -236,28 +264,21 @@ class Datasource(BaseModel):
         title="Last modified time",
         description="Last time datasource was modified",
         default=datetime.datetime.utcnow(),
-        allow_mutation=False,
+        frozen=True,
     )
     driver_args: Optional[dict] = Field(
         alias="args",
         title="Driver arguments",
         description="Driver arguments for datasource. These are driver dependent.",
-        allow_mutation=False,
+        frozen=True,
         default={},
     )
-    driver: str = Field(allow_mutation=False)
+    driver: str = Field(frozen=True)
     _exists: bool = PrivateAttr(default=False)
     _detail: bool = PrivateAttr(default=False)
-
-    class Config:
-        use_enum_values = True
-        validate_assignment = True
-        json_encoders = {
-            Timeperiod: timedelta_isoformat,
-            shapely.geometry.Point: geojson,
-            shapely.geometry.MultiPoint: geojson,
-            shapely.geometry.Polygon: geojson,
-        }
+    # TODO[pydantic]: The following keys were removed: `json_encoders`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(use_enum_values=True, validate_assignment=True)
 
     def __str__(self):
         if self._detail:
