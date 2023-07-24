@@ -28,7 +28,7 @@ requirements = [
     "requests",
     "pyarrow",
     "python-snappy",
-    "geojson-pydantic",
+    "geojson-pydantic<=0.6.3",
 ]
 
 setup_requirements = [
