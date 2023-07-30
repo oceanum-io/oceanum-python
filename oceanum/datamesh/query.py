@@ -1,42 +1,51 @@
 import datetime
-import orjson
 import pandas as pd
 import numpy as np
-from pydantic import BaseModel, Field, validator
+from pydantic import (
+    field_validator,
+    ConfigDict,
+    BaseModel,
+    Field,
+    BeforeValidator,
+    WithJsonSchema,
+)
 from typing import Optional, Dict, Union, List
+from typing_extensions import Annotated
 from enum import Enum
 from geojson_pydantic import Feature, FeatureCollection
-
-
-def _orjson_dumps(val, *, default):
-    return orjson.dumps(val, default=default).decode()
 
 
 class QueryError(Exception):
     pass
 
 
-class Timestamp(pd.Timestamp):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+def parse_time(v):
+    if not (
+        isinstance(v, str)
+        or isinstance(v, datetime.datetime)
+        or isinstance(v, datetime.date)
+        or isinstance(v, pd.Timestamp)
+    ):
+        raise TypeError("datetime or time string required")
+    try:
+        time = pd.Timestamp(v)
+        if not time.tz:
+            time = time.tz_localize("UTC")
+        return pd.to_datetime(time.tz_convert(None))
+    except Exception as e:
+        raise TypeError(f"Timestamp format not valid: {e}")
 
-    @classmethod
-    def validate(cls, v):
-        if not (
-            isinstance(v, str)
-            or isinstance(v, datetime.datetime)
-            or isinstance(v, datetime.date)
-            or isinstance(v, pd.Timestamp)
-        ):
-            raise TypeError("datetime or time string required")
-        try:
-            time = cls(v)
-            if not time.tz:
-                time = time.tz_localize("UTC")
-            return time.tz_convert(None).to_datetime64()
-        except Exception as e:
-            raise TypeError(f"Timestamp format not valid: {e}")
+
+Timestamp = Annotated[
+    datetime.datetime,
+    Field(
+        default=None,
+        title="Timestamp",
+        description="Timestamp as python datetime, numpy datetime64 or pandas Timestamp",
+    ),
+    BeforeValidator(parse_time),
+    WithJsonSchema({"type": "string", "format": "date-time"}),
+]
 
 
 class GeoFilterType(Enum):
@@ -89,7 +98,8 @@ class GeoFilter(BaseModel):
         description="Maximum resolution of the data for downsampling in CRS units. Only works for feature datasources.",
     )
 
-    @validator("geom", pre=True)
+    @field_validator("geom", mode="before")
+    @classmethod
     def validate_geom(cls, v):
         if isinstance(v, list):
             if len(v) != 4:
@@ -174,6 +184,11 @@ class Aggregate(BaseModel):
 # df      ∩  features -> subset of df within (resolution) of features
 
 
+class CoordSelector(BaseModel):
+    coord: str = Field(title="Coordinate name")
+    value: List[str | int | float] = Field(title="Coordinate value")
+
+
 class Query(BaseModel):
     """
     Datamesh query
@@ -208,6 +223,9 @@ class Query(BaseModel):
     geofilter: Optional[GeoFilter] = Field(
         title="Spatial filter or interpolator", default=None
     )
+    coordfilter: Optional[List[CoordSelector]] = Field(
+        title="List of additional coordinate filters", default=None
+    )
     crs: Optional[Union[str, int]] = Field(
         title="Spatial reference for filter and output",
         default=None,
@@ -218,11 +236,6 @@ class Query(BaseModel):
         default=None,
         description="Optional aggregation operators to apply to query after filtering",
     )
-
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = _orjson_dumps
-        json_encoders = {np.datetime64: str}
 
 
 class Container(str, Enum):

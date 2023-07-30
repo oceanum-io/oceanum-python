@@ -26,6 +26,8 @@ from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteE
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
+DASK_QUERY_SIZE = 1000000000  # 1GB
+
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -213,12 +215,12 @@ class Connector(object):
         return Datasource(**resp.json())
 
     def _stage_request(self, query, cache=False):
-        qhash = hashlib.sha224(query.json().encode()).hexdigest()
+        qhash = hashlib.sha224(query.model_dump_json().encode()).hexdigest()
 
         resp = requests.post(
             f"{self._gateway}/oceanql/stage/",
             headers=self._auth_headers,
-            data=query.json(),
+            data=query.model_dump_json(),
         )
         if resp.status_code >= 400:
             msg = resp.json()["detail"]
@@ -228,13 +230,17 @@ class Connector(object):
         else:
             return Stage(**resp.json())
 
-    def _query(self, query, use_dask=True):
+    def _query(self, query, use_dask=False):
         if not isinstance(query, Query):
             query = Query(**query)
         stage = self._stage_request(query)
         if stage is None:
             warnings.warn("No data found for query")
             return None
+        elif stage.size > DASK_QUERY_SIZE:
+            warnings.warn(
+                "Query is too large for direct access, using lazy access with dask"
+            )
         if use_dask and (stage.container == Container.Dataset):
             mapper = self._zarr_proxy(stage.qhash)
             return xarray.open_zarr(
