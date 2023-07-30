@@ -241,6 +241,7 @@ class Connector(object):
             warnings.warn(
                 "Query is too large for direct access, using lazy access with dask"
             )
+            use_dask = True
         if use_dask and (stage.container == Container.Dataset):
             mapper = self._zarr_proxy(stage.qhash)
             return xarray.open_zarr(
@@ -401,14 +402,14 @@ class Connector(object):
         """
         return self.load_datasource(datasource_id, parameters, use_dask)
 
-    def query(self, query=None, *, use_dask=True, **query_keys):
+    def query(self, query=None, *, use_dask=False, **query_keys):
         """Make a datamesh query
 
         Args:
             query (Union[:obj:`oceanum.datamesh.Query`, dict]): Datamesh query as a query object or a valid query dictionary
 
         Kwargs:
-            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
             **query_keys: Keywords form of query, for example datamesh.query(datasource="my_datasource")
 
         Returns:
@@ -419,14 +420,14 @@ class Connector(object):
         return self._query(query, use_dask)
 
     @asyncwrapper
-    async def query_async(self, query, *, use_dask=True, **query_keys):
+    async def query_async(self, query, *, use_dask=False, **query_keys):
         """Make a datamesh query asynchronously
 
         Args:
             query (Union[:obj:`oceanum.datamesh.Query`, dict]): Datamesh query as a query object or a valid query dictionary
 
         Kwargs:
-            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
             loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
             executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
             **query_keys: Keywords form of query, for example datamesh.query(datasource="my_datasource")
