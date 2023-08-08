@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; oceanum 0.7.2 documentation</title>
+    <title>Index &#8212; oceanum 0.9.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -35,6 +35,7 @@
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="_static/oceanum-favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
@@ -123,6 +124,10 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/oceanum-io/oceanum-python" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
       </ul>
       </div>
       
@@ -138,14 +143,17 @@
 
 <!-- Only show if we have sidebars configured, else just a small margin  -->
 <div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
-  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <div class="bd-toc-item active">
-    
-  </div>
-</nav>
+  <div class="sidebar-start-items">
+<h3><a href="index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html#oceanum-python">oceanum-python</a></li>
+</ul>
+
   </div>
   <div class="sidebar-end-items">
   </div>
@@ -175,6 +183,7 @@
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
@@ -190,6 +199,7 @@
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
@@ -201,6 +211,8 @@
 
       <ul>
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.__init__">(oceanum.datamesh.Connector method)</a>
+</li>
+        <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.__init__">(oceanum.storage.FileSystem method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -249,10 +261,26 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.cat">cat() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.cat_file">cat_file() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.cat_ranges">cat_ranges() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog">Catalog (class in oceanum.datamesh)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.catalog.Catalog">(class in oceanum.datamesh.catalog)</a>
+</li>
+      </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.checksum">checksum() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.clear_instance_cache">clear_instance_cache() (oceanum.storage.FileSystem class method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.close_session">close_session() (oceanum.storage.FileSystem static method)</a>
+
+      <ul>
+        <li><a href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.close_session">(oceanum.storage.filesystem.FileSystem static method)</a>
 </li>
       </ul></li>
       <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector">Connector (class in oceanum.datamesh)</a>
@@ -263,10 +291,18 @@
       </ul></li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Container">Container (class in oceanum.datamesh.query)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.container">container (oceanum.datamesh.query.Stage attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.CoordSelector.coord">coord (oceanum.datamesh.query.CoordSelector attribute)</a>
+</li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.coordfilter">coordfilter (oceanum.datamesh.Query attribute)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.coordfilter">(oceanum.datamesh.query.Query attribute)</a>
+</li>
+      </ul></li>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.coordinates">coordinates (oceanum.datamesh.Datasource attribute)</a>
 
       <ul>
@@ -275,12 +311,22 @@
       </ul></li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.coords">coords (oceanum.datamesh.query.Stage attribute)</a>
 </li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.copy">copy() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.cp">cp() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.cp_file">cp_file() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.created">created() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="classes/datamesh/oceanum.datamesh.Query.html#oceanum.datamesh.Query.crs">crs (oceanum.datamesh.Query attribute)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.crs">(oceanum.datamesh.query.Query attribute)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.current">current() (oceanum.storage.FileSystem class method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -288,12 +334,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Container.DataFrame">DataFrame (oceanum.datamesh.query.Container attribute)</a>
-</li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshConnectError">DatameshConnectError</a>
-</li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshQueryError">DatameshQueryError</a>
-</li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshWriteError">DatameshWriteError</a>
 </li>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.dataschema">dataschema (oceanum.datamesh.Datasource attribute)</a>
 
@@ -309,6 +349,8 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.datasource">(oceanum.datamesh.query.Query attribute)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.delete">delete() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.delete_datasource">delete_datasource() (oceanum.datamesh.connection.Connector method)</a>
 
       <ul>
@@ -321,8 +363,6 @@
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.delete_datasource_async">(oceanum.datamesh.Connector method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.description">description (oceanum.datamesh.Datasource attribute)</a>
 
       <ul>
@@ -333,13 +373,19 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.description">(oceanum.datamesh.query.Query attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.details">details (oceanum.datamesh.Datasource attribute)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.details">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.disk_usage">disk_usage() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.dlen">dlen (oceanum.datamesh.query.Stage attribute)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.download">download() (oceanum.storage.FileSystem method)</a>
 </li>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.driver">driver (oceanum.datamesh.Datasource attribute)</a>
 
@@ -353,6 +399,22 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.driver_args">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.du">du() (oceanum.storage.FileSystem method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.end_transaction">end_transaction() (oceanum.storage.FileSystem method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.exists">exists() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.expand_path">expand_path() (oceanum.storage.FileSystem method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -361,9 +423,21 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilterType.feature">feature (oceanum.datamesh.query.GeoFilterType attribute)</a>
 </li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem">FileSystem (class in oceanum.storage)</a>
+
+      <ul>
+        <li><a href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem">(class in oceanum.storage.filesystem)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.find">find() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.formats">formats (oceanum.datamesh.query.Stage attribute)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.from_json">from_json() (oceanum.storage.FileSystem static method)</a>
+</li>
+      <li><a href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.fsid">fsid (oceanum.storage.filesystem.FileSystem property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -395,20 +469,24 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.geometry">(oceanum.datamesh.datasource.Datasource property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.get">get() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.get_catalog">get_catalog() (oceanum.datamesh.connection.Connector method)</a>
 
       <ul>
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_catalog">(oceanum.datamesh.Connector method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.get_catalog_async">get_catalog_async() (oceanum.datamesh.connection.Connector method)</a>
 
       <ul>
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_catalog_async">(oceanum.datamesh.Connector method)</a>
 </li>
       </ul></li>
+      <li><a href="oceanum.storage.html#oceanum.storage.filesystem.get_client">get_client() (in module oceanum.storage.filesystem)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.get_datasource">get_datasource() (oceanum.datamesh.connection.Connector method)</a>
 
       <ul>
@@ -421,11 +499,21 @@
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.get_datasource_async">(oceanum.datamesh.Connector method)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.get_file">get_file() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.get_mapper">get_mapper() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.glob">glob() (oceanum.storage.FileSystem method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.head">head() (oceanum.storage.FileSystem method)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.host">host (oceanum.datamesh.connection.Connector property)</a>
 </li>
@@ -443,8 +531,6 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.DatasourceGeom.id">(oceanum.datamesh.query.DatasourceGeom attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.catalog.Catalog.ids">ids (oceanum.datamesh.catalog.Catalog property)</a>
 </li>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.info">info (oceanum.datamesh.Datasource attribute)</a>
@@ -453,6 +539,16 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.info">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.info">info() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.invalidate_cache">invalidate_cache() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.isdir">isdir() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.isfile">isfile() (oceanum.storage.FileSystem method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -485,6 +581,10 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.last_modified">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.lexists">lexists() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.listdir">listdir() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="classes/datamesh/oceanum.datamesh.Catalog.html#oceanum.datamesh.Catalog.load">load() (oceanum.datamesh.Catalog method)</a>
 
       <ul>
@@ -511,12 +611,22 @@
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.load_datasource_async">(oceanum.datamesh.Connector method)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.ls">ls() (oceanum.storage.FileSystem method)</a>
+
+      <ul>
+        <li><a href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.ls">(oceanum.storage.filesystem.FileSystem method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.makedir">makedir() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.makedirs">makedirs() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.max">max (oceanum.datamesh.query.AggregateOps attribute)</a>
 </li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.mean">mean (oceanum.datamesh.query.AggregateOps attribute)</a>
@@ -526,6 +636,20 @@
 </li>
       </ul></li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.min">min (oceanum.datamesh.query.AggregateOps attribute)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.mkdir">mkdir() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.mkdirs">mkdirs() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.model_post_init">model_post_init() (oceanum.datamesh.Datasource method)</a>
+
+      <ul>
+        <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.model_post_init">(oceanum.datamesh.datasource.Datasource method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.modified">modified() (oceanum.storage.FileSystem method)</a>
 </li>
       <li>
     module
@@ -543,7 +667,13 @@
 </li>
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.query">oceanum.datamesh.query</a>
 </li>
+        <li><a href="oceanum.storage.html#module-oceanum.storage.filesystem">oceanum.storage.filesystem</a>
+</li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.move">move() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.mv">mv() (oceanum.storage.FileSystem method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -583,8 +713,6 @@
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     oceanum.datamesh.catalog
 
@@ -592,6 +720,8 @@
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.catalog">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     oceanum.datamesh.connection
 
@@ -606,6 +736,17 @@
         <li><a href="oceanum.datamesh.html#module-oceanum.datamesh.query">module</a>
 </li>
       </ul></li>
+      <li>
+    oceanum.storage.filesystem
+
+      <ul>
+        <li><a href="oceanum.storage.html#module-oceanum.storage.filesystem">module</a>
+</li>
+      </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.open">open() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.open_async">open_async() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Aggregate.operations">operations (oceanum.datamesh.query.Aggregate attribute)</a>
 </li>
   </ul></td>
@@ -626,14 +767,24 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Query.parameters">(oceanum.datamesh.query.Query attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.parchive">parchive (oceanum.datamesh.Datasource attribute)</a>
 
       <ul>
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.parchive">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.parse_time">parse_time() (in module oceanum.datamesh.query)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.pipe">pipe() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.pipe_file">pipe_file() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.put">put() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.put_file">put_file() (oceanum.storage.FileSystem method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -676,6 +827,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilterType.range">range (oceanum.datamesh.query.TimeFilterType attribute)</a>
 </li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.read_block">read_block() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.read_bytes">read_bytes() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.read_text">read_text() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.rename">rename() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilter.resample">resample (oceanum.datamesh.query.TimeFilter attribute)</a>
 </li>
   </ul></td>
@@ -688,18 +847,40 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilter.resolution">(oceanum.datamesh.query.TimeFilter attribute)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.rm">rm() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.rm_file">rm_file() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.rmdir">rmdir() (oceanum.storage.FileSystem method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.set_session">set_session() (oceanum.storage.FileSystem method)</a>
+
+      <ul>
+        <li><a href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.set_session">(oceanum.storage.filesystem.FileSystem method)</a>
+</li>
+      </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.sign">sign() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Stage.size">size (oceanum.datamesh.query.Stage attribute)</a>
 </li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Aggregate.spatial">spatial (oceanum.datamesh.query.Aggregate attribute)</a>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.size">size() (oceanum.storage.FileSystem method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.sizes">sizes() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Aggregate.spatial">spatial (oceanum.datamesh.query.Aggregate attribute)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.start_transaction">start_transaction() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.stat">stat() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.std">std (oceanum.datamesh.query.AggregateOps attribute)</a>
 </li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.AggregateOps.sum">sum (oceanum.datamesh.query.AggregateOps attribute)</a>
@@ -716,6 +897,10 @@
         <li><a href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tags">(oceanum.datamesh.datasource.Datasource attribute)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.tail">tail() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.tempFile">tempFile() (in module oceanum.datamesh.connection)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Aggregate.temporal">temporal (oceanum.datamesh.query.Aggregate attribute)</a>
 </li>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.tend">tend (oceanum.datamesh.Datasource attribute)</a>
@@ -736,7 +921,9 @@
 </li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilter.times">times (oceanum.datamesh.query.TimeFilter attribute)</a>
 </li>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Timestamp">Timestamp (class in oceanum.datamesh.query)</a>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.to_json">to_json() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.touch">touch() (oceanum.storage.FileSystem method)</a>
 </li>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.tstart">tstart (oceanum.datamesh.Datasource attribute)</a>
 
@@ -753,10 +940,30 @@
   </ul></td>
 </tr></table>
 
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.ukey">ukey() (oceanum.storage.FileSystem method)</a>
+
+      <ul>
+        <li><a href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.ukey">(oceanum.storage.filesystem.FileSystem method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.unstrip_protocol">unstrip_protocol() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.upload">upload() (oceanum.storage.FileSystem method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.Timestamp.validate">validate() (oceanum.datamesh.query.Timestamp class method)</a>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.validate_geom">validate_geom() (oceanum.datamesh.query.GeoFilter class method)</a>
+</li>
+      <li><a href="oceanum.datamesh.html#oceanum.datamesh.query.CoordSelector.value">value (oceanum.datamesh.query.CoordSelector attribute)</a>
 </li>
       <li><a href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource.variables">variables (oceanum.datamesh.Datasource property)</a>
 
@@ -774,6 +981,10 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.walk">walk() (oceanum.storage.FileSystem method)</a>
+</li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.write_bytes">write_bytes() (oceanum.storage.FileSystem method)</a>
+</li>
       <li><a href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.write_datasource">write_datasource() (oceanum.datamesh.connection.Connector method)</a>
 
       <ul>
@@ -788,6 +999,8 @@
         <li><a href="classes/datamesh/oceanum.datamesh.Connector.html#oceanum.datamesh.Connector.write_datasource_async">(oceanum.datamesh.Connector method)</a>
 </li>
       </ul></li>
+      <li><a href="classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.write_text">write_text() (oceanum.storage.FileSystem method)</a>
+</li>
   </ul></td>
 </tr></table>
 

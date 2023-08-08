@@ -20,6 +20,18 @@ End-user classes
     Catalog
     Query
 
+Storage
+---------------------
+.. currentmodule:: oceanum.storage
+
+
+End-user classes
+
+.. autosummary::
+   :toctree: classes/storage
+
+    FileSystem
+
 .. Internal classes
 
 .. .. autosummary::

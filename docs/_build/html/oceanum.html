@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum package &#8212; oceanum 0.7.2 documentation</title>
+    <title>oceanum package &#8212; oceanum 0.9.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -36,6 +36,7 @@
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="_static/oceanum-favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -124,6 +125,10 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/oceanum-io/oceanum-python" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
       </ul>
       </div>
       
@@ -139,21 +144,17 @@
 
 <!-- Only show if we have sidebars configured, else just a small margin  -->
 <div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
-  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <div class="bd-toc-item active">
-    <ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="oceanum.datamesh.html">
-   oceanum.datamesh package
-  </a>
- </li>
+  <div class="sidebar-start-items">
+<h3><a href="index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html#oceanum-python">oceanum-python</a></li>
 </ul>
 
-  </div>
-</nav>
   </div>
   <div class="sidebar-end-items">
   </div>
@@ -250,11 +251,9 @@
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.connection.Connector.write_datasource_async"><code class="docutils literal notranslate"><span class="pre">Connector.write_datasource_async()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshConnectError"><code class="docutils literal notranslate"><span class="pre">DatameshConnectError</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshQueryError"><code class="docutils literal notranslate"><span class="pre">DatameshQueryError</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.connection.DatameshWriteError"><code class="docutils literal notranslate"><span class="pre">DatameshWriteError</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.connection.asyncwrapper"><code class="docutils literal notranslate"><span class="pre">asyncwrapper()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.connection.json_serial"><code class="docutils literal notranslate"><span class="pre">json_serial()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.connection.tempFile"><code class="docutils literal notranslate"><span class="pre">tempFile()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="oceanum.datamesh.html#oceanum-datamesh-datasource-module">oceanum.datamesh.datasource module</a><ul>
@@ -275,6 +274,7 @@
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tags"><code class="docutils literal notranslate"><span class="pre">Datasource.tags</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tend"><code class="docutils literal notranslate"><span class="pre">Datasource.tend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.tstart"><code class="docutils literal notranslate"><span class="pre">Datasource.tstart</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.model_post_init"><code class="docutils literal notranslate"><span class="pre">Datasource.model_post_init()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.attributes"><code class="docutils literal notranslate"><span class="pre">Datasource.attributes</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.bounds"><code class="docutils literal notranslate"><span class="pre">Datasource.bounds</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.datasource.Datasource.geometry"><code class="docutils literal notranslate"><span class="pre">Datasource.geometry</span></code></a></li>
@@ -304,6 +304,11 @@
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Container.GeoDataFrame"><code class="docutils literal notranslate"><span class="pre">Container.GeoDataFrame</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.CoordSelector"><code class="docutils literal notranslate"><span class="pre">CoordSelector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.CoordSelector.coord"><code class="docutils literal notranslate"><span class="pre">CoordSelector.coord</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.CoordSelector.value"><code class="docutils literal notranslate"><span class="pre">CoordSelector.value</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.DatasourceGeom"><code class="docutils literal notranslate"><span class="pre">DatasourceGeom</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.DatasourceGeom.id"><code class="docutils literal notranslate"><span class="pre">DatasourceGeom.id</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.DatasourceGeom.parameters"><code class="docutils literal notranslate"><span class="pre">DatasourceGeom.parameters</span></code></a></li>
@@ -313,6 +318,7 @@
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.geom"><code class="docutils literal notranslate"><span class="pre">GeoFilter.geom</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.resolution"><code class="docutils literal notranslate"><span class="pre">GeoFilter.resolution</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.type"><code class="docutils literal notranslate"><span class="pre">GeoFilter.type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilter.validate_geom"><code class="docutils literal notranslate"><span class="pre">GeoFilter.validate_geom</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.GeoFilterType"><code class="docutils literal notranslate"><span class="pre">GeoFilterType</span></code></a><ul>
@@ -322,6 +328,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Query"><code class="docutils literal notranslate"><span class="pre">Query</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Query.aggregate"><code class="docutils literal notranslate"><span class="pre">Query.aggregate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Query.coordfilter"><code class="docutils literal notranslate"><span class="pre">Query.coordfilter</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Query.crs"><code class="docutils literal notranslate"><span class="pre">Query.crs</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Query.datasource"><code class="docutils literal notranslate"><span class="pre">Query.datasource</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Query.description"><code class="docutils literal notranslate"><span class="pre">Query.description</span></code></a></li>
@@ -357,13 +364,26 @@
 <li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.TimeFilterType.range"><code class="docutils literal notranslate"><span class="pre">TimeFilterType.range</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Timestamp"><code class="docutils literal notranslate"><span class="pre">Timestamp</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.Timestamp.validate"><code class="docutils literal notranslate"><span class="pre">Timestamp.validate()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.html#oceanum.datamesh.query.parse_time"><code class="docutils literal notranslate"><span class="pre">parse_time()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="oceanum.datamesh.html#module-oceanum.datamesh">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oceanum.storage.html">oceanum.storage package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oceanum.storage.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oceanum.storage.html#module-oceanum.storage.filesystem">oceanum.storage.filesystem module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem"><code class="docutils literal notranslate"><span class="pre">FileSystem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.close_session"><code class="docutils literal notranslate"><span class="pre">FileSystem.close_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.fsid"><code class="docutils literal notranslate"><span class="pre">FileSystem.fsid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.ls"><code class="docutils literal notranslate"><span class="pre">FileSystem.ls()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.set_session"><code class="docutils literal notranslate"><span class="pre">FileSystem.set_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="oceanum.storage.html#oceanum.storage.filesystem.FileSystem.ukey"><code class="docutils literal notranslate"><span class="pre">FileSystem.ukey()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oceanum.storage.html#oceanum.storage.filesystem.get_client"><code class="docutils literal notranslate"><span class="pre">get_client()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

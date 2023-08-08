@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum.datamesh.Connector &#8212; oceanum 0.7.2 documentation</title>
+    <title>oceanum.datamesh.Connector &#8212; oceanum 0.9.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -36,6 +36,7 @@
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="../../_static/oceanum-favicon.ico"/>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -126,6 +127,10 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/oceanum-io/oceanum-python" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
       </ul>
       </div>
       
@@ -141,36 +146,30 @@
 
 <!-- Only show if we have sidebars configured, else just a small margin  -->
 <div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
-  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <div class="bd-toc-item active">
-    <ul class="current nav bd-sidenav">
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   oceanum.datamesh.Connector
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="oceanum.datamesh.Datasource.html">
-   oceanum.datamesh.Datasource
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="oceanum.datamesh.Catalog.html">
-   oceanum.datamesh.Catalog
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="oceanum.datamesh.Query.html">
-   oceanum.datamesh.Query
-  </a>
- </li>
+  <div class="sidebar-start-items">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../api.html#datamesh">Datamesh</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">oceanum.datamesh.Connector</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#oceanum.datamesh.Connector"><code class="docutils literal notranslate"><span class="pre">Connector</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.Datasource.html">oceanum.datamesh.Datasource</a></li>
+<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.Catalog.html">oceanum.datamesh.Catalog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="oceanum.datamesh.Query.html">oceanum.datamesh.Query</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#storage">Storage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html#oceanum-python">oceanum-python</a></li>
 </ul>
 
-  </div>
-</nav>
   </div>
   <div class="sidebar-end-items">
   </div>
@@ -467,7 +466,7 @@
 <dd class="field-odd"><p><a class="reference internal" href="oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource" title="oceanum.datamesh.Datasource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Datasource</span></code></a></p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.connection.DatameshConnectError" title="oceanum.datamesh.connection.DatameshConnectError"><strong>DatameshConnectError</strong></a> – Datasource cannot be found or is not authorized for the datamesh key</p>
+<dd class="field-even"><p><strong>DatameshConnectError</strong> – Datasource cannot be found or is not authorized for the datamesh key</p>
 </dd>
 </dl>
 </dd></dl>
@@ -491,7 +490,7 @@
 <dd class="field-odd"><p>Coroutine&lt;<a class="reference internal" href="oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource" title="oceanum.datamesh.Datasource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Datasource</span></code></a>&gt;</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="../../oceanum.datamesh.html#oceanum.datamesh.connection.DatameshConnectError" title="oceanum.datamesh.connection.DatameshConnectError"><strong>DatameshConnectError</strong></a> – Datasource cannot be found or is not authorized for the datamesh key</p>
+<dd class="field-even"><p><strong>DatameshConnectError</strong> – Datasource cannot be found or is not authorized for the datamesh key</p>
 </dd>
 </dl>
 </dd></dl>
@@ -543,7 +542,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.Connector.query">
-<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.query" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.query" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a datamesh query</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -551,7 +550,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 </dd>
 </dl>
 <dl class="simple">
-<dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+<dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
 <a href="#id1"><span class="problematic" id="id2">**</span></a>query_keys: Keywords form of query, for example datamesh.query(datasource=”my_datasource”)</p>
 </dd>
 </dl>
@@ -567,7 +566,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.Connector.query_async">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.query_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.query_async" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/datamesh/connection.html#Connector.query_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.Connector.query_async" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a datamesh query asynchronously</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -575,7 +574,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 </dd>
 </dl>
 <dl class="simple">
-<dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+<dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
 loop: event loop. default=None will use <code class="xref py py-obj docutils literal notranslate"><span class="pre">asyncio.get_running_loop()</span></code>
 executor: <code class="xref py py-obj docutils literal notranslate"><span class="pre">concurrent.futures.Executor</span></code> instance. default=None will use the default executor
 <a href="#id3"><span class="problematic" id="id4">**</span></a>query_keys: Keywords form of query, for example datamesh.query(datasource=”my_datasource”)</p>

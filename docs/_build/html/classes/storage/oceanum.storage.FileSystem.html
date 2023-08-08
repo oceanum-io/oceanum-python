@@ -1,0 +1,1706 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>oceanum.storage.FileSystem &#8212; oceanum 0.9.0 documentation</title>
+<script>
+  document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+  document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
+</script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+
+
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="../../_static/oceanum-favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="About" href="../../about.html" />
+    <link rel="prev" title="oceanum.datamesh.Query" href="../datamesh/oceanum.datamesh.Query.html" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+    <div class="bd-header-announcement container-fluid" id="banner">
+      
+
+    </div>
+
+    
+    <nav class="bd-header navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="bd-header__inner container-xl">
+
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+    <img src="../../_static/banner_dark.svg" class="logo__image only-light" alt="Logo image">
+    <img src="../../_static/banner_dark.svg" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="fas fa-bars"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../usage.html">
+  Usage
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../../api.html">
+  API documentation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../about.html">
+  About
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <span id="theme-switch" class="btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/oceanum-io/oceanum-python" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="bd-container container-xl">
+      <div class="bd-container__inner row">
+          
+
+<!-- Only show if we have sidebars configured, else just a small margin  -->
+<div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
+  <div class="sidebar-start-items">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../api.html#datamesh">Datamesh</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../api.html#storage">Storage</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">oceanum.storage.FileSystem</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#oceanum.storage.FileSystem"><code class="docutils literal notranslate"><span class="pre">FileSystem</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html#oceanum-python">oceanum-python</a></li>
+</ul>
+
+  </div>
+  <div class="sidebar-end-items">
+  </div>
+</div>
+
+
+          
+
+
+<div class="bd-sidebar-secondary d-none d-xl-block col-xl-2 bd-toc">
+  
+    
+    <div class="toc-item">
+      
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#oceanum.storage.FileSystem">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     FileSystem
+    </span>
+   </code>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.__init__">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.__init__()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.cat">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.cat()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.cat_file">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.cat_file()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.cat_ranges">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.cat_ranges()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.checksum">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.checksum()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.clear_instance_cache">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.clear_instance_cache()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.close_session">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.close_session()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.copy">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.copy()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.cp">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.cp()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.cp_file">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.cp_file()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.created">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.created()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.current">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.current()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.delete">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.delete()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.disk_usage">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.disk_usage()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.download">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.download()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.du">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.du()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.end_transaction">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.end_transaction()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.exists">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.exists()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.expand_path">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.expand_path()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.find">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.find()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.from_json">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.from_json()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.get">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.get()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.get_file">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.get_file()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.get_mapper">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.get_mapper()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.glob">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.glob()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.head">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.head()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.info">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.info()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.invalidate_cache">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.invalidate_cache()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.isdir">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.isdir()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.isfile">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.isfile()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.lexists">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.lexists()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.listdir">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.listdir()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.ls">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.ls()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.makedir">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.makedir()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.makedirs">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.makedirs()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.mkdir">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.mkdir()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.mkdirs">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.mkdirs()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.modified">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.modified()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.move">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.move()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.mv">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.mv()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.open">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.open()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.open_async">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.open_async()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.pipe">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.pipe()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.pipe_file">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.pipe_file()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.put">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.put()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.put_file">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.put_file()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.read_block">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.read_block()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.read_bytes">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.read_bytes()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.read_text">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.read_text()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.rename">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.rename()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.rm">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.rm()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.rm_file">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.rm_file()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.rmdir">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.rmdir()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.set_session">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.set_session()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.sign">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.sign()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.size">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.size()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.sizes">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.sizes()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.start_transaction">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.start_transaction()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.stat">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.stat()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.tail">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.tail()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.to_json">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.to_json()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.touch">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.touch()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.ukey">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.ukey()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.unstrip_protocol">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.unstrip_protocol()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.upload">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.upload()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.walk">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.walk()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.write_bytes">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.write_bytes()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.FileSystem.write_text">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       FileSystem.write_text()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+    </div>
+    
+    <div class="toc-item">
+      
+    </div>
+    
+  
+</div>
+
+
+          
+          
+          <div class="bd-content col-12 col-md-9 col-xl-7">
+              
+              <article class="bd-article" role="main">
+                
+  <section id="oceanum-storage-filesystem">
+<h1>oceanum.storage.FileSystem<a class="headerlink" href="#oceanum-storage-filesystem" title="Permalink to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oceanum.storage.</span></span><span class="sig-name descname"><span class="pre">FileSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/storage/filesystem.html#FileSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.FileSystem" title="Permalink to this definition">#</a></dt>
+<dd><p>Datamesh storage filesystem.</p>
+<p>This follows the fsspec specification and can be used with dask.</p>
+<dl class="simple">
+<dt>You can use this class directly, for example:</dt><dd><p>fs = FileSystem(token=”my_datamesh_token”)
+fs.ls(“/myfolder”)</p>
+</dd>
+<dt>or use fsspec convenience functions with protocol “oceanum”. For example:</dt><dd><p>of=fsspec.open(“oceanum://myfolder/myfile.txt”, token=”my_datamesh_token”)</p>
+</dd>
+</dl>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">async_impl</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">blocksize</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cachable</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">disable_throttling</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fsid</span></code></p></td>
+<td><p>Persistent filesystem id that can be used to compare filesystems across sessions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">loop</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mirror_sync_methods</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">protocol</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">root_marker</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sep</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transaction</span></code></p></td>
+<td><p>A context within which files are committed together upon exit</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://storage.oceanum.io'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asynchronous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/storage/filesystem.html#FileSystem.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.FileSystem.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Storage filesystem constructor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token</strong> (<em>string</em>) – Your datamesh access token. Defaults to os.environ.get(“DATAMESH_TOKEN”, None).</p></li>
+<li><p><strong>service</strong> (<em>string</em><em>, </em><em>optional</em>) – URL of datamesh service. Defaults to os.environ.get(“STORAGE_SERVICE”, “<a class="reference external" href="https://storage.oceanum.io">https://storage.oceanum.io</a>”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Missing or invalid arguments</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.cat">
+<span class="sig-name descname"><span class="pre">cat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'raise'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.cat" title="Permalink to this definition">#</a></dt>
+<dd><p>Fetch (potentially multiple) paths’ contents</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>recursive</strong> (<em>bool</em>) – If True, assume the path(s) are directories, and get all the
+contained files</p></li>
+<li><p><strong>on_error</strong> (<em>&quot;raise&quot;</em><em>, </em><em>&quot;omit&quot;</em><em>, </em><em>&quot;return&quot;</em>) – If raise, an underlying exception will be raised (converted to KeyError
+if the type is in self.missing_exceptions); if omit, keys with exception
+will simply not be included in the output; if “return”, all keys are
+included in the output, but the value will be bytes or an exception
+instance.</p></li>
+<li><p><strong>kwargs</strong> (<em>passed to cat_file</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>dict of {path</strong> (<em>contents} if there are multiple paths</em>)</p></li>
+<li><p><em>or the path has been otherwise expanded</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.cat_file">
+<span class="sig-name descname"><span class="pre">cat_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.cat_file" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the content of a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>URL</em><em> of </em><em>file on this filesystems</em>) – </p></li>
+<li><p><strong>start</strong> (<em>int</em>) – Bytes limits of the read. If negative, backwards from end,
+like usual python slices. Either can be None for start or
+end of file, respectively</p></li>
+<li><p><strong>end</strong> (<em>int</em>) – Bytes limits of the read. If negative, backwards from end,
+like usual python slices. Either can be None for start or
+end of file, respectively</p></li>
+<li><p><strong>kwargs</strong> (passed to <code class="docutils literal notranslate"><span class="pre">open()</span></code>.) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.cat_ranges">
+<span class="sig-name descname"><span class="pre">cat_ranges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ends</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_gap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'return'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.cat_ranges" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.checksum">
+<span class="sig-name descname"><span class="pre">checksum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.checksum" title="Permalink to this definition">#</a></dt>
+<dd><p>Unique value for current version of file</p>
+<p>If the checksum is the same from one moment to another, the contents
+are guaranteed to be the same. If the checksum changes, the contents
+<em>might</em> have changed.</p>
+<p>This should normally be overridden; default will probably capture
+creation/modification timestamp (which would be good) or maybe
+access timestamp (which would be bad)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.clear_instance_cache">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_instance_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.clear_instance_cache" title="Permalink to this definition">#</a></dt>
+<dd><p>Clear the cache of filesystem instances.</p>
+<p class="rubric">Notes</p>
+<p>Unless overridden by setting the <code class="docutils literal notranslate"><span class="pre">cachable</span></code> class attribute to False,
+the filesystem class stores a reference to newly created instances. This
+prevents Python’s normal rules around garbage collection from working,
+since the instances refcount will not drop to zero until
+<code class="docutils literal notranslate"><span class="pre">clear_instance_cache</span></code> is called.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.close_session">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/storage/filesystem.html#FileSystem.close_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.FileSystem.close_session" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.copy" title="Permalink to this definition">#</a></dt>
+<dd><p>Copy within two locations in the filesystem</p>
+<dl class="simple">
+<dt>on_error<span class="classifier">“raise”, “ignore”</span></dt><dd><p>If raise, any not-found exceptions will be raised; if ignore any
+not-found exceptions will cause the path to be skipped; defaults to
+raise unless recursive is true, where the default is ignore</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.cp">
+<span class="sig-name descname"><span class="pre">cp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.cp" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.copy</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.cp_file">
+<span class="sig-name descname"><span class="pre">cp_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.cp_file" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.created">
+<span class="sig-name descname"><span class="pre">created</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.created" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the created timestamp of a file as a datetime.datetime</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.current">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.current" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the most recently instantiated FileSystem</p>
+<p>If no instance has been created, then create one with defaults</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.delete" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.rm</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.disk_usage">
+<span class="sig-name descname"><span class="pre">disk_usage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.disk_usage" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.du</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.download">
+<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.download" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.get</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.du">
+<span class="sig-name descname"><span class="pre">du</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">withdirs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.du" title="Permalink to this definition">#</a></dt>
+<dd><p>Space used by files and optionally directories within a path</p>
+<p>Directory size does not include the size of its contents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – </p></li>
+<li><p><strong>total</strong> (<em>bool</em>) – Whether to sum all the file sizes</p></li>
+<li><p><strong>maxdepth</strong> (<em>int</em><em> or </em><em>None</em>) – Maximum number of directory levels to descend, None for unlimited.</p></li>
+<li><p><strong>withdirs</strong> (<em>bool</em>) – Whether to include directory paths in the output.</p></li>
+<li><p><strong>kwargs</strong> (passed to <code class="docutils literal notranslate"><span class="pre">find</span></code>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>Dict of {path</strong> (<em>size} if total=False, or int otherwise, where numbers</em>)</p></li>
+<li><p><em>refer to bytes used.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.end_transaction">
+<span class="sig-name descname"><span class="pre">end_transaction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.end_transaction" title="Permalink to this definition">#</a></dt>
+<dd><p>Finish write transaction, non-context version</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.exists">
+<span class="sig-name descname"><span class="pre">exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.exists" title="Permalink to this definition">#</a></dt>
+<dd><p>Is there a file at the given path</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.expand_path">
+<span class="sig-name descname"><span class="pre">expand_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.expand_path" title="Permalink to this definition">#</a></dt>
+<dd><p>Turn one or more globs or directories into a list of all matching paths
+to files or directories.</p>
+<p>kwargs are passed to <code class="docutils literal notranslate"><span class="pre">glob</span></code> or <code class="docutils literal notranslate"><span class="pre">find</span></code>, which may in turn call <code class="docutils literal notranslate"><span class="pre">ls</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.find">
+<span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">withdirs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.find" title="Permalink to this definition">#</a></dt>
+<dd><p>List all files below path.</p>
+<p>Like posix <code class="docutils literal notranslate"><span class="pre">find</span></code> command without conditions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – </p></li>
+<li><p><strong>maxdepth</strong> (<em>int</em><em> or </em><em>None</em>) – If not None, the maximum number of levels to descend</p></li>
+<li><p><strong>withdirs</strong> (<em>bool</em>) – Whether to include directory paths in the output. This is True
+when used by glob, but users usually only want files.</p></li>
+<li><p><strong>ls.</strong> (<em>kwargs are passed to</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.from_json">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blob</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.from_json" title="Permalink to this definition">#</a></dt>
+<dd><p>Recreate a filesystem instance from JSON representation</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">.to_json()</span></code> for the expected structure of the input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>blob</strong> (<em>str</em>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>file system instance, not necessarily of this particular class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback=&lt;fsspec.callbacks.NoOpCallback</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Copy file(s) to local.</p>
+<p>Copies a specific file or tree of files (if recursive=True). If lpath
+ends with a “/”, it will be assumed to be a directory, and target files
+will go within. Can submit a list of paths, which may be glob-patterns
+and will be expanded.</p>
+<p>Calls get_file for each source.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.get_file">
+<span class="sig-name descname"><span class="pre">get_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback=&lt;fsspec.callbacks.NoOpCallback</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.get_file" title="Permalink to this definition">#</a></dt>
+<dd><p>Copy single remote file to local</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.get_mapper">
+<span class="sig-name descname"><span class="pre">get_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_exceptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.get_mapper" title="Permalink to this definition">#</a></dt>
+<dd><p>Create key/value store based on this file-system</p>
+<p>Makes a MutableMapping interface to the FS at the given root path.
+See <code class="docutils literal notranslate"><span class="pre">fsspec.mapping.FSMap</span></code> for further details.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.glob">
+<span class="sig-name descname"><span class="pre">glob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.glob" title="Permalink to this definition">#</a></dt>
+<dd><p>Find files by glob-matching.</p>
+<p>If the path ends with ‘/’ and does not contain “*”, it is essentially
+the same as <code class="docutils literal notranslate"><span class="pre">ls(path)</span></code>, returning only files.</p>
+<p>We support <code class="docutils literal notranslate"><span class="pre">&quot;**&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;?&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;[..]&quot;</span></code>. We do not support ^ for pattern negation.</p>
+<p>Search path names that contain embedded characters special to this
+implementation of glob may not produce expected results;
+e.g., ‘foo/bar/<em>starredfilename</em>’.</p>
+<p>kwargs are passed to <code class="docutils literal notranslate"><span class="pre">ls</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.head">
+<span class="sig-name descname"><span class="pre">head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.head" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the first <code class="docutils literal notranslate"><span class="pre">size</span></code> bytes from file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.info">
+<span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.info" title="Permalink to this definition">#</a></dt>
+<dd><p>Give details of entry at path</p>
+<p>Returns a single dictionary, with exactly the same information as <code class="docutils literal notranslate"><span class="pre">ls</span></code>
+would with <code class="docutils literal notranslate"><span class="pre">detail=True</span></code>.</p>
+<p>The default implementation should calls ls and could be overridden by a
+shortcut. kwargs are passed on to <code class="docutils literal notranslate"><span class="pre">`ls()</span></code>.</p>
+<p>Some file systems might not be able to measure the file’s size, in
+which case, the returned dict will include <code class="docutils literal notranslate"><span class="pre">'size':</span> <span class="pre">None</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>dict with keys</strong> (<em>name (full path in the FS), size (in bytes), type (file,</em>)</p></li>
+<li><p><em>directory, or something else) and other FS-specific keys.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.invalidate_cache">
+<span class="sig-name descname"><span class="pre">invalidate_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.invalidate_cache" title="Permalink to this definition">#</a></dt>
+<dd><p>Discard any cached directory information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>string</em><em> or </em><em>None</em>) – If None, clear all listings cached else listings at or under given
+path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.isdir">
+<span class="sig-name descname"><span class="pre">isdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.isdir" title="Permalink to this definition">#</a></dt>
+<dd><p>Is this entry directory-like?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.isfile">
+<span class="sig-name descname"><span class="pre">isfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.isfile" title="Permalink to this definition">#</a></dt>
+<dd><p>Is this entry file-like?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.lexists">
+<span class="sig-name descname"><span class="pre">lexists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.lexists" title="Permalink to this definition">#</a></dt>
+<dd><p>If there is a file at the given path (including
+broken links)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.listdir">
+<span class="sig-name descname"><span class="pre">listdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.listdir" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.ls</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.ls">
+<span class="sig-name descname"><span class="pre">ls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.ls" title="Permalink to this definition">#</a></dt>
+<dd><p>List objects at path.</p>
+<p>This should include subdirectories and files at that location. The
+difference between a file and a directory must be clear when details
+are requested.</p>
+<p>The specific keys, or perhaps a FileInfo class, or similar, is TBD,
+but must be consistent across implementations.
+Must include:</p>
+<ul class="simple">
+<li><p>full path to the entry (without protocol)</p></li>
+<li><p>size of the entry, in bytes. If the value cannot be determined, will
+be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>type of entry, “file”, “directory” or other</p></li>
+</ul>
+<p>Additional information
+may be present, appropriate to the file-system, e.g., generation,
+checksum, etc.</p>
+<p>May use refresh=True|False to allow use of self._ls_from_cache to
+check for a saved listing and avoid calling the backend. This would be
+common where listing may be expensive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – </p></li>
+<li><p><strong>detail</strong> (<em>bool</em>) – if True, gives a list of dictionaries, where each is the same as
+the result of <code class="docutils literal notranslate"><span class="pre">info(path)</span></code>. If False, gives a list of paths
+(str).</p></li>
+<li><p><strong>kwargs</strong> (<em>may have additional backend-specific options</em><em>, </em><em>such as version</em>) – information</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>List of strings if detail is False, or list of directory information</em></p></li>
+<li><p><em>dicts if detail is True.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.makedir">
+<span class="sig-name descname"><span class="pre">makedir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_parents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.makedir" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.mkdir</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.makedirs">
+<span class="sig-name descname"><span class="pre">makedirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exist_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.makedirs" title="Permalink to this definition">#</a></dt>
+<dd><p>Recursively make directories</p>
+<p>Creates directory at path and any intervening required directories.
+Raises exception if, for instance, the path already exists but is a
+file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – leaf directory name</p></li>
+<li><p><strong>exist_ok</strong> (<em>bool</em><em> (</em><em>False</em><em>)</em>) – If False, will error if the target already exists</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.mkdir">
+<span class="sig-name descname"><span class="pre">mkdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_parents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.mkdir" title="Permalink to this definition">#</a></dt>
+<dd><p>Create directory entry at path</p>
+<p>For systems that don’t have true directories, may create an for
+this instance only and not touch the real filesystem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – location</p></li>
+<li><p><strong>create_parents</strong> (<em>bool</em>) – if True, this is equivalent to <code class="docutils literal notranslate"><span class="pre">makedirs</span></code></p></li>
+<li><p><strong>kwargs</strong> – may be permissions, etc.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.mkdirs">
+<span class="sig-name descname"><span class="pre">mkdirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exist_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.mkdirs" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.makedirs</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.modified">
+<span class="sig-name descname"><span class="pre">modified</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.modified" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the modified timestamp of a file as a datetime.datetime</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.move">
+<span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.move" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.mv</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.mv">
+<span class="sig-name descname"><span class="pre">mv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.mv" title="Permalink to this definition">#</a></dt>
+<dd><p>Move file(s) from one location to another</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.open" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a file-like object from the filesystem</p>
+<p>The resultant instance must function correctly in a context <code class="docutils literal notranslate"><span class="pre">with</span></code>
+block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – Target file</p></li>
+<li><p><strong>mode</strong> (<em>str like 'rb'</em><em>, </em><em>'w'</em>) – See builtin <code class="docutils literal notranslate"><span class="pre">open()</span></code></p></li>
+<li><p><strong>block_size</strong> (<em>int</em>) – Some indication of buffering - this is a value in bytes</p></li>
+<li><p><strong>cache_options</strong> (<em>dict</em><em>, </em><em>optional</em>) – Extra arguments to pass through to the cache.</p></li>
+<li><p><strong>compression</strong> (<em>string</em><em> or </em><em>None</em>) – If given, open file using compression codec. Can either be a compression
+name (a key in <code class="docutils literal notranslate"><span class="pre">fsspec.compression.compr</span></code>) or “infer” to guess the
+compression from the filename suffix.</p></li>
+<li><p><strong>encoding</strong> (<em>passed on to TextIOWrapper for text mode</em>) – </p></li>
+<li><p><strong>errors</strong> (<em>passed on to TextIOWrapper for text mode</em>) – </p></li>
+<li><p><strong>newline</strong> (<em>passed on to TextIOWrapper for text mode</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.open_async">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">open_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rb'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.open_async" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.pipe">
+<span class="sig-name descname"><span class="pre">pipe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.pipe" title="Permalink to this definition">#</a></dt>
+<dd><p>Put value into path</p>
+<p>(counterpart to <code class="docutils literal notranslate"><span class="pre">cat</span></code>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>string</em><em> or </em><em>dict</em><em>(</em><em>str</em><em>, </em><em>bytes</em><em>)</em>) – If a string, a single remote location to put <code class="docutils literal notranslate"><span class="pre">value</span></code> bytes; if a dict,
+a mapping of {path: bytesvalue}.</p></li>
+<li><p><strong>value</strong> (<em>bytes</em><em>, </em><em>optional</em>) – If using a single path, these are the bytes to put there. Ignored if
+<code class="docutils literal notranslate"><span class="pre">path</span></code> is a dict</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.pipe_file">
+<span class="sig-name descname"><span class="pre">pipe_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.pipe_file" title="Permalink to this definition">#</a></dt>
+<dd><p>Set the bytes of given file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback=&lt;fsspec.callbacks.NoOpCallback</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.put" title="Permalink to this definition">#</a></dt>
+<dd><p>Copy file(s) from local.</p>
+<p>Copies a specific file or tree of files (if recursive=True). If rpath
+ends with a “/”, it will be assumed to be a directory, and target files
+will go within.</p>
+<p>Calls put_file for each source.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.put_file">
+<span class="sig-name descname"><span class="pre">put_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback=&lt;fsspec.callbacks.NoOpCallback</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.put_file" title="Permalink to this definition">#</a></dt>
+<dd><p>Copy single file to remote</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.read_block">
+<span class="sig-name descname"><span class="pre">read_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.read_block" title="Permalink to this definition">#</a></dt>
+<dd><p>Read a block of bytes from</p>
+<p>Starting at <code class="docutils literal notranslate"><span class="pre">offset</span></code> of the file, read <code class="docutils literal notranslate"><span class="pre">length</span></code> bytes.  If
+<code class="docutils literal notranslate"><span class="pre">delimiter</span></code> is set then we ensure that the read starts and stops at
+delimiter boundaries that follow the locations <code class="docutils literal notranslate"><span class="pre">offset</span></code> and <code class="docutils literal notranslate"><span class="pre">offset</span>
+<span class="pre">+</span> <span class="pre">length</span></code>.  If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is zero then we start at zero.  The
+bytestring returned WILL include the end delimiter string.</p>
+<p>If offset+length is beyond the eof, reads to eof.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>string</em>) – Path to filename</p></li>
+<li><p><strong>offset</strong> (<em>int</em>) – Byte offset to start read</p></li>
+<li><p><strong>length</strong> (<em>int</em>) – Number of bytes to read. If None, read to end.</p></li>
+<li><p><strong>delimiter</strong> (<em>bytes</em><em> (</em><em>optional</em><em>)</em>) – Ensure reading starts and stops at delimiter bytestring</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fs</span><span class="o">.</span><span class="n">read_block</span><span class="p">(</span><span class="s1">&#39;data/file.csv&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>  
+<span class="go">b&#39;Alice, 100\nBo&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fs</span><span class="o">.</span><span class="n">read_block</span><span class="p">(</span><span class="s1">&#39;data/file.csv&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="sa">b</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>  
+<span class="go">b&#39;Alice, 100\nBob, 200\n&#39;</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">length=None</span></code> to read to the end of the file.
+&gt;&gt;&gt; fs.read_block(‘data/file.csv’, 0, None, delimiter=b’n’)  # doctest: +SKIP
+b’Alice, 100nBob, 200nCharlie, 300’</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">fsspec.utils.read_block()</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.read_bytes">
+<span class="sig-name descname"><span class="pre">read_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.read_bytes" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.cat_file</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.read_text">
+<span class="sig-name descname"><span class="pre">read_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.read_text" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the contents of the file as a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – URL of file on this filesystems</p></li>
+<li><p><strong>encoding</strong> (same as <cite>open</cite>.) – </p></li>
+<li><p><strong>errors</strong> (same as <cite>open</cite>.) – </p></li>
+<li><p><strong>newline</strong> (same as <cite>open</cite>.) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.rename">
+<span class="sig-name descname"><span class="pre">rename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.rename" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.mv</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.rm">
+<span class="sig-name descname"><span class="pre">rm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.rm" title="Permalink to this definition">#</a></dt>
+<dd><p>Delete files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>str</em>) – File(s) to delete.</p></li>
+<li><p><strong>recursive</strong> (<em>bool</em>) – If file(s) are directories, recursively delete contents and then
+also remove the directory</p></li>
+<li><p><strong>maxdepth</strong> (<em>int</em><em> or </em><em>None</em>) – Depth to pass to walk for finding files to delete, if recursive.
+If None, there will be no limit and infinite recursion may be
+possible.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.rm_file">
+<span class="sig-name descname"><span class="pre">rm_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.rm_file" title="Permalink to this definition">#</a></dt>
+<dd><p>Delete a file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.rmdir">
+<span class="sig-name descname"><span class="pre">rmdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.rmdir" title="Permalink to this definition">#</a></dt>
+<dd><p>Remove a directory, if empty</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.set_session">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/storage/filesystem.html#FileSystem.set_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.FileSystem.set_session" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.sign">
+<span class="sig-name descname"><span class="pre">sign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expiration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.sign" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a signed URL representing the given path</p>
+<p>Some implementations allow temporary URLs to be generated, as a
+way of delegating credentials.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – The path on the filesystem</p></li>
+<li><p><strong>expiration</strong> (<em>int</em>) – Number of seconds to enable the URL for (if supported)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>URL</strong> – The signed URL</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p>:raises NotImplementedError : if method is not implemented for a filesystem:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.size" title="Permalink to this definition">#</a></dt>
+<dd><p>Size in bytes of file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.sizes">
+<span class="sig-name descname"><span class="pre">sizes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.sizes" title="Permalink to this definition">#</a></dt>
+<dd><p>Size in bytes of each file in a list of paths</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.start_transaction">
+<span class="sig-name descname"><span class="pre">start_transaction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.start_transaction" title="Permalink to this definition">#</a></dt>
+<dd><p>Begin write transaction for deferring files, non-context version</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.stat">
+<span class="sig-name descname"><span class="pre">stat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.stat" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.info</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.tail">
+<span class="sig-name descname"><span class="pre">tail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.tail" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the last <code class="docutils literal notranslate"><span class="pre">size</span></code> bytes from file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.to_json" title="Permalink to this definition">#</a></dt>
+<dd><p>JSON representation of this filesystem instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>str</strong> – protocol (text name of this class’s protocol, first one in case of
+multiple), args (positional args, usually empty), and all other
+kwargs as their own keys.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>JSON structure with keys cls (the python location of this class),</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.touch">
+<span class="sig-name descname"><span class="pre">touch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.touch" title="Permalink to this definition">#</a></dt>
+<dd><p>Create empty file, or update timestamp</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – file location</p></li>
+<li><p><strong>truncate</strong> (<em>bool</em>) – If True, always set file size to 0; if False, update timestamp and
+leave file unchanged, if backend allows this</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.ukey">
+<span class="sig-name descname"><span class="pre">ukey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/oceanum/storage/filesystem.html#FileSystem.ukey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.FileSystem.ukey" title="Permalink to this definition">#</a></dt>
+<dd><p>Unique identifier</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.unstrip_protocol">
+<span class="sig-name descname"><span class="pre">unstrip_protocol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.unstrip_protocol" title="Permalink to this definition">#</a></dt>
+<dd><p>Format FS-specific path to generic, including protocol</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.upload">
+<span class="sig-name descname"><span class="pre">upload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.upload" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.put</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.walk">
+<span class="sig-name descname"><span class="pre">walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxdepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topdown</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.walk" title="Permalink to this definition">#</a></dt>
+<dd><p>Return all files belows path</p>
+<p>List all files, recursing into subdirectories; output is iterator-style,
+like <code class="docutils literal notranslate"><span class="pre">os.walk()</span></code>. For a simple list of files, <code class="docutils literal notranslate"><span class="pre">find()</span></code> is available.</p>
+<p>When topdown is True, the caller can modify the dirnames list in-place (perhaps
+using del or slice assignment), and walk() will
+only recurse into the subdirectories whose names remain in dirnames;
+this can be used to prune the search, impose a specific order of visiting,
+or even to inform walk() about directories the caller creates or renames before
+it resumes walk() again.
+Modifying dirnames when topdown is False has no effect. (see os.walk)</p>
+<p>Note that the “files” outputted will include anything that is not
+a directory, such as links.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – Root to recurse into</p></li>
+<li><p><strong>maxdepth</strong> (<em>int</em>) – Maximum recursion depth. None means limitless, but not recommended
+on link-based file-systems.</p></li>
+<li><p><strong>topdown</strong> (<em>bool</em><em> (</em><em>True</em><em>)</em>) – Whether to walk the directory tree from the top downwards or from
+the bottom upwards.</p></li>
+<li><p><strong>kwargs</strong> (passed to <code class="docutils literal notranslate"><span class="pre">ls</span></code>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.write_bytes">
+<span class="sig-name descname"><span class="pre">write_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.write_bytes" title="Permalink to this definition">#</a></dt>
+<dd><p>Alias of <cite>AbstractFileSystem.pipe_file</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.storage.FileSystem.write_text">
+<span class="sig-name descname"><span class="pre">write_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#oceanum.storage.FileSystem.write_text" title="Permalink to this definition">#</a></dt>
+<dd><p>Write the text to the given file.</p>
+<p>An existing file will be overwritten.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – URL of file on this filesystems</p></li>
+<li><p><strong>value</strong> (<em>str</em>) – Text to write.</p></li>
+<li><p><strong>encoding</strong> (same as <cite>open</cite>.) – </p></li>
+<li><p><strong>errors</strong> (same as <cite>open</cite>.) – </p></li>
+<li><p><strong>newline</strong> (same as <cite>open</cite>.) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+              </article>
+              
+
+              
+              <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="../datamesh/oceanum.datamesh.Query.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">oceanum.datamesh.Query</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="../../about.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title">About</p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+              </footer>
+              
+          </div>
+          
+      </div>
+    </div>
+
+  
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695"></script>
+
+<footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    <p class="copyright">
+    &copy; Copyright 2022, Oceanum Developers.<br>
+</p>
+  </div>
+  
+  <div class="footer-item">
+    <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+</p>
+  </div>
+  
+</div>
+</footer>
+  </body>
+</html>

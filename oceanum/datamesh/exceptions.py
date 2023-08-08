@@ -1,10 +1,10 @@
 class DatameshConnectError(Exception):
-    pass
+    oceanum_exc = True
 
 
 class DatameshQueryError(Exception):
-    pass
+    oceanum_exc = True
 
 
 class DatameshWriteError(Exception):
-    pass
+    oceanum_exc = True

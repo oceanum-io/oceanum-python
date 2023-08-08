@@ -1,0 +1,516 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>oceanum.storage.filesystem &#8212; oceanum 0.9.0 documentation</title>
+<script>
+  document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+  document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
+</script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+
+
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/autodoc_pydantic.css" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="../../../_static/oceanum-favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+    <div class="bd-header-announcement container-fluid" id="banner">
+      
+
+    </div>
+
+    
+    <nav class="bd-header navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="bd-header__inner container-xl">
+
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+    <img src="../../../_static/banner_dark.svg" class="logo__image only-light" alt="Logo image">
+    <img src="../../../_static/banner_dark.svg" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="fas fa-bars"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../usage.html">
+  Usage
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../api.html">
+  API documentation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../about.html">
+  About
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <span id="theme-switch" class="btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/oceanum-io/oceanum-python" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="bd-container container-xl">
+      <div class="bd-container__inner row">
+          
+
+<!-- Only show if we have sidebars configured, else just a small margin  -->
+<div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
+  <div class="sidebar-start-items">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html#oceanum-python">oceanum-python</a></li>
+</ul>
+
+  </div>
+  <div class="sidebar-end-items">
+  </div>
+</div>
+
+
+          
+
+
+<div class="bd-sidebar-secondary d-none d-xl-block col-xl-2 bd-toc">
+  
+</div>
+
+
+          
+          
+          <div class="bd-content col-12 col-md-9 col-xl-7">
+              
+              <article class="bd-article" role="main">
+                
+  <h1>Source code for oceanum.storage.filesystem</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+
+<span class="kn">import</span> <span class="nn">aiohttp</span>
+<span class="kn">import</span> <span class="nn">fsspec</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">yarl</span>
+<span class="kn">from</span> <span class="nn">fsspec.asyn</span> <span class="kn">import</span> <span class="n">AbstractAsyncStreamedFile</span><span class="p">,</span> <span class="n">AsyncFileSystem</span><span class="p">,</span> <span class="n">sync</span><span class="p">,</span> <span class="n">sync_wrapper</span>
+<span class="kn">from</span> <span class="nn">fsspec.callbacks</span> <span class="kn">import</span> <span class="n">_DEFAULT_CALLBACK</span>
+<span class="kn">from</span> <span class="nn">fsspec.exceptions</span> <span class="kn">import</span> <span class="n">FSTimeoutError</span>
+<span class="kn">from</span> <span class="nn">fsspec.spec</span> <span class="kn">import</span> <span class="n">AbstractBufferedFile</span>
+<span class="kn">from</span> <span class="nn">fsspec.utils</span> <span class="kn">import</span> <span class="n">DEFAULT_BLOCK_SIZE</span><span class="p">,</span> <span class="n">isfilelike</span><span class="p">,</span> <span class="n">nullcontext</span><span class="p">,</span> <span class="n">tokenize</span>
+<span class="kn">from</span> <span class="nn">fsspec.implementations.memory</span> <span class="kn">import</span> <span class="n">MemoryFile</span>
+
+<span class="n">DEFAULT_CONFIG</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;STORAGE_SERVICE&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.oceanum.io&quot;</span><span class="p">}</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;fsspec.oceanum&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_client"><a class="viewcode-back" href="../../../oceanum.storage.html#oceanum.storage.get_client">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">get_client</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">aiohttp</span><span class="o">.</span><span class="n">ClientSession</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FileSystem"><a class="viewcode-back" href="../../../oceanum.storage.html#oceanum.storage.FileSystem">[docs]</a><span class="k">class</span> <span class="nc">FileSystem</span><span class="p">(</span><span class="n">AsyncFileSystem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Datamesh storage filesystem.</span>
+
+<span class="sd">    This follows the fsspec specification and can be used with dask.</span>
+
+<span class="sd">    You can use this class directly, for example:</span>
+<span class="sd">        fs = FileSystem(token=&quot;my_datamesh_token&quot;)</span>
+<span class="sd">        fs.ls(&quot;/myfolder&quot;)</span>
+
+<span class="sd">    or use fsspec convenience functions with protocol &quot;oceanum&quot;. For example:</span>
+<span class="sd">        of=fsspec.open(&quot;oceanum://myfolder/myfile.txt&quot;, token=&quot;my_datamesh_token&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FileSystem.__init__"><a class="viewcode-back" href="../../../classes/storage/oceanum.storage.FileSystem.html#oceanum.storage.FileSystem.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">service</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;STORAGE_SERVICE&quot;</span><span class="p">,</span> <span class="n">DEFAULT_CONFIG</span><span class="p">[</span><span class="s2">&quot;STORAGE_SERVICE&quot;</span><span class="p">]),</span>
+        <span class="n">asynchronous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Storage filesystem constructor</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            token (string): Your datamesh access token. Defaults to os.environ.get(&quot;DATAMESH_TOKEN&quot;, None).</span>
+<span class="sd">            service (string, optional): URL of datamesh service. Defaults to os.environ.get(&quot;STORAGE_SERVICE&quot;, &quot;https://storage.oceanum.io&quot;).</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Missing or invalid arguments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DATAMESH_TOKEN&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN&quot;</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_token</span> <span class="o">=</span> <span class="n">token</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">service</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proto</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">scheme</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">netloc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_proto</span><span class="si">}</span><span class="s2">://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="si">}</span><span class="s2">/&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_auth_headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;X-DATAMESH-TOKEN&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_token</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asynchronous</span><span class="o">=</span><span class="n">asynchronous</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_client</span> <span class="o">=</span> <span class="n">get_client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;headers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auth_headers</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fsid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;oceanum&quot;</span>
+
+<div class="viewcode-block" id="FileSystem.close_session"><a class="viewcode-back" href="../../../oceanum.storage.html#oceanum.storage.FileSystem.close_session">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">close_session</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">loop</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sync</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TimeoutError</span><span class="p">,</span> <span class="n">FSTimeoutError</span><span class="p">):</span>
+                <span class="k">pass</span>
+        <span class="n">connector</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="s2">&quot;_connector&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">connector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># close after loop is dead</span>
+            <span class="n">connector</span><span class="o">.</span><span class="n">_close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FileSystem.set_session"><a class="viewcode-back" href="../../../oceanum.storage.html#oceanum.storage.FileSystem.set_session">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">set_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_client</span><span class="p">(</span><span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">client_kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">asynchronous</span><span class="p">:</span>
+                <span class="n">weakref</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">close_session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span></div>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_ls</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">listing</span> <span class="o">=</span> <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">detail</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="o">**</span><span class="n">u</span><span class="p">,</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;directory&quot;</span> <span class="k">if</span> <span class="n">u</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;contentType&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;folder&quot;</span> <span class="k">else</span> <span class="s2">&quot;file&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">listing</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">u</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">listing</span><span class="p">]</span>
+
+    <span class="n">ls</span> <span class="o">=</span> <span class="n">sync_wrapper</span><span class="p">(</span><span class="n">_ls</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_raise_not_found_for_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raises FileNotFoundError for 404s, otherwise uses raise_for_status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_cat_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_get_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">rpath</span><span class="p">,</span> <span class="n">lpath</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">5</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="mi">20</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">_DEFAULT_CALLBACK</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">rpath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rpath</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">rpath</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;content-length&quot;</span><span class="p">])</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">callback</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">rpath</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">isfilelike</span><span class="p">(</span><span class="n">lpath</span><span class="p">):</span>
+                <span class="n">outfile</span> <span class="o">=</span> <span class="n">lpath</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">outfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">chunk</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">while</span> <span class="n">chunk</span><span class="p">:</span>
+                    <span class="n">chunk</span> <span class="o">=</span> <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
+                    <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+                    <span class="n">callback</span><span class="o">.</span><span class="n">relative_update</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">))</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">isfilelike</span><span class="p">(</span><span class="n">lpath</span><span class="p">):</span>
+                    <span class="n">outfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_put_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lpath</span><span class="p">,</span>
+        <span class="n">rpath</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="o">=</span><span class="mi">5</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">callback</span><span class="o">=</span><span class="n">_DEFAULT_CALLBACK</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;post&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">gen_chunks</span><span class="p">():</span>
+            <span class="c1"># Support passing arbitrary file-like objects</span>
+            <span class="c1"># and use them instead of streams.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">io</span><span class="o">.</span><span class="n">IOBase</span><span class="p">):</span>
+                <span class="n">context</span> <span class="o">=</span> <span class="n">nullcontext</span><span class="p">(</span><span class="n">lpath</span><span class="p">)</span>
+                <span class="n">use_seek</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># might not support seeking</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">context</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+                <span class="n">use_seek</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">with</span> <span class="n">context</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">use_seek</span><span class="p">:</span>
+                    <span class="n">callback</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">callback</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+                <span class="n">chunk</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
+                <span class="k">while</span> <span class="n">chunk</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">chunk</span>
+                    <span class="n">callback</span><span class="o">.</span><span class="n">relative_update</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">))</span>
+                    <span class="n">chunk</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
+
+        <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
+
+        <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="s2">&quot;put&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;method has to be either &#39;post&#39; or &#39;put&#39;, not: </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">meth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">rpath</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="n">gen_chunks</span><span class="p">())</span> <span class="k">as</span> <span class="n">resp</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">rpath</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span>
+            <span class="k">async</span> <span class="k">with</span> <span class="n">r</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">&lt;</span> <span class="mi">400</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">HTTPError</span><span class="p">,</span> <span class="n">aiohttp</span><span class="o">.</span><span class="n">ClientError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_isfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_isdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;directory&quot;</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_open</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="o">=</span><span class="mi">5</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="mi">8</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">!=</span> <span class="s2">&quot;rb&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;content-length&quot;</span><span class="p">])</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">MemoryFile</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">chunk</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">while</span> <span class="n">chunk</span><span class="p">:</span>
+                    <span class="n">chunk</span> <span class="o">=</span> <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">f</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get info of path&quot;&quot;&quot;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+            <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content-length&quot;</span><span class="p">)),</span>
+            <span class="s2">&quot;contentType&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content-type&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;modified&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last-modified&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;directory&quot;</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content-type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;folder&quot;</span>
+            <span class="k">else</span> <span class="s2">&quot;file&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">create_parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">create_parents</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_makedirs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exist_ok</span><span class="p">:</span>
+            <span class="n">check</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">check</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/_&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FileSystem.ukey"><a class="viewcode-back" href="../../../oceanum.storage.html#oceanum.storage.FileSystem.ukey">[docs]</a>    <span class="k">def</span> <span class="nf">ukey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unique identifier&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div></div>
+</pre></div>
+
+              </article>
+              
+
+              
+              <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              </footer>
+              
+          </div>
+          
+      </div>
+    </div>
+
+  
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695"></script>
+
+<footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    <p class="copyright">
+    &copy; Copyright 2022, Oceanum Developers.<br>
+</p>
+  </div>
+  
+  <div class="footer-item">
+    <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+</p>
+  </div>
+  
+</div>
+</footer>
+  </body>
+</html>

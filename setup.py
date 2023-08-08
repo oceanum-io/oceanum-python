@@ -44,6 +44,9 @@ setup(
         "console_scripts": [
             "oceanum=oceanum.cli:main",
         ],
+        "fsspec.specs": [
+            "oceanum = oceanum.storage:FileSystem",
+        ],
     },
     install_requires=requirements,
     license="MIT license",
@@ -59,4 +62,5 @@ setup(
     url="https://github.com/oceanum/oceanum-python",
     version=oceanum.__version__,
     zip_safe=False,
+    python_requires=">=3.8",
 )

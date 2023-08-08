@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum.datamesh package &#8212; oceanum 0.7.2 documentation</title>
+    <title>oceanum.datamesh package &#8212; oceanum 0.9.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -36,6 +36,7 @@
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="_static/oceanum-favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -124,6 +125,10 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/oceanum-io/oceanum-python" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
       </ul>
       </div>
       
@@ -139,21 +144,17 @@
 
 <!-- Only show if we have sidebars configured, else just a small margin  -->
 <div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
-  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <div class="bd-toc-item active">
-    <ul class="current nav bd-sidenav">
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   oceanum.datamesh package
-  </a>
- </li>
+  <div class="sidebar-start-items">
+<h3><a href="index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html#oceanum-python">oceanum-python</a></li>
 </ul>
 
-  </div>
-</nav>
   </div>
   <div class="sidebar-end-items">
   </div>
@@ -385,33 +386,6 @@
     </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#oceanum.datamesh.connection.DatameshConnectError">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DatameshConnectError
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#oceanum.datamesh.connection.DatameshQueryError">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DatameshQueryError
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#oceanum.datamesh.connection.DatameshWriteError">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DatameshWriteError
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#oceanum.datamesh.connection.asyncwrapper">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -425,6 +399,15 @@
      <code class="docutils literal notranslate">
       <span class="pre">
        json_serial()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.connection.tempFile">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       tempFile()
       </span>
      </code>
     </a>
@@ -585,6 +568,15 @@
        <code class="docutils literal notranslate">
         <span class="pre">
          Datasource.tstart
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#oceanum.datamesh.datasource.Datasource.model_post_init">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         Datasource.model_post_init()
         </span>
        </code>
       </a>
@@ -767,6 +759,35 @@
     </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.query.CoordSelector">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       CoordSelector
+      </span>
+     </code>
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#oceanum.datamesh.query.CoordSelector.coord">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         CoordSelector.coord
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#oceanum.datamesh.query.CoordSelector.value">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         CoordSelector.value
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#oceanum.datamesh.query.DatasourceGeom">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -831,6 +852,15 @@
        </code>
       </a>
      </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#oceanum.datamesh.query.GeoFilter.validate_geom">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         GeoFilter.validate_geom
+        </span>
+       </code>
+      </a>
+     </li>
     </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
@@ -876,6 +906,15 @@
        <code class="docutils literal notranslate">
         <span class="pre">
          Query.aggregate
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#oceanum.datamesh.query.Query.coordfilter">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         Query.coordfilter
         </span>
        </code>
       </a>
@@ -1116,24 +1155,13 @@
     </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#oceanum.datamesh.query.Timestamp">
+    <a class="reference internal nav-link" href="#oceanum.datamesh.query.parse_time">
      <code class="docutils literal notranslate">
       <span class="pre">
-       Timestamp
+       parse_time()
       </span>
      </code>
     </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#oceanum.datamesh.query.Timestamp.validate">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         Timestamp.validate()
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
    </li>
   </ul>
  </li>
@@ -1361,7 +1389,7 @@ This class behaves like an immutable dictionary with the datasource ids as keys<
 <dd class="field-odd"><p><a class="reference internal" href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource" title="oceanum.datamesh.Datasource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Datasource</span></code></a></p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#oceanum.datamesh.connection.DatameshConnectError" title="oceanum.datamesh.connection.DatameshConnectError"><strong>DatameshConnectError</strong></a> – Datasource cannot be found or is not authorized for the datamesh key</p>
+<dd class="field-even"><p><strong>DatameshConnectError</strong> – Datasource cannot be found or is not authorized for the datamesh key</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1385,7 +1413,7 @@ This class behaves like an immutable dictionary with the datasource ids as keys<
 <dd class="field-odd"><p>Coroutine&lt;<a class="reference internal" href="classes/datamesh/oceanum.datamesh.Datasource.html#oceanum.datamesh.Datasource" title="oceanum.datamesh.Datasource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">oceanum.datamesh.Datasource</span></code></a>&gt;</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#oceanum.datamesh.connection.DatameshConnectError" title="oceanum.datamesh.connection.DatameshConnectError"><strong>DatameshConnectError</strong></a> – Datasource cannot be found or is not authorized for the datamesh key</p>
+<dd class="field-even"><p><strong>DatameshConnectError</strong> – Datasource cannot be found or is not authorized for the datamesh key</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1451,7 +1479,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.connection.Connector.query">
-<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#Connector.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.Connector.query" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#Connector.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.Connector.query" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a datamesh query</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1459,7 +1487,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 </dd>
 </dl>
 <dl class="simple">
-<dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+<dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
 <a href="#id1"><span class="problematic" id="id2">**</span></a>query_keys: Keywords form of query, for example datamesh.query(datasource=”my_datasource”)</p>
 </dd>
 </dl>
@@ -1475,7 +1503,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.connection.Connector.query_async">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#Connector.query_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.Connector.query_async" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#Connector.query_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.Connector.query_async" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a datamesh query asynchronously</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1483,7 +1511,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 </dd>
 </dl>
 <dl class="simple">
-<dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+<dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
 loop: event loop. default=None will use <code class="xref py py-obj docutils literal notranslate"><span class="pre">asyncio.get_running_loop()</span></code>
 executor: <code class="xref py py-obj docutils literal notranslate"><span class="pre">concurrent.futures.Executor</span></code> instance. default=None will use the default executor
 <a href="#id3"><span class="problematic" id="id4">**</span></a>query_keys: Keywords form of query, for example datamesh.query(datasource=”my_datasource”)</p>
@@ -1549,24 +1577,6 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 
 </dd></dl>
 
-<dl class="py exception">
-<dt class="sig sig-object py" id="oceanum.datamesh.connection.DatameshConnectError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.connection.</span></span><span class="sig-name descname"><span class="pre">DatameshConnectError</span></span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#DatameshConnectError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.DatameshConnectError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="oceanum.datamesh.connection.DatameshQueryError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.connection.</span></span><span class="sig-name descname"><span class="pre">DatameshQueryError</span></span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#DatameshQueryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.DatameshQueryError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="oceanum.datamesh.connection.DatameshWriteError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.connection.</span></span><span class="sig-name descname"><span class="pre">DatameshWriteError</span></span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#DatameshWriteError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.DatameshWriteError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="oceanum.datamesh.connection.asyncwrapper">
 <span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.connection.</span></span><span class="sig-name descname"><span class="pre">asyncwrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#asyncwrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.asyncwrapper" title="Permalink to this definition">#</a></dt>
@@ -1577,6 +1587,11 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.connection.</span></span><span class="sig-name descname"><span class="pre">json_serial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#json_serial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.json_serial" title="Permalink to this definition">#</a></dt>
 <dd><p>JSON serializer for objects not serializable by default json code</p>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oceanum.datamesh.connection.tempFile">
+<span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.connection.</span></span><span class="sig-name descname"><span class="pre">tempFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'wb'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#tempFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.tempFile" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </section>
 <section id="oceanum-datamesh-datasource-module">
@@ -1592,146 +1607,258 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <span class="w">   </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">   </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource ID&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unique ID for the datasource&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;minLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;pattern&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^[a-z0-9-_]+$&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;strip_whitespace&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource ID&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;to_lower&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource name&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Human readable name for the datasource&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">64</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource name&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource description&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Description of datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1500</span><span class="p">,</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1500</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Description of datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource description&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;parameters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource parameters&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Additional parameters for accessing datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Additional parameters for accessing datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource parameters&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;geom&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Geom&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Valid shapely or geoJSON geometry describing the spatial extent of the datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource geometry&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;tstart&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Start time of datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;date-time&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Earliest time in datasource. Must be a valid ISO8601 datetime string&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;date-time&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Start time of datasource&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;tend&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;End time of datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;date-time&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Latest time in datasource. Must be a valid ISO8601 datetime string&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;date-time&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;End time of datasource&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;parchive&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource rolling archive period&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;duration&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Duration of a rolling archive (time before present). Must be a valid ISO8601 interval string or None.&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;number&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;time-delta&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource rolling archive period&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource tags&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Metadata keyword tags related to the datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;array&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;array&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Metadata keyword tags related to the datasource&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource tags&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;info&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource metadata&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Additional datasource descriptive metadata&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Additional datasource descriptive metadata&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource metadata&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Schema&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource schema&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;$ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#/$defs/Schema&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">            </span><span class="nt">&quot;attrs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
-<span class="w">            </span><span class="nt">&quot;dims&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
 <span class="w">            </span><span class="nt">&quot;coords&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
-<span class="w">            </span><span class="nt">&quot;data_vars&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;data_vars&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;dims&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
 <span class="w">         </span><span class="p">},</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;allOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
-<span class="w">            </span><span class="p">{</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;$ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#/definitions/Schema&quot;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">         </span><span class="p">]</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource schema&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Schema&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;coordinates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coordinate keys&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;\n        Coordinates in datasource, referenced by standard coordinate keys. The dictionary keys map to coordinates variables in the datasource.\n            Ensemble: \&quot;e\&quot;\n            Rasterband: \&quot;b\&quot;\n            Category: \&quot;c\&quot;\n            Quantile: \&quot;q\&quot;\n            Season: \&quot;s\&quot;\n            Month: \&quot;m\&quot;\n            Time: \&quot;t\&quot;\n            Vertical: \&quot;z\&quot;\n            Northing: \&quot;y\&quot;\n            Easting: \&quot;x\&quot;\n            Station: \&quot;s\&quot;  (Locations assumed stationary, datasource with a multigeometry indexed by station coordinate)\n            Geometry: \&quot;g\&quot;  (Abstract coordinate - a 2 or 3D geometry that defines a feature location)\n            Frequency: \&quot;f\&quot;\n            Direction:\&quot;d\&quot;\n\n        Example {\&quot;t\&quot;:\&quot;time\&quot;,\&quot;x\&quot;:\&quot;longitude\&quot;,\&quot;y\&quot;:\&quot;latitude\&quot;}\n        &quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;additionalProperties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
-<span class="w">         </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">},</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;\n        Coordinates in datasource, referenced by standard coordinate keys. The dictionary keys map to coordinates variables in the datasource.\n            Ensemble: \&quot;e\&quot;\n            Rasterband: \&quot;b\&quot;\n            Category: \&quot;c\&quot;\n            Quantile: \&quot;q\&quot;\n            Season: \&quot;s\&quot;\n            Month: \&quot;m\&quot;\n            Time: \&quot;t\&quot;\n            Vertical: \&quot;z\&quot;\n            Northing: \&quot;y\&quot;\n            Easting: \&quot;x\&quot;\n            Station: \&quot;s\&quot;  (Locations assumed stationary, datasource with a multigeometry indexed by station coordinate)\n            Geometry: \&quot;g\&quot;  (Abstract coordinate - a 2 or 3D geometry that defines a feature location)\n            Frequency: \&quot;f\&quot;\n            Direction:\&quot;d\&quot;\n\n        Example {\&quot;t\&quot;:\&quot;time\&quot;,\&quot;x\&quot;:\&quot;longitude\&quot;,\&quot;y\&quot;:\&quot;latitude\&quot;}\n        &quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coordinate keys&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Details&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uri&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;minLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;URL to further details about the datasource&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;minLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">65536</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uri&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Details&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;last_modified&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last modified time&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;date-time&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-08-08T22:45:20.582238&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last time datasource was modified&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-01-10T19:39:50.742000&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;date-time&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last modified time&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Driver arguments&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">],</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Driver arguments for datasource. These are driver dependent.&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Driver arguments&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;driver&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Driver&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">}</span><span class="w"></span>
 <span class="w">   </span><span class="p">},</span><span class="w"></span>
+<span class="w">   </span><span class="nt">&quot;$defs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="nt">&quot;Schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;attrs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                  </span><span class="p">{</span><span class="w"></span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">},</span><span class="w"></span>
+<span class="w">                  </span><span class="p">{</span><span class="w"></span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">}</span><span class="w"></span>
+<span class="w">               </span><span class="p">],</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Global attributes&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;dims&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                  </span><span class="p">{</span><span class="w"></span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">},</span><span class="w"></span>
+<span class="w">                  </span><span class="p">{</span><span class="w"></span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">}</span><span class="w"></span>
+<span class="w">               </span><span class="p">],</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Dimensions&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;coords&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                  </span><span class="p">{</span><span class="w"></span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">},</span><span class="w"></span>
+<span class="w">                  </span><span class="p">{</span><span class="w"></span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">}</span><span class="w"></span>
+<span class="w">               </span><span class="p">],</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coordinates&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">},</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;data_vars&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                  </span><span class="p">{</span><span class="w"></span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">},</span><span class="w"></span>
+<span class="w">                  </span><span class="p">{</span><span class="w"></span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
+<span class="w">                  </span><span class="p">}</span><span class="w"></span>
+<span class="w">               </span><span class="p">],</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w"></span>
+<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Data variables&quot;</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">         </span><span class="p">},</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Schema&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="w">      </span><span class="p">}</span><span class="w"></span>
+<span class="w">   </span><span class="p">},</span><span class="w"></span>
 <span class="w">   </span><span class="nt">&quot;required&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
 <span class="w">      </span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">      </span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="s2">&quot;geom&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">      </span><span class="s2">&quot;coordinates&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">      </span><span class="s2">&quot;driver&quot;</span><span class="w"></span>
-<span class="w">   </span><span class="p">],</span><span class="w"></span>
-<span class="w">   </span><span class="nt">&quot;definitions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;Schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Schema&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="nt">&quot;attrs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Global attributes&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
-<span class="w">            </span><span class="p">},</span><span class="w"></span>
-<span class="w">            </span><span class="nt">&quot;dims&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Dimensions&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
-<span class="w">            </span><span class="p">},</span><span class="w"></span>
-<span class="w">            </span><span class="nt">&quot;coords&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Coordinates&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
-<span class="w">            </span><span class="p">},</span><span class="w"></span>
-<span class="w">            </span><span class="nt">&quot;data_vars&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Data variables&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">         </span><span class="p">}</span><span class="w"></span>
-<span class="w">      </span><span class="p">}</span><span class="w"></span>
-<span class="w">   </span><span class="p">}</span><span class="w"></span>
+<span class="w">   </span><span class="p">]</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
@@ -1741,16 +1868,16 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.coordinates" title="oceanum.datamesh.datasource.Datasource.coordinates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coordinates</span> <span class="pre">(Dict[oceanum.datamesh.datasource.Coordinates,</span> <span class="pre">str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.dataschema" title="oceanum.datamesh.datasource.Datasource.dataschema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataschema</span> <span class="pre">(Optional[oceanum.datamesh.datasource.Schema])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.description" title="oceanum.datamesh.datasource.Datasource.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span> <span class="pre">(Optional[str])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.details" title="oceanum.datamesh.datasource.Datasource.details"><code class="xref py py-obj docutils literal notranslate"><span class="pre">details</span> <span class="pre">(Optional[pydantic.networks.AnyHttpUrl])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.details" title="oceanum.datamesh.datasource.Datasource.details"><code class="xref py py-obj docutils literal notranslate"><span class="pre">details</span> <span class="pre">(Optional[pydantic_core._pydantic_core.Url])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.driver" title="oceanum.datamesh.datasource.Datasource.driver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">driver</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.driver_args" title="oceanum.datamesh.datasource.Datasource.driver_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">driver_args</span> <span class="pre">(Optional[dict])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.geom" title="oceanum.datamesh.datasource.Datasource.geom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geom</span> <span class="pre">(oceanum.datamesh.datasource.Geometry)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.geom" title="oceanum.datamesh.datasource.Datasource.geom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geom</span> <span class="pre">(Union[shapely.geometry.point.Point,</span> <span class="pre">shapely.geometry.multipoint.MultiPoint,</span> <span class="pre">shapely.geometry.polygon.Polygon])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.id" title="oceanum.datamesh.datasource.Datasource.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.info" title="oceanum.datamesh.datasource.Datasource.info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">info</span> <span class="pre">(Optional[dict])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="oceanum.datamesh.datasource.Datasource.last_modified"><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_modified</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.name" title="oceanum.datamesh.datasource.Datasource.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.parameters" title="oceanum.datamesh.datasource.Datasource.parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span> <span class="pre">(Optional[dict])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.parchive" title="oceanum.datamesh.datasource.Datasource.parchive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parchive</span> <span class="pre">(Optional[oceanum.datamesh.datasource.Timeperiod])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.parchive" title="oceanum.datamesh.datasource.Datasource.parchive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parchive</span> <span class="pre">(Optional[datetime.timedelta])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.tags" title="oceanum.datamesh.datasource.Datasource.tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tags</span> <span class="pre">(Optional[list])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.tend" title="oceanum.datamesh.datasource.Datasource.tend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tend</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.tstart" title="oceanum.datamesh.datasource.Datasource.tstart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tstart</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
@@ -1793,7 +1920,7 @@ Direction:”d”</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>maxLength</strong> = 1500</p></li>
+<li><p><strong>max_length</strong> = 1500</p></li>
 </ul>
 </dd>
 </dl>
@@ -1801,17 +1928,8 @@ Direction:”d”</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.details">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">details</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">AnyHttpUrl</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.details" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">details</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Url</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.details" title="Permalink to this definition">#</a></dt>
 <dd><p>URL to further details about the datasource</p>
-<dl class="field-list simple">
-<dt class="field-odd">Constraints</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>minLength</strong> = 1</p></li>
-<li><p><strong>maxLength</strong> = 65536</p></li>
-<li><p><strong>format</strong> = uri</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1821,14 +1939,25 @@ Direction:”d”</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.driver_args">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">driver_args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'args')</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.driver_args" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">driver_args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><em class="property"> <span class="pre">(alias</span> <span class="pre">'args')</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.driver_args" title="Permalink to this definition">#</a></dt>
 <dd><p>Driver arguments for datasource. These are driver dependent.</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.geom">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geom</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Geometry</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.geom" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geom</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Point</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MultiPoint</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Polygon</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.geom" title="Permalink to this definition">#</a></dt>
 <dd><p>Valid shapely or geoJSON geometry describing the spatial extent of the datasource</p>
+<dl class="field-list simple">
+<dt class="field-odd">Constraints</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>__module__</strong> = oceanum.datamesh.datasource</p></li>
+<li><p><strong>__get_pydantic_core_schema__</strong> = &lt;bound method _GeometryAnnotation.__get_pydantic_core_schema__ of &lt;class ‘oceanum.datamesh.datasource._GeometryAnnotation’&gt;&gt;</p></li>
+<li><p><strong>__get_pydantic_json_schema__</strong> = &lt;bound method _GeometryAnnotation.__get_pydantic_json_schema__ of &lt;class ‘oceanum.datamesh.datasource._GeometryAnnotation’&gt;&gt;</p></li>
+<li><p><strong>__dict__</strong> = {‘__module__’: ‘oceanum.datamesh.datasource’, ‘__get_pydantic_core_schema__’: &lt;classmethod(&lt;function _GeometryAnnotation.__get_pydantic_core_schema__ at 0x7ff035d2d870&gt;)&gt;, ‘__get_pydantic_json_schema__’: &lt;classmethod(&lt;function _GeometryAnnotation.__get_pydantic_json_schema__ at 0x7ff035d2d2d0&gt;)&gt;, ‘__dict__’: &lt;attribute ‘__dict__’ of ‘_GeometryAnnotation’ objects&gt;, ‘__weakref__’: &lt;attribute ‘__weakref__’ of ‘_GeometryAnnotation’ objects&gt;, ‘__doc__’: None}</p></li>
+<li><p><strong>__weakref__</strong> = &lt;attribute ‘__weakref__’ of ‘_GeometryAnnotation’ objects&gt;</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -1838,8 +1967,8 @@ Direction:”d”</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>maxLength</strong> = 80</p></li>
-<li><p><strong>minLength</strong> = 3</p></li>
+<li><p><strong>min_length</strong> = 3</p></li>
+<li><p><strong>max_length</strong> = 80</p></li>
 <li><p><strong>pattern</strong> = ^[a-z0-9-_]+$</p></li>
 </ul>
 </dd>
@@ -1854,7 +1983,7 @@ Direction:”d”</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.last_modified">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">1,</span> <span class="pre">10,</span> <span class="pre">19,</span> <span class="pre">39,</span> <span class="pre">50,</span> <span class="pre">742000)</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">8,</span> <span class="pre">8,</span> <span class="pre">22,</span> <span class="pre">45,</span> <span class="pre">20,</span> <span class="pre">582238)</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
 <dd><p>Last time datasource was modified</p>
 </dd></dl>
 
@@ -1865,7 +1994,7 @@ Direction:”d”</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>maxLength</strong> = 64</p></li>
+<li><p><strong>max_length</strong> = 64</p></li>
 </ul>
 </dd>
 </dl>
@@ -1879,7 +2008,7 @@ Direction:”d”</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.parchive">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parchive</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Timeperiod</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.parchive" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parchive</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">timedelta</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.parchive" title="Permalink to this definition">#</a></dt>
 <dd><p>Duration of a rolling archive (time before present). Must be a valid ISO8601 interval string or None.</p>
 </dd></dl>
 
@@ -1899,6 +2028,21 @@ Direction:”d”</p>
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.tstart">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tstart</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.tstart" title="Permalink to this definition">#</a></dt>
 <dd><p>Earliest time in datasource. Must be a valid ISO8601 datetime string</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.model_post_init">
+<span class="sig-name descname"><span class="pre">model_post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">__context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.model_post_init" title="Permalink to this definition">#</a></dt>
+<dd><p>This function is meant to behave like a BaseModel method to initialise private attributes.</p>
+<p>It takes context as an argument since that’s what pydantic-core passes when calling it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – The BaseModel instance.</p></li>
+<li><p><strong>__context</strong> – The context.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -2022,6 +2166,30 @@ Direction:”d”</p>
 </dd></dl>
 
 <dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="oceanum.datamesh.query.CoordSelector">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.query.</span></span><span class="sig-name descname"><span class="pre">CoordSelector</span></span><a class="reference internal" href="_modules/oceanum/datamesh/query.html#CoordSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.query.CoordSelector" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Fields</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#oceanum.datamesh.query.CoordSelector.coord" title="oceanum.datamesh.query.CoordSelector.coord"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coord</span> <span class="pre">(str)</span></code></a></p></li>
+<li><p><a class="reference internal" href="#oceanum.datamesh.query.CoordSelector.value" title="oceanum.datamesh.query.CoordSelector.value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">value</span> <span class="pre">(List[Union[str,</span> <span class="pre">int,</span> <span class="pre">float]])</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.query.CoordSelector.coord">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coord</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.query.CoordSelector.coord" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.query.CoordSelector.value">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.query.CoordSelector.value" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class pydantic_model">
 <dt class="sig sig-object py" id="oceanum.datamesh.query.DatasourceGeom">
 <em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.query.</span></span><span class="sig-name descname"><span class="pre">DatasourceGeom</span></span><a class="reference internal" href="_modules/oceanum/datamesh/query.html#DatasourceGeom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.query.DatasourceGeom" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
@@ -2059,6 +2227,11 @@ Describes a spatial subset or interpolation</p>
 <li><p><a class="reference internal" href="#oceanum.datamesh.query.GeoFilter.type" title="oceanum.datamesh.query.GeoFilter.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span> <span class="pre">(oceanum.datamesh.query.GeoFilterType)</span></code></a></p></li>
 </ul>
 </dd>
+<dt class="field-even">Validators</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#oceanum.datamesh.query.GeoFilter.validate_geom" title="oceanum.datamesh.query.GeoFilter.validate_geom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_geom</span></code></a> » <a class="reference internal" href="#oceanum.datamesh.query.GeoFilter.geom" title="oceanum.datamesh.query.GeoFilter.geom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geom</span></code></a></p></li>
+</ul>
+</dd>
 </dl>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.query.GeoFilter.geom">
@@ -2067,6 +2240,13 @@ Describes a spatial subset or interpolation</p>
 <li><p>For type=’feature’, geojson feature.</p></li>
 <li><p>For type=’bbox’, list[x_min,y_min,x_max,y_max] in CRS units.</p></li>
 </ul>
+<dl class="field-list simple">
+<dt class="field-odd">Validated by</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#oceanum.datamesh.query.GeoFilter.validate_geom" title="oceanum.datamesh.query.GeoFilter.validate_geom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_geom</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
@@ -2086,6 +2266,11 @@ Describes a spatial subset or interpolation</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="oceanum.datamesh.query.GeoFilter.validate_geom">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_geom</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#oceanum.datamesh.query.GeoFilter.geom" title="oceanum.datamesh.query.GeoFilter.geom"><em class="xref py py-obj"><span class="pre">geom</span></em></a><a class="reference internal" href="_modules/oceanum/datamesh/query.html#GeoFilter.validate_geom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.query.GeoFilter.validate_geom" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -2115,7 +2300,8 @@ Describes a spatial subset or interpolation</p>
 <dt class="field-odd">Fields</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><a class="reference internal" href="#oceanum.datamesh.query.Query.aggregate" title="oceanum.datamesh.query.Query.aggregate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">aggregate</span> <span class="pre">(Optional[oceanum.datamesh.query.Aggregate])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#oceanum.datamesh.query.Query.crs" title="oceanum.datamesh.query.Query.crs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">crs</span> <span class="pre">(Optional[Union[str,</span> <span class="pre">int]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#oceanum.datamesh.query.Query.coordfilter" title="oceanum.datamesh.query.Query.coordfilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coordfilter</span> <span class="pre">(Optional[List[oceanum.datamesh.query.CoordSelector]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#oceanum.datamesh.query.Query.crs" title="oceanum.datamesh.query.Query.crs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">crs</span> <span class="pre">(Optional[Union[int,</span> <span class="pre">str]])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.query.Query.datasource" title="oceanum.datamesh.query.Query.datasource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">datasource</span> <span class="pre">(str)</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.query.Query.description" title="oceanum.datamesh.query.Query.description"><code class="xref py py-obj docutils literal notranslate"><span class="pre">description</span> <span class="pre">(Optional[str])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.query.Query.geofilter" title="oceanum.datamesh.query.Query.geofilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geofilter</span> <span class="pre">(Optional[oceanum.datamesh.query.GeoFilter])</span></code></a></p></li>
@@ -2132,8 +2318,13 @@ Describes a spatial subset or interpolation</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="oceanum.datamesh.query.Query.coordfilter">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coordfilter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#oceanum.datamesh.query.CoordSelector" title="oceanum.datamesh.query.CoordSelector"><span class="pre">CoordSelector</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.query.Query.coordfilter" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.query.Query.crs">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">crs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.query.Query.crs" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">crs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#oceanum.datamesh.query.Query.crs" title="Permalink to this definition">#</a></dt>
 <dd><p>Valid CRS string for returned data</p>
 </dd></dl>
 
@@ -2144,8 +2335,8 @@ Describes a spatial subset or interpolation</p>
 <dl class="field-list simple">
 <dt class="field-odd">Constraints</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>maxLength</strong> = 80</p></li>
-<li><p><strong>minLength</strong> = 3</p></li>
+<li><p><strong>min_length</strong> = 3</p></li>
+<li><p><strong>max_length</strong> = 80</p></li>
 </ul>
 </dd>
 </dl>
@@ -2265,7 +2456,7 @@ Describes a temporal subset or interpolation</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><a class="reference internal" href="#oceanum.datamesh.query.TimeFilter.resample" title="oceanum.datamesh.query.TimeFilter.resample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resample</span> <span class="pre">(Optional[oceanum.datamesh.query.ResampleType])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.query.TimeFilter.resolution" title="oceanum.datamesh.query.TimeFilter.resolution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolution</span> <span class="pre">(Optional[str])</span></code></a></p></li>
-<li><p><a class="reference internal" href="#oceanum.datamesh.query.TimeFilter.times" title="oceanum.datamesh.query.TimeFilter.times"><code class="xref py py-obj docutils literal notranslate"><span class="pre">times</span> <span class="pre">(List[Optional[oceanum.datamesh.query.Timestamp]])</span></code></a></p></li>
+<li><p><a class="reference internal" href="#oceanum.datamesh.query.TimeFilter.times" title="oceanum.datamesh.query.TimeFilter.times"><code class="xref py py-obj docutils literal notranslate"><span class="pre">times</span> <span class="pre">(List[Optional[datetime.datetime]])</span></code></a></p></li>
 <li><p><a class="reference internal" href="#oceanum.datamesh.query.TimeFilter.type" title="oceanum.datamesh.query.TimeFilter.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span> <span class="pre">(oceanum.datamesh.query.TimeFilterType)</span></code></a></p></li>
 </ul>
 </dd>
@@ -2279,12 +2470,14 @@ Describes a temporal subset or interpolation</p>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.query.TimeFilter.resolution">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resolution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'native'</span></em><a class="headerlink" href="#oceanum.datamesh.query.TimeFilter.resolution" title="Permalink to this definition">#</a></dt>
-<dd><p>Maximum resolution of the data for temporal downsampling. Only valid with range type</p>
+<dd><p>”
+Maximum resolution of the data for temporal downsampling. 
+Must be a valid pandas [DateOffset.freqstr](<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.tseries.offsets.DateOffset.freqstr.html#pandas.tseries.offsets.DateOffset.freqstr">https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.tseries.offsets.DateOffset.freqstr.html#pandas.tseries.offsets.DateOffset.freqstr</a>). Only valid with range type</p>
 </dd></dl>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.query.TimeFilter.times">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#oceanum.datamesh.query.Timestamp" title="oceanum.datamesh.query.Timestamp"><span class="pre">Timestamp</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.query.TimeFilter.times" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">times</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#oceanum.datamesh.query.TimeFilter.times" title="Permalink to this definition">#</a></dt>
 <dd><ul class="simple">
 <li><p>For type=’range’, [timestart, tend].</p></li>
 </ul>
@@ -2315,16 +2508,10 @@ Describes a temporal subset or interpolation</p>
 
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="oceanum.datamesh.query.Timestamp">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.query.</span></span><span class="sig-name descname"><span class="pre">Timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ts_input=&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tz=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hour=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minute=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">microsecond=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nanosecond=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tzinfo=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fold=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/query.html#Timestamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.query.Timestamp" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="oceanum.datamesh.query.Timestamp.validate">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/query.html#Timestamp.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.query.Timestamp.validate" title="Permalink to this definition">#</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="oceanum.datamesh.query.parse_time">
+<span class="sig-prename descclassname"><span class="pre">oceanum.datamesh.query.</span></span><span class="sig-name descname"><span class="pre">parse_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/query.html#parse_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.query.parse_time" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
-
-</dd></dl>
 
 </section>
 <section id="module-oceanum.datamesh">

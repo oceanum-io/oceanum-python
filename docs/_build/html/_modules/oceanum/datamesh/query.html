@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>oceanum.datamesh.query &#8212; oceanum 0.7.2 documentation</title>
+    <title>oceanum.datamesh.query &#8212; oceanum 0.9.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -35,6 +35,7 @@
     <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
     <script src="../../../_static/sphinx_highlight.js"></script>
+    <link rel="shortcut icon" href="../../../_static/oceanum-favicon.ico"/>
     <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -123,6 +124,10 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/oceanum-io/oceanum-python" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
       </ul>
       </div>
       
@@ -138,14 +143,17 @@
 
 <!-- Only show if we have sidebars configured, else just a small margin  -->
 <div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
-  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <div class="bd-toc-item active">
-    
-  </div>
-</nav>
+  <div class="sidebar-start-items">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html#oceanum-python">oceanum-python</a></li>
+</ul>
+
   </div>
   <div class="sidebar-end-items">
   </div>
@@ -168,44 +176,53 @@
                 
   <h1>Source code for oceanum.datamesh.query</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">orjson</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">field_validator</span><span class="p">,</span>
+    <span class="n">ConfigDict</span><span class="p">,</span>
+    <span class="n">BaseModel</span><span class="p">,</span>
+    <span class="n">Field</span><span class="p">,</span>
+    <span class="n">BeforeValidator</span><span class="p">,</span>
+    <span class="n">WithJsonSchema</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Annotated</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">geojson_pydantic</span> <span class="kn">import</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">FeatureCollection</span>
-
-
-<span class="k">def</span> <span class="nf">_orjson_dumps</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">orjson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="QueryError"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.QueryError">[docs]</a><span class="k">class</span> <span class="nc">QueryError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="Timestamp"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Timestamp">[docs]</a><span class="k">class</span> <span class="nc">Timestamp</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">):</span>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">__get_validators__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
-        <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validate</span>
+<div class="viewcode-block" id="parse_time"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.parse_time">[docs]</a><span class="k">def</span> <span class="nf">parse_time</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;datetime or time string required&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">time</span><span class="o">.</span><span class="n">tz</span><span class="p">:</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="s2">&quot;UTC&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timestamp format not valid: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Timestamp.validate"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Timestamp.validate">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">)</span>
-        <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;datetime or time string required&quot;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">time</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">time</span><span class="o">.</span><span class="n">tz</span><span class="p">:</span>
-                <span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="s2">&quot;UTC&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">to_datetime64</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timestamp format not valid: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
+
+<span class="n">Timestamp</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span>
+    <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span>
+    <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Timestamp&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timestamp as python datetime, numpy datetime64 or pandas Timestamp&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">BeforeValidator</span><span class="p">(</span><span class="n">parse_time</span><span class="p">),</span>
+    <span class="n">WithJsonSchema</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;date-time&quot;</span><span class="p">}),</span>
+<span class="p">]</span>
 
 
 <div class="viewcode-block" id="GeoFilterType"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.GeoFilterType">[docs]</a><span class="k">class</span> <span class="nc">GeoFilterType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -256,7 +273,21 @@
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Maximum spatial resolution of data&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Maximum resolution of the data for downsampling in CRS units. Only works for feature datasources.&quot;</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="GeoFilter.validate_geom"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.GeoFilter.validate_geom">[docs]</a>    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;geom&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">validate_geom</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;bbox must be a list of length 4: [x_min,y_min,x_max,y_max]&quot;</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">&quot;properties&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="n">v</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">Feature</span><span class="p">(</span><span class="o">**</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span></div></div>
 
 
 <div class="viewcode-block" id="TimeFilter"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.TimeFilter">[docs]</a><span class="k">class</span> <span class="nc">TimeFilter</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -281,7 +312,9 @@
     <span class="n">resolution</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Temporal resolution of data&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;native&quot;</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Maximum resolution of the data for temporal downsampling. Only valid with range type&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;&quot;</span>
+<span class="s2">            Maximum resolution of the data for temporal downsampling. </span>
+<span class="s2">            Must be a valid pandas [DateOffset.freqstr](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.tseries.offsets.DateOffset.freqstr.html#pandas.tseries.offsets.DateOffset.freqstr). Only valid with range type&quot;&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">resample</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ResampleType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Temporal resampling method&quot;</span><span class="p">,</span>
@@ -328,6 +361,11 @@
 <span class="c1"># df      ∩  features -&gt; subset of df within (resolution) of features</span>
 
 
+<div class="viewcode-block" id="CoordSelector"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.CoordSelector">[docs]</a><span class="k">class</span> <span class="nc">CoordSelector</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">coord</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Coordinate name&quot;</span><span class="p">)</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Coordinate value&quot;</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="Query"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Query">[docs]</a><span class="k">class</span> <span class="nc">Query</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Datamesh query</span>
@@ -362,6 +400,9 @@
     <span class="n">geofilter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeoFilter</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Spatial filter or interpolator&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">)</span>
+    <span class="n">coordfilter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CoordSelector</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;List of additional coordinate filters&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span>
     <span class="n">crs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Spatial reference for filter and output&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -371,12 +412,7 @@
         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Aggregation operators to apply&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Optional aggregation operators to apply to query after filtering&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
-        <span class="n">json_loads</span> <span class="o">=</span> <span class="n">orjson</span><span class="o">.</span><span class="n">loads</span>
-        <span class="n">json_dumps</span> <span class="o">=</span> <span class="n">_orjson_dumps</span>
-        <span class="n">json_encoders</span> <span class="o">=</span> <span class="p">{</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">:</span> <span class="nb">str</span><span class="p">}</span></div>
+    <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Container"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Container">[docs]</a><span class="k">class</span> <span class="nc">Container</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
