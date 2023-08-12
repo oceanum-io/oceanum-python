@@ -11,6 +11,7 @@ import aiohttp
 import fsspec
 import requests
 import yarl
+import fsspec
 from fsspec.asyn import AbstractAsyncStreamedFile, AsyncFileSystem, sync, sync_wrapper
 from fsspec.callbacks import _DEFAULT_CALLBACK
 from fsspec.exceptions import FSTimeoutError
@@ -19,6 +20,7 @@ from fsspec.utils import DEFAULT_BLOCK_SIZE, isfilelike, nullcontext, tokenize
 from fsspec.implementations.memory import MemoryFile
 
 DEFAULT_CONFIG = {"STORAGE_SERVICE": "https://storage.oceanum.io"}
+fsspec.asyn._DEFAULT_BATCH_SIZE = 32
 
 logger = logging.getLogger("fsspec.oceanum")
 
