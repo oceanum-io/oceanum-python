@@ -15,7 +15,7 @@ REMOTE_PATH = "/test_storage"
 @pytest.fixture
 def fs():
     """Connection fixture"""
-    fs = FileSystem(os.environ["DATAMESH_TOKEN"])
+    fs = FileSystem(os.environ["DATAMESH_TOKEN"], service="http://localhost:8010")
     return fs
 
 
@@ -37,13 +37,18 @@ def dummy_files():
     return tmpdir
 
 
-def test_not_found(fs):
+def test_file_not_found(fs):
     with pytest.raises(FileNotFoundError):
         fs.ls("/not_found")
 
 
+def test_dir_not_found(fs):
+    with pytest.raises(FileNotFoundError):
+        fs.ls("/not_found/")
+
+
 def test_ls(fs, dummy_files):
-    fs.mkdirs(REMOTE_PATH)
+    fs.mkdirs(REMOTE_PATH, exist_ok=True)
     fs.put(os.path.join(dummy_files.name, "test"), REMOTE_PATH, recursive=True)
 
     files = fs.ls(REMOTE_PATH)
@@ -55,17 +60,17 @@ def test_ls(fs, dummy_files):
 
 
 def test_get(fs, dummy_files):
-    fs.mkdirs(REMOTE_PATH)
+    fs.mkdirs(REMOTE_PATH, exist_ok=True)
     fs.put(os.path.join(dummy_files.name, "test"), REMOTE_PATH, recursive=True)
 
     localdir = tempfile.TemporaryDirectory()
-    fs.get(REMOTE_PATH, localdir.name, recursive=True)
+    fs.get(REMOTE_PATH, localdir.name + "/", recursive=True)
 
     assert os.path.exists(os.path.join(localdir.name, "test", "file1.txt"))
 
 
 def test_open(fs, dummy_files):
-    fs.mkdirs(REMOTE_PATH)
+    fs.mkdirs(REMOTE_PATH, exist_ok=True)
     fs.put(os.path.join(dummy_files.name, "test"), REMOTE_PATH, recursive=True)
 
     with fsspec.open(

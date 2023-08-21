@@ -4,15 +4,22 @@ import os
 import logging
 import re
 import weakref
+import random
 from copy import copy
 from urllib.parse import urlparse
+from decorator import decorator
 
 import aiohttp
 import fsspec
 import requests
 import yarl
 import fsspec
-from fsspec.asyn import AbstractAsyncStreamedFile, AsyncFileSystem, sync, sync_wrapper
+from fsspec.asyn import (
+    AbstractAsyncStreamedFile,
+    AsyncFileSystem,
+    sync,
+    sync_wrapper,
+)
 from fsspec.callbacks import _DEFAULT_CALLBACK
 from fsspec.exceptions import FSTimeoutError
 from fsspec.spec import AbstractBufferedFile
@@ -20,9 +27,29 @@ from fsspec.utils import DEFAULT_BLOCK_SIZE, isfilelike, nullcontext, tokenize
 from fsspec.implementations.memory import MemoryFile
 
 DEFAULT_CONFIG = {"STORAGE_SERVICE": "https://storage.oceanum.io"}
-fsspec.asyn._DEFAULT_BATCH_SIZE = 32
-
+_DEFAULT_BATCH_SIZE = 16
+_NOFILES_DEFAULT_BATCH_SIZE = 16
 logger = logging.getLogger("fsspec.oceanum")
+
+
+@decorator
+async def retry_request(func, retries=6, *args, **kwargs):
+    for retry in range(retries):
+        try:
+            if retry > 0:
+                await asyncio.sleep(min(random.random() + 2 ** (retry - 1), 32))
+            return await func(*args, **kwargs)
+        except (
+            aiohttp.client_exceptions.ClientError,
+            FSTimeoutError,
+            FileNotFoundError,
+        ) as e:
+            if isinstance(e, FileNotFoundError):
+                logger.debug("Request returned 404")
+                raise e
+            if retry == retries - 1:
+                logger.exception(f"{func.__name__} out of retries on exception: {e}")
+                raise e
 
 
 async def get_client(**kwargs):
@@ -72,9 +99,12 @@ class FileSystem(AsyncFileSystem):
         self._auth_headers = {
             "X-DATAMESH-TOKEN": self._token,
         }
-        super().__init__(self, asynchronous=asynchronous, loop=loop)
+        super().__init__(self, asynchronous=asynchronous, loop=loop, batch_size=16)
         self.get_client = get_client
-        self.client_kwargs = {"headers": self._auth_headers}
+        self.client_kwargs = {
+            "headers": self._auth_headers,
+            "timeout": aiohttp.ClientTimeout(total=3600, sock_read=3600),
+        }
         self._session = None
 
     @property
@@ -101,11 +131,18 @@ class FileSystem(AsyncFileSystem):
                 weakref.finalize(self, self.close_session, self.loop, self._session)
         return self._session
 
-    async def _ls(self, path, detail=True, **kwargs):
+    async def _ls(self, path="", detail=True, **kwargs):
         logger.debug(path)
         session = await self.set_session()
-        async with session.get(self._base_url + path.strip("/") + "/") as r:
-            self._raise_not_found_for_status(r, path)
+        spath = path.lstrip("/")
+        async with session.get(self._base_url + spath) as r:
+            try:
+                self._raise_not_found_for_status(r, path)
+            except FileNotFoundError:  # The storage endpoint enforces trailing slash for directories, so test for that
+                if path[-1] == "/":
+                    raise FileNotFoundError(path)
+                else:
+                    return await self._ls(path + "/", detail=detail, **kwargs)
             listing = await r.json()
         if detail:
             return [
@@ -136,6 +173,7 @@ class FileSystem(AsyncFileSystem):
             self._raise_not_found_for_status(r, path)
         return out
 
+    @retry_request
     async def _get_file(
         self, rpath, lpath, chunk_size=5 * 2**20, callback=_DEFAULT_CALLBACK, **kwargs
     ):

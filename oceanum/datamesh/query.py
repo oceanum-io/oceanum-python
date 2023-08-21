@@ -186,7 +186,7 @@ class Aggregate(BaseModel):
 
 class CoordSelector(BaseModel):
     coord: str = Field(title="Coordinate name")
-    value: List[Union[str, int, float]] = Field(title="Coordinate value")
+    values: List[Union[str, int, float]] = Field(title="Coordinate value")
 
 
 class Query(BaseModel):
