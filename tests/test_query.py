@@ -54,3 +54,10 @@ def test_query_geofilter():
             },
         },
     )
+
+
+def test_query_coord():
+    q = Query(
+        datasource="test",
+        coordfilter=[{"coord": "ensemble", "values": [1,2,3]}]
+    )
