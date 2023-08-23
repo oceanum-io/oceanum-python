@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>oceanum.storage.filesystem &#8212; oceanum 0.9.0 documentation</title>
+    <title>oceanum.storage.filesystem &#8212; oceanum 0.9.6 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -181,14 +181,22 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">weakref</span>
+<span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+<span class="kn">from</span> <span class="nn">decorator</span> <span class="kn">import</span> <span class="n">decorator</span>
 
 <span class="kn">import</span> <span class="nn">aiohttp</span>
 <span class="kn">import</span> <span class="nn">fsspec</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">yarl</span>
-<span class="kn">from</span> <span class="nn">fsspec.asyn</span> <span class="kn">import</span> <span class="n">AbstractAsyncStreamedFile</span><span class="p">,</span> <span class="n">AsyncFileSystem</span><span class="p">,</span> <span class="n">sync</span><span class="p">,</span> <span class="n">sync_wrapper</span>
+<span class="kn">import</span> <span class="nn">fsspec</span>
+<span class="kn">from</span> <span class="nn">fsspec.asyn</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AbstractAsyncStreamedFile</span><span class="p">,</span>
+    <span class="n">AsyncFileSystem</span><span class="p">,</span>
+    <span class="n">sync</span><span class="p">,</span>
+    <span class="n">sync_wrapper</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">fsspec.callbacks</span> <span class="kn">import</span> <span class="n">_DEFAULT_CALLBACK</span>
 <span class="kn">from</span> <span class="nn">fsspec.exceptions</span> <span class="kn">import</span> <span class="n">FSTimeoutError</span>
 <span class="kn">from</span> <span class="nn">fsspec.spec</span> <span class="kn">import</span> <span class="n">AbstractBufferedFile</span>
@@ -196,8 +204,29 @@
 <span class="kn">from</span> <span class="nn">fsspec.implementations.memory</span> <span class="kn">import</span> <span class="n">MemoryFile</span>
 
 <span class="n">DEFAULT_CONFIG</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;STORAGE_SERVICE&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.oceanum.io&quot;</span><span class="p">}</span>
-
+<span class="n">_DEFAULT_BATCH_SIZE</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">_NOFILES_DEFAULT_BATCH_SIZE</span> <span class="o">=</span> <span class="mi">16</span>
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;fsspec.oceanum&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="retry_request"><a class="viewcode-back" href="../../../oceanum.storage.html#oceanum.storage.retry_request">[docs]</a><span class="nd">@decorator</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">retry_request</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">retry</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">retries</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">retry</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">retry</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">32</span><span class="p">))</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span>
+            <span class="n">aiohttp</span><span class="o">.</span><span class="n">client_exceptions</span><span class="o">.</span><span class="n">ClientError</span><span class="p">,</span>
+            <span class="n">FSTimeoutError</span><span class="p">,</span>
+            <span class="ne">FileNotFoundError</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Request returned 404&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">e</span>
+            <span class="k">if</span> <span class="n">retry</span> <span class="o">==</span> <span class="n">retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> out of retries on exception: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">e</span></div>
 
 
 <div class="viewcode-block" id="get_client"><a class="viewcode-back" href="../../../oceanum.storage.html#oceanum.storage.get_client">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">get_client</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -223,13 +252,14 @@
         <span class="n">service</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;STORAGE_SERVICE&quot;</span><span class="p">,</span> <span class="n">DEFAULT_CONFIG</span><span class="p">[</span><span class="s2">&quot;STORAGE_SERVICE&quot;</span><span class="p">]),</span>
         <span class="n">asynchronous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">loop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="o">=</span><span class="mi">3600</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Storage filesystem constructor</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            token (string): Your datamesh access token. Defaults to os.environ.get(&quot;DATAMESH_TOKEN&quot;, None).</span>
 <span class="sd">            service (string, optional): URL of datamesh service. Defaults to os.environ.get(&quot;STORAGE_SERVICE&quot;, &quot;https://storage.oceanum.io&quot;).</span>
-
+<span class="sd">            timeout (int, optional): Timeout for requests in seconds. Defaults to 3600.</span>
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: Missing or invalid arguments</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -247,9 +277,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_auth_headers</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;X-DATAMESH-TOKEN&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_token</span><span class="p">,</span>
         <span class="p">}</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asynchronous</span><span class="o">=</span><span class="n">asynchronous</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asynchronous</span><span class="o">=</span><span class="n">asynchronous</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">get_client</span> <span class="o">=</span> <span class="n">get_client</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;headers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auth_headers</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;headers&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_auth_headers</span><span class="p">,</span>
+            <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">aiohttp</span><span class="o">.</span><span class="n">ClientTimeout</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">sock_read</span><span class="o">=</span><span class="n">timeout</span><span class="p">),</span>
+        <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span></div>
 
     <span class="nd">@property</span>
@@ -276,11 +309,18 @@
                 <span class="n">weakref</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">close_session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span></div>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_ls</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">_ls</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">session</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_session</span><span class="p">()</span>
-        <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">spath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_url</span> <span class="o">+</span> <span class="n">spath</span><span class="p">)</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>  <span class="c1"># The storage endpoint enforces trailing slash for directories, so test for that</span>
+                <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ls</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">listing</span> <span class="o">=</span> <span class="k">await</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">detail</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span>
@@ -311,6 +351,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_raise_not_found_for_status</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
+    <span class="nd">@retry_request</span>
     <span class="k">async</span> <span class="k">def</span> <span class="nf">_get_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">rpath</span><span class="p">,</span> <span class="n">lpath</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">5</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="mi">20</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">_DEFAULT_CALLBACK</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>

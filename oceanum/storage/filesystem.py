@@ -75,13 +75,14 @@ class FileSystem(AsyncFileSystem):
         service=os.environ.get("STORAGE_SERVICE", DEFAULT_CONFIG["STORAGE_SERVICE"]),
         asynchronous=False,
         loop=None,
+        timeout=3600,
     ):
         """Storage filesystem constructor
 
         Args:
             token (string): Your datamesh access token. Defaults to os.environ.get("DATAMESH_TOKEN", None).
             service (string, optional): URL of datamesh service. Defaults to os.environ.get("STORAGE_SERVICE", "https://storage.oceanum.io").
-
+            timeout (int, optional): Timeout for requests in seconds. Defaults to 3600.
         Raises:
             ValueError: Missing or invalid arguments
         """
@@ -103,7 +104,7 @@ class FileSystem(AsyncFileSystem):
         self.get_client = get_client
         self.client_kwargs = {
             "headers": self._auth_headers,
-            "timeout": aiohttp.ClientTimeout(total=3600, sock_read=3600),
+            "timeout": aiohttp.ClientTimeout(total=timeout, sock_read=timeout),
         }
         self._session = None
 
