@@ -76,6 +76,7 @@ class FileSystem(AsyncFileSystem):
         asynchronous=False,
         loop=None,
         timeout=3600,
+        batch_size=_DEFAULT_BATCH_SIZE,
     ):
         """Storage filesystem constructor
 
@@ -83,6 +84,7 @@ class FileSystem(AsyncFileSystem):
             token (string): Your datamesh access token. Defaults to os.environ.get("DATAMESH_TOKEN", None).
             service (string, optional): URL of datamesh service. Defaults to os.environ.get("STORAGE_SERVICE", "https://storage.oceanum.io").
             timeout (int, optional): Timeout for requests in seconds. Defaults to 3600.
+            batch_size (int, optional): Number of concurrent requests. Defaults to 16.
         Raises:
             ValueError: Missing or invalid arguments
         """
@@ -100,7 +102,9 @@ class FileSystem(AsyncFileSystem):
         self._auth_headers = {
             "X-DATAMESH-TOKEN": self._token,
         }
-        super().__init__(self, asynchronous=asynchronous, loop=loop, batch_size=16)
+        super().__init__(
+            self, asynchronous=asynchronous, loop=loop, batch_size=batch_size
+        )
         self.get_client = get_client
         self.client_kwargs = {
             "headers": self._auth_headers,

@@ -55,7 +55,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "oceanum"
-copyright = "2022, Oceanum Developers"
+copyright = "2023, Oceanum Developers"
 author = "Oceanum Developers"
 
 # The version info for the project you're documenting, acts as replacement
@@ -110,11 +110,11 @@ html_theme_options = {
             "icon": "fab fa-github",
             "type": "fontawesome",
         }
-   ]
+    ],
 }
 
 html_sidebars = {
-  "**": ["globaltoc.html"],
+    "**": ["globaltoc.html"],
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
