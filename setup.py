@@ -26,6 +26,7 @@ requirements = [
     "pyarrow",
     "python-snappy",
     "geojson-pydantic>=1.0",
+    "decorator",
 ]
 
 setup_requirements = [
