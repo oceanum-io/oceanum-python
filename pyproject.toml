@@ -79,3 +79,6 @@ version = {attr = "oceanum.__version__"}
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "docs"]
+
+[tool.distutils.bdist_wheel]
+universal = true
