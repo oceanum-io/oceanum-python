@@ -1,6 +1,7 @@
 import os
 import io
 import re
+import shutil
 import json
 import datetime
 import tempfile
@@ -22,6 +23,7 @@ from .datasource import Datasource, _datasource_props, _datasource_driver
 from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter
 from .zarr import zarr_write
+from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
@@ -56,7 +58,8 @@ def tempFile(mode="wb"):
         yield file
     finally:
         file.close()
-        os.unlink(file.name)
+        if os.path.exists(file.name):
+            os.unlink(file.name)
 
 
 class Connector(object):
@@ -230,9 +233,14 @@ class Connector(object):
         else:
             return Stage(**resp.json())
 
-    def _query(self, query, use_dask=False):
+    def _query(self, query, use_dask=False, cache_timeout=0):
         if not isinstance(query, Query):
             query = Query(**query)
+        if cache_timeout and not use_dask:
+            localcache = LocalCache(cache_timeout)
+            cached = localcache.get(query)
+            if cached:
+                return cached
         stage = self._stage_request(query)
         if stage is None:
             warnings.warn("No data found for query")
@@ -266,10 +274,15 @@ class Connector(object):
                     f.seek(0)
                     if stage.container == Container.Dataset:
                         ds = xarray.load_dataset(f.name)
+                        ext = ".nc"
                     elif stage.container == Container.GeoDataFrame:
                         ds = geopandas.read_parquet(f.name)
+                        ext = ".gpq"
                     else:
                         ds = pandas.read_parquet(f.name)
+                        ext = ".pq"
+                    if cache_timeout:
+                        os.rename(f.name, localcache._cachepath(query) + ext)
                 return ds
 
     def get_catalog(self, search=None, timefilter=None, geofilter=None):
@@ -402,7 +415,7 @@ class Connector(object):
         """
         return self.load_datasource(datasource_id, parameters, use_dask)
 
-    def query(self, query=None, *, use_dask=False, **query_keys):
+    def query(self, query=None, *, use_dask=False, cache_timeout=0, **query_keys):
         """Make a datamesh query
 
         Args:
@@ -410,6 +423,7 @@ class Connector(object):
 
         Kwargs:
             use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
+            cache_timeout (int, optional): Local cache timeout in seconds. Defaults to 0 (no local cache). Only applies if use_dask=False. Will return an identical query from a local cache if available with an age of less than cache_timeout seconds. Does not check for more recent data on the server.
             **query_keys: Keywords form of query, for example datamesh.query(datasource="my_datasource")
 
         Returns:
@@ -417,10 +431,12 @@ class Connector(object):
         """
         if query is None:
             query = Query(**query_keys)
-        return self._query(query, use_dask)
+        return self._query(query, use_dask, cache_timeout)
 
     @asyncwrapper
-    async def query_async(self, query, *, use_dask=False, **query_keys):
+    async def query_async(
+        self, query, *, use_dask=False, cache_timeout=0, **query_keys
+    ):
         """Make a datamesh query asynchronously
 
         Args:
@@ -428,6 +444,7 @@ class Connector(object):
 
         Kwargs:
             use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
+            cache_timeout (int, optional): Local cache timeout in seconds. Defaults to 0 (no local cache). Only applies if use_dask=False. Will return an identical query from a local cache if available with an age of less than cache_timeout seconds. Does not check for more recent data on the server.
             loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
             executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
             **query_keys: Keywords form of query, for example datamesh.query(datasource="my_datasource")
@@ -438,7 +455,7 @@ class Connector(object):
         """
         if query is None:
             query = Query(**query_keys)
-        return self._query(query, use_dask)
+        return self._query(query, use_dask, cache_timeout)
 
     def write_datasource(
         self,
