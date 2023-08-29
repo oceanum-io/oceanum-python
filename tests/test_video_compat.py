@@ -9,7 +9,6 @@ from click.testing import CliRunner
 
 from oceanum.datamesh import Connector, Datasource
 
-import xarray_video as xv
 
 HERE = os.path.dirname(__file__)
 
@@ -22,6 +21,7 @@ def conn():
 
 @pytest.fixture
 def video():
+    xv = pytest.importorskip("xarray_video")
     vid = xv.open_video(os.path.join(HERE, "data", "ocean_test_1.mp4"))
     return vid
 
