@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oceanum"
+description = "Library for oceanum.io services"
+readme = "README.rst"
+license = { file = "LICENSE" }
+keywords = ["oceanum", "datamesh", "oceanum.io"]
+authors = [
+  { name = "Oceanum Developers", email="developers@oceanum.science" },
+]
+maintainers = [
+  {name = "Oceanum Developers", email = "developers@oceanum.science"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+requires-python = ">=3.8"
+dependencies = [
+  "aiohttp",
+  "click",
+  "decorator",
+  "fsspec",
+  "geojson-pydantic>=1.0",
+  "geopandas",
+  "h5netcdf",
+  "numpy",
+  "orjson",
+  "pandas",
+  "pyarrow",
+  "python-snappy",
+  "requests",
+  "shapely",
+  "xarray",
+  "zarr",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+]
+extra = [
+    "xarray_video",
+]
+docs = [
+  "autodoc-pydantic",
+  "pydata-sphinx-theme",
+  "sphinx",
+]
+
+[project.urls]
+"Homepage" = "https://oceanum.io/"
+"Source" = "https://github.com/oceanum-io/oceanum-python"
+"Documentation" = "https://oceanum-python.readthedocs.io/en/latest/"
+"Tracker" = "https://github.com/oceanum-io/oceanum-python/issues"
+
+[project.scripts]
+oceanum = "oceanum.cli:main"
+
+[project.entry-points."fsspec.specs"]
+"oceanum" = "oceanum.storage:FileSystem"
+
+[tool.setuptools.dynamic]
+version = {attr = "oceanum.__version__"}
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "docs"]

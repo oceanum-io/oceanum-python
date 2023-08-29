@@ -14,6 +14,7 @@ from pydantic import (
     PrivateAttr,
     constr,
     BeforeValidator,
+    field_validator,
 )
 from pydantic_core import core_schema
 from pydantic.json import timedelta_isoformat
@@ -178,8 +179,6 @@ class Datasource(BaseModel):
         description="Unique ID for the datasource",
         min_length=3,
         max_length=80,
-        strip_whitespace=True,
-        to_lower=True,
         pattern=r"^[a-z0-9-_]+$",
     )
     name: str = Field(
@@ -279,6 +278,11 @@ class Datasource(BaseModel):
     # TODO[pydantic]: The following keys were removed: `json_encoders`.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     model_config = ConfigDict(use_enum_values=True, validate_assignment=True)
+
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, v: str) -> str:
+        return v.lower().strip()
 
     def __str__(self):
         if self._detail:
