@@ -31,7 +31,7 @@ class LocalCache:
             if os.path.exists(cache_file + ".nc"):
                 if (
                     os.path.getmtime(cache_file + ".nc") + self.cache_timeout
-                    > time.time()
+                    < time.time()
                 ):
                     os.remove(cache_file + ".nc")
                     return None
@@ -39,7 +39,7 @@ class LocalCache:
             elif os.path.exists(cache_file + ".gpq"):
                 if (
                     os.path.getmtime(cache_file + ".gpq") + self.cache_timeout
-                    > time.time()
+                    < time.time()
                 ):
                     os.remove(cache_file + ".gpq")
                     return None
@@ -47,7 +47,7 @@ class LocalCache:
             elif os.path.exists(cache_file + ".pq"):
                 if (
                     os.path.getmtime(cache_file + ".pq") + self.cache_timeout
-                    > time.time()
+                    < time.time()
                 ):
                     os.remove(cache_file + ".pq")
                     return None

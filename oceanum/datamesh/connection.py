@@ -239,7 +239,7 @@ class Connector(object):
         if cache_timeout and not use_dask:
             localcache = LocalCache(cache_timeout)
             cached = localcache.get(query)
-            if cached:
+            if cached is not None:
                 return cached
         stage = self._stage_request(query)
         if stage is None:
