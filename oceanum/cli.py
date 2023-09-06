@@ -52,20 +52,19 @@ def main(auth, datamesh_token):
 
 @main.command()
 @click.option("-l", "--long", is_flag=True, help="Long listing format")
-@click.option("-h", "--human-readable", is_flag=True, help="Human readable sizes")
+@click.option("-h", "--human-readable", is_flag=True, help="Readable sizes with -l")
 @click.option("-r", "--recursive", is_flag=True, help="List subdirectories recursively")
 @click.argument("path", default="/")
 @pass_auth
 def ls(auth, path, long, human_readable, recursive):
     """List contents in the oceanum storage (the root directory by default)."""
-    if recursive:
-        click.echo("Recursive option not yet implemented")
     fs = FileSystem(auth.datamesh_token)
     try:
-        items = fs.ls(path, detail=long)
+        maxdepth = None if recursive else 1
+        items = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=long)
         if long:
             sizes = 0
-            for item in items:
+            for item in items.values():
                 line, size = item_to_long(item, human_readable=human_readable)
                 sizes += size
                 click.echo(line)
@@ -76,7 +75,6 @@ def ls(auth, path, long, human_readable, recursive):
             click.echo("\n".join(items))
     except ClientResponseError:
         click.echo(f"Path {path} not found or not authorised (check datamesh token)")
-
 
 
 @main.command()
