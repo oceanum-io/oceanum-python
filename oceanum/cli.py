@@ -40,14 +40,14 @@ pass_auth = click.make_pass_decorator(Auth, ensure=True)
 
 @click.group()
 @click.option(
-    "-d",
-    "--datamesh_token",
+    "-t",
+    "--token",
     help="Datamesh token, env DATAMESH_TOKEN by default",
     envvar="DATAMESH_TOKEN",
 )
 @pass_auth
-def main(auth, datamesh_token):
-    auth.datamesh_token = datamesh_token
+def main(auth, token):
+    auth.token = token
 
 
 @main.command()
@@ -58,7 +58,7 @@ def main(auth, datamesh_token):
 @pass_auth
 def ls(auth, path, long, human_readable, recursive):
     """List contents in the oceanum storage (the root directory by default)."""
-    fs = FileSystem(auth.datamesh_token)
+    fs = FileSystem(auth.token)
     try:
         maxdepth = None if recursive else 1
         items = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=long)
@@ -82,6 +82,6 @@ def ls(auth, path, long, human_readable, recursive):
 @click.argument("dest")
 @click.option("-r", "--recursive")
 @pass_auth
-def cp(auth, source, dest, recursive, datamesh_token):
+def cp(auth, source, dest, recursive, token):
     """Copy SOURCE to DEST."""
     pass
