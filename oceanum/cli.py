@@ -1,5 +1,6 @@
 """Console script for oceanum library."""
 import click
+from pathlib import Path
 from aiohttp import ClientResponseError
 
 from oceanum.storage import FileSystem
@@ -61,11 +62,12 @@ def main(credentials, token):
 @click.option(
     "-s",
     "--service",
+    default="https://storage.oceanum.io",
     help="Storage service, defaults to STORAGE_SERVICE env or https://storage.oceanum.io",
     envvar="STORAGE_SERVICE",
 )
 @pass_credentials
-def storage(credentials, service):
+def storage(credentials: Credentials, service: str):
     """Oceanum storage commands."""
     credentials.storage_service = service
 
@@ -76,9 +78,17 @@ def storage(credentials, service):
 @click.option("-r", "--recursive", is_flag=True, help="List subdirectories recursively")
 @click.argument("path", default="/")
 @pass_credentials
-def ls(credentials, path, long, human_readable, recursive):
+def ls(
+    credentials: Credentials,
+    path: str,
+    long: bool,
+    human_readable: bool,
+    recursive: bool,
+):
     """List contents in the oceanum storage (the root directory by default)."""
-    fs = FileSystem(credentials.datamesh_token)
+    fs = FileSystem(
+        token=credentials.datamesh_token, service=credentials.storage_service
+    )
     try:
         maxdepth = None if recursive else 1
         items = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=long)
@@ -101,10 +111,34 @@ def ls(credentials, path, long, human_readable, recursive):
 @click.argument("source")
 @click.argument("dest")
 @click.option("-r", "--recursive")
+@click.option("-o", "--overwrite", is_flag=True, help="Overwrite existing destination")
 @pass_credentials
-def cp(credentials, source, dest, recursive, token):
-    """Copy SOURCE to DEST."""
-    pass
+def get(
+    credentials: Credentials,
+    source: str,
+    dest: str,
+    recursive: bool,
+    overwrite: bool,
+):
+    """Copy content from SOURCE to DEST."""
+    fs = FileSystem(
+        token=credentials.datamesh_token, service=credentials.storage_service
+    )
+    # checking
+    dest = Path(dest)
+    is_source_dir = fs.isdir(source)
+    if not overwrite and dest.is_file():
+        raise FileExistsError(
+            f"Destination {dest} already exists, set --overwrite to overwrite it"
+        )
+    if not fs.isfile(source) and not is_source_dir:
+        raise FileNotFoundError(f"Source {source} not found")
+    if is_source_dir and not recursive:
+        raise IsADirectoryError(f"--recursive is required to get directory {source}")
+    if dest.is_dir() and Path(source).name != dest.name:
+        dest = str(dest / Path(source).name)
+    # Downloading
+    fs.get(source, str(dest), recursive=recursive)
 
 
 # =====================================================================================
@@ -114,4 +148,3 @@ def cp(credentials, source, dest, recursive, token):
 def datamesh():
     """Oceanum datamesh commands."""
     pass
-
