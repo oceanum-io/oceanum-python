@@ -31,8 +31,8 @@ def item_to_long(item, human_readable=False):
 
 
 class Auth:
-    def __init__(self, datamesh_token=None):
-        self.datamesh_token = datamesh_token
+    def __init__(self, token=None):
+        self.token = token
 
 
 pass_auth = click.make_pass_decorator(Auth, ensure=True)
@@ -47,10 +47,20 @@ pass_auth = click.make_pass_decorator(Auth, ensure=True)
 )
 @pass_auth
 def main(auth, token):
+    """Oceanum python commands."""
     auth.token = token
 
 
-@main.command()
+# =====================================================================================
+# Storage CLI
+# =====================================================================================
+@main.group()
+def storage():
+    """Oceanum storage commands."""
+    pass
+
+
+@storage.command()
 @click.option("-l", "--long", is_flag=True, help="Long listing format")
 @click.option("-h", "--human-readable", is_flag=True, help="Readable sizes with -l")
 @click.option("-r", "--recursive", is_flag=True, help="List subdirectories recursively")
@@ -77,7 +87,7 @@ def ls(auth, path, long, human_readable, recursive):
         click.echo(f"Path {path} not found or not authorised (check datamesh token)")
 
 
-@main.command()
+@storage.command()
 @click.argument("source")
 @click.argument("dest")
 @click.option("-r", "--recursive")
@@ -85,3 +95,13 @@ def ls(auth, path, long, human_readable, recursive):
 def cp(auth, source, dest, recursive, token):
     """Copy SOURCE to DEST."""
     pass
+
+
+# =====================================================================================
+# Datamesh CLI
+# =====================================================================================
+@main.group()
+def datamesh():
+    """Oceanum datamesh commands."""
+    pass
+
