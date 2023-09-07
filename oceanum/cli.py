@@ -30,34 +30,44 @@ def item_to_long(item, human_readable=False):
     return f"{size:>10}  {modified:>32}  {item['name']}", item["size"]
 
 
-class Auth:
-    def __init__(self, token=None):
-        self.token = token
+class Credentials:
+    def __init__(
+            self, datamesh_token=None, storage_service="https://storage.oceanum.io"
+        ):
+        self.datamesh_token = datamesh_token
+        self.storage_service = storage_service
 
 
-pass_auth = click.make_pass_decorator(Auth, ensure=True)
+pass_credentials = click.make_pass_decorator(Credentials, ensure=True)
 
 
 @click.group()
 @click.option(
     "-t",
     "--token",
-    help="Datamesh token, env DATAMESH_TOKEN by default",
+    help="Datamesh token, defaults to DATAMESH_TOKEN env",
     envvar="DATAMESH_TOKEN",
 )
-@pass_auth
-def main(auth, token):
+@pass_credentials
+def main(credentials, token):
     """Oceanum python commands."""
-    auth.token = token
+    credentials.datamesh_token = token
 
 
 # =====================================================================================
 # Storage CLI
 # =====================================================================================
 @main.group()
-def storage():
+@click.option(
+    "-s",
+    "--service",
+    help="Storage service, defaults to STORAGE_SERVICE env or https://storage.oceanum.io",
+    envvar="STORAGE_SERVICE",
+)
+@pass_credentials
+def storage(credentials, service):
     """Oceanum storage commands."""
-    pass
+    credentials.storage_service = service
 
 
 @storage.command()
@@ -65,10 +75,10 @@ def storage():
 @click.option("-h", "--human-readable", is_flag=True, help="Readable sizes with -l")
 @click.option("-r", "--recursive", is_flag=True, help="List subdirectories recursively")
 @click.argument("path", default="/")
-@pass_auth
-def ls(auth, path, long, human_readable, recursive):
+@pass_credentials
+def ls(credentials, path, long, human_readable, recursive):
     """List contents in the oceanum storage (the root directory by default)."""
-    fs = FileSystem(auth.token)
+    fs = FileSystem(credentials.datamesh_token)
     try:
         maxdepth = None if recursive else 1
         items = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=long)
@@ -91,8 +101,8 @@ def ls(auth, path, long, human_readable, recursive):
 @click.argument("source")
 @click.argument("dest")
 @click.option("-r", "--recursive")
-@pass_auth
-def cp(auth, source, dest, recursive, token):
+@pass_credentials
+def cp(credentials, source, dest, recursive, token):
     """Copy SOURCE to DEST."""
     pass
 

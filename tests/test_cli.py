@@ -18,7 +18,7 @@ def test_main(runner):
 
 
 def test_storage(runner):
-    result = runner.invoke(cli.storage)
+    result = runner.invoke(cli.storage, ["-s", "https://storage.oceanum.io", "--help"])
     assert result.exit_code == 0
     assert "Oceanum storage commands" in result.output
 
