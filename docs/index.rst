@@ -14,6 +14,7 @@ Documentation
 
 * :doc:`installation`
 * :doc:`usage`
+* :doc:`cli`
 * :doc:`api`
 * :doc:`about`
 
@@ -25,6 +26,7 @@ Documentation
 
    installation
    usage
+   cli
    api
    about
 
