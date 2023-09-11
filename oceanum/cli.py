@@ -149,7 +149,7 @@ def put(
 @click.argument("path")
 @pass_credentials
 def rm(credentials: Credentials, recursive: bool, path: str):
-    """Copy content from SOURCE to DEST."""
+    """Remove PATH."""
     filesystem.rm(
         path=path,
         recursive=recursive,

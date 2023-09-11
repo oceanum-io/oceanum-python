@@ -489,7 +489,7 @@ def rm(
     token: str | None = None,
     service: str = DEFAULT_CONFIG["STORAGE_SERVICE"]
 ):
-    """Copy local source to remote dest, or multiple sources to directory.
+    """Remove path file or directory.
 
     Parameters
     ----------
