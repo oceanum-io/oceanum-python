@@ -3,7 +3,7 @@ import click
 from pathlib import Path
 from aiohttp import ClientResponseError
 
-from oceanum.storage import FileSystem
+from oceanum.storage import filesystem
 
 
 def bytes_to_human(size):
@@ -86,59 +86,41 @@ def ls(
     recursive: bool,
 ):
     """List contents in the oceanum storage (the root directory by default)."""
-    fs = FileSystem(
-        token=credentials.datamesh_token, service=credentials.storage_service
+    contents = filesystem.ls(
+        path, recursive, long, credentials.datamesh_token, credentials.storage_service,
     )
-    try:
-        maxdepth = None if recursive else 1
-        items = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=long)
-        if long:
-            sizes = 0
-            for item in items.values():
-                line, size = item_to_long(item, human_readable=human_readable)
-                sizes += size
-                click.echo(line)
-            click.echo(
-                f"TOTAL: {len(items)} objects, {sizes} bytes ({bytes_to_human(sizes)})"
-            )
-        else:
-            click.echo("\n".join(items))
-    except ClientResponseError:
-        click.echo(f"Path {path} not found or not authorised (check datamesh token)")
+    if long:
+        sizes = 0
+        for item in contents.values():
+            line, size = item_to_long(item, human_readable=human_readable)
+            sizes += size
+            click.echo(line)
+        click.echo(
+            f"TOTAL: {len(contents)} objects, {sizes} bytes ({bytes_to_human(sizes)})"
+        )
+    else:
+        click.echo("\n".join(contents))
 
 
 @storage.command()
+@click.option("-r", "--recursive", is_flag=True, help="Copy directories recursively")
 @click.argument("source")
 @click.argument("dest")
-@click.option("-r", "--recursive")
-@click.option("-o", "--overwrite", is_flag=True, help="Overwrite existing destination")
 @pass_credentials
 def get(
     credentials: Credentials,
+    recursive: bool,
     source: str,
     dest: str,
-    recursive: bool,
-    overwrite: bool,
 ):
     """Copy content from SOURCE to DEST."""
-    fs = FileSystem(
-        token=credentials.datamesh_token, service=credentials.storage_service
+    filesystem.get(
+        source=source,
+        dest=dest,
+        recursive=recursive,
+        token=credentials.datamesh_token,
+        service=credentials.storage_service,
     )
-    # checking
-    dest = Path(dest)
-    is_source_dir = fs.isdir(source)
-    if not overwrite and dest.is_file():
-        raise FileExistsError(
-            f"Destination {dest} already exists, set --overwrite to overwrite it"
-        )
-    if not fs.isfile(source) and not is_source_dir:
-        raise FileNotFoundError(f"Source {source} not found")
-    if is_source_dir and not recursive:
-        raise IsADirectoryError(f"--recursive is required to get directory {source}")
-    if dest.is_dir() and Path(source).name != dest.name:
-        dest = str(dest / Path(source).name)
-    # Downloading
-    fs.get(source, str(dest), recursive=recursive)
 
 
 # =====================================================================================
