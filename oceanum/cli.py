@@ -1,7 +1,5 @@
 """Console script for oceanum library."""
 import click
-from pathlib import Path
-from aiohttp import ClientResponseError
 
 from oceanum.storage import filesystem
 
