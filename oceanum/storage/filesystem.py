@@ -8,6 +8,7 @@ import random
 from copy import copy
 from urllib.parse import urlparse
 from decorator import decorator
+from pathlib import Path
 
 import aiohttp
 import fsspec
@@ -342,3 +343,164 @@ class FileSystem(AsyncFileSystem):
     def ukey(self, path):
         """Unique identifier"""
         return tokenize(path)
+
+
+def ls(
+    path: str,
+    recursive: bool,
+    detail: bool = False,
+    token: str | None = None,
+    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"]
+):
+    """List contents in the oceanum storage (the root directory by default).
+
+    Parameters
+    ----------
+    path: str
+        Path to list.
+    recursive: bool
+        List subdirectories recursively.
+    detail: bool
+        Return detailed information about each content.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    Returns
+    -------
+    contents: list | dict
+        List of contents or dictionary with detailed information about each content.
+
+    """
+    fs = FileSystem(token=token, service=service)
+    try:
+        maxdepth = None if recursive else 1
+        return fs.find(path, maxdepth=maxdepth, withdirs=True, detail=detail)
+    except aiohttp.client_exceptions.ClientError as err:
+        raise aiohttp.client_exceptions.ClientError(
+            f"Path {path} not found or not authorised (check datamesh token)"
+        ) from err
+
+
+def get(
+    source: str,
+    dest: str,
+    recursive: bool = False,
+    token: str | None = None,
+    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"]
+):
+    """Copy remote source to local dest, or multiple sources to directory.
+
+    Parameters
+    ----------
+    source: str
+        Path to get.
+    dest: str
+        Destination path.
+    recursive: bool
+        Get directories recursively.
+    overwrite: bool
+        Overwrite existing destination.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    Notes
+    -----
+    - Directory dest defined with a trailing slash must exist, consistent with gsutil.
+    - Non-existing file dest path is allowed, consistent with gsutil (all required
+      intermediate directories are created).
+
+    """
+    fs = FileSystem(token=token, service=service)
+    is_source_dir = fs.isdir(source)
+
+    # Ensure attempting to copy folder without recursive option does not fail silently
+    if is_source_dir and not recursive:
+        raise IsADirectoryError(f"--recursive is required to get directory {source}")
+
+    # Deal with mimetype error when trying to copy file with recursive option
+    if not is_source_dir and recursive:
+        raise NotADirectoryError(f"Source {source} is a file, do not use --recursive")
+
+    # Prevent from downloading into a folder that does not exist
+    if not Path(dest).is_dir() and dest.endswith(os.path.sep):
+        raise FileNotFoundError(f"Destination directory {dest} not found")
+
+    # Expand destination file name to avoid IsADirectoryError
+    if not is_source_dir and Path(dest).is_dir():
+        dest = str(Path(dest) / Path(source).name)
+
+    # Expand destination folder name if different than source's to keep path structure
+    if is_source_dir and Path(dest) != Path(source):
+        dest = str(Path(dest) / Path(source).name)
+
+    # Downloading
+    fs.get(source, dest, recursive=recursive)
+
+
+def put(
+    source: str,
+    dest: str,
+    recursive: bool = False,
+    token: str | None = None,
+    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"]
+):
+    """Copy local source to remote dest, or multiple sources to directory.
+
+    Parameters
+    ----------
+    source: str
+        Path to get.
+    dest: str
+        Destination path.
+    recursive: bool
+        Get directories recursively.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    """
+    fs = FileSystem(token=token, service=service)
+    is_dest_dir = fs.isdir(dest)
+
+    # Deal with ClientOsError when trying to copy non-existing source
+    if not Path(source).exists():
+        raise FileNotFoundError(f"Source {source} not found")
+
+    # Ensure attempting to copy folder without recursive option does not fail silently
+    if Path(source).is_dir() and not recursive:
+        raise IsADirectoryError(f"--recursive is required to put directory {source}")
+
+    # Raise if trying to upload a folder into an existing file
+    if fs.exists(dest) and not is_dest_dir and Path(source).is_dir():
+        raise FileExistsError(f"Destination {dest} is an existing file")
+
+    # Downloading
+    fs.put(source, dest, recursive=recursive)
+
+
+def rm(
+    path: str,
+    recursive: bool = False,
+    token: str | None = None,
+    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"]
+):
+    """Remove path file or directory.
+
+    Parameters
+    ----------
+    path: str
+        Path to remove.
+    recursive: bool
+        Remove directories recursively.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    """
+    raise NotImplementedError("rm not implemented yet")
