@@ -390,7 +390,7 @@ def get(
     token: str | None = None,
     service: str = DEFAULT_CONFIG["STORAGE_SERVICE"]
 ):
-    """Copy source to dest, or multiple sources to directory.
+    """Copy remote source to local dest, or multiple sources to directory.
 
     Parameters
     ----------
@@ -412,7 +412,6 @@ def get(
     - Directory dest defined with a trailing slash must exist, consistent with gsutil.
     - Non-existing file dest path is allowed, consistent with gsutil (all required
       intermediate directories are created).
-    - Source folder without trailing slash are copied 
 
     """
     fs = FileSystem(token=token, service=service)
@@ -441,3 +440,67 @@ def get(
     # Downloading
     fs.get(source, dest, recursive=recursive)
 
+
+def put(
+    source: str,
+    dest: str,
+    recursive: bool = False,
+    token: str | None = None,
+    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"]
+):
+    """Copy local source to remote dest, or multiple sources to directory.
+
+    Parameters
+    ----------
+    source: str
+        Path to get.
+    dest: str
+        Destination path.
+    recursive: bool
+        Get directories recursively.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    """
+    fs = FileSystem(token=token, service=service)
+    is_dest_dir = fs.isdir(dest)
+
+    # Deal with ClientOsError when trying to copy non-existing source
+    if not Path(source).exists():
+        raise FileNotFoundError(f"Source {source} not found")
+
+    # Ensure attempting to copy folder without recursive option does not fail silently
+    if Path(source).is_dir() and not recursive:
+        raise IsADirectoryError(f"--recursive is required to put directory {source}")
+
+    # Raise if trying to upload a folder into an existing file
+    if fs.exists(dest) and not is_dest_dir and Path(source).is_dir():
+        raise FileExistsError(f"Destination {dest} is an existing file")
+
+    # Downloading
+    fs.put(source, dest, recursive=recursive)
+
+
+def rm(
+    path: str,
+    recursive: bool = False,
+    token: str | None = None,
+    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"]
+):
+    """Copy local source to remote dest, or multiple sources to directory.
+
+    Parameters
+    ----------
+    path: str
+        Path to remove.
+    recursive: bool
+        Remove directories recursively.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    """
+    raise NotImplementedError("rm not implemented yet")

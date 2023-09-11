@@ -123,6 +123,40 @@ def get(
     )
 
 
+@storage.command()
+@click.option("-r", "--recursive", is_flag=True, help="Copy directories recursively")
+@click.argument("source")
+@click.argument("dest")
+@pass_credentials
+def put(
+    credentials: Credentials,
+    recursive: bool,
+    source: str,
+    dest: str,
+):
+    """Copy content from SOURCE to DEST."""
+    filesystem.put(
+        source=source,
+        dest=dest,
+        recursive=recursive,
+        token=credentials.datamesh_token,
+        service=credentials.storage_service,
+    )
+
+
+@storage.command()
+@click.option("-r", "--recursive", is_flag=True, help="Remove directories recursively")
+@click.argument("path")
+@pass_credentials
+def rm(credentials: Credentials, recursive: bool, path: str):
+    """Copy content from SOURCE to DEST."""
+    filesystem.rm(
+        path=path,
+        recursive=recursive,
+        token=credentials.datamesh_token,
+        service=credentials.storage_service,
+    )
+
 # =====================================================================================
 # Datamesh CLI
 # =====================================================================================
