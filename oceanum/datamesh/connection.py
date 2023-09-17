@@ -267,7 +267,7 @@ class Connector(object):
             resp = requests.post(
                 f"{self._gateway}/oceanql/",
                 headers=headers,
-                data=query.json(warnings=False),
+                data=query.model_dump_json(warnings=False),
             )
             if resp.status_code >= 400:
                 msg = resp.json()["detail"]
