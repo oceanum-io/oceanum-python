@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>oceanum.datamesh.connection &#8212; oceanum 0.9.6 documentation</title>
+    <title>oceanum.datamesh.connection &#8212; oceanum 0.11.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -101,6 +101,12 @@
 </li>
 
 <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../cli.html">
+  Command line interface
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="../../../about.html">
   About
  </a>
@@ -150,6 +156,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command line interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../about.html#oceanum-python">oceanum-python</a></li>
 </ul>
@@ -178,6 +185,7 @@
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
@@ -199,6 +207,7 @@
 <span class="kn">from</span> <span class="nn">.catalog</span> <span class="kn">import</span> <span class="n">Catalog</span>
 <span class="kn">from</span> <span class="nn">.query</span> <span class="kn">import</span> <span class="n">Query</span><span class="p">,</span> <span class="n">Stage</span><span class="p">,</span> <span class="n">Container</span><span class="p">,</span> <span class="n">TimeFilter</span><span class="p">,</span> <span class="n">GeoFilter</span>
 <span class="kn">from</span> <span class="nn">.zarr</span> <span class="kn">import</span> <span class="n">zarr_write</span>
+<span class="kn">from</span> <span class="nn">.cache</span> <span class="kn">import</span> <span class="n">LocalCache</span>
 <span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">DatameshConnectError</span><span class="p">,</span> <span class="n">DatameshQueryError</span><span class="p">,</span> <span class="n">DatameshWriteError</span>
 
 <span class="n">DEFAULT_CONFIG</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;DATAMESH_SERVICE&quot;</span><span class="p">:</span> <span class="s2">&quot;https://datamesh.oceanum.io&quot;</span><span class="p">}</span>
@@ -233,7 +242,8 @@
         <span class="k">yield</span> <span class="n">file</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Connector"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector">[docs]</a><span class="k">class</span> <span class="nc">Connector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -407,9 +417,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Stage</span><span class="p">(</span><span class="o">**</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cache_timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">Query</span><span class="p">):</span>
             <span class="n">query</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">**</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cache_timeout</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">use_dask</span><span class="p">:</span>
+            <span class="n">localcache</span> <span class="o">=</span> <span class="n">LocalCache</span><span class="p">(</span><span class="n">cache_timeout</span><span class="p">)</span>
+            <span class="n">cached</span> <span class="o">=</span> <span class="n">localcache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cached</span>
         <span class="n">stage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stage_request</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">stage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No data found for query&quot;</span><span class="p">)</span>
@@ -443,10 +458,15 @@
                     <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">Container</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
                         <span class="n">ds</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                        <span class="n">ext</span> <span class="o">=</span> <span class="s2">&quot;.nc&quot;</span>
                     <span class="k">elif</span> <span class="n">stage</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">Container</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">:</span>
                         <span class="n">ds</span> <span class="o">=</span> <span class="n">geopandas</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                        <span class="n">ext</span> <span class="o">=</span> <span class="s2">&quot;.gpq&quot;</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">ds</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                        <span class="n">ext</span> <span class="o">=</span> <span class="s2">&quot;.pq&quot;</span>
+                    <span class="k">if</span> <span class="n">cache_timeout</span><span class="p">:</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">localcache</span><span class="o">.</span><span class="n">_cachepath</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="o">+</span> <span class="n">ext</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">ds</span>
 
 <div class="viewcode-block" id="Connector.get_catalog"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timefilter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">geofilter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -579,7 +599,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_datasource</span><span class="p">(</span><span class="n">datasource_id</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">use_dask</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Connector.query"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">query_keys</span><span class="p">):</span>
+<div class="viewcode-block" id="Connector.query"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cache_timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">query_keys</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Make a datamesh query</span>
 
 <span class="sd">        Args:</span>
@@ -587,6 +607,7 @@
 
 <span class="sd">        Kwargs:</span>
 <span class="sd">            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.</span>
+<span class="sd">            cache_timeout (int, optional): Local cache timeout in seconds. Defaults to 0 (no local cache). Only applies if use_dask=False. Will return an identical query from a local cache if available with an age of less than cache_timeout seconds. Does not check for more recent data on the server.</span>
 <span class="sd">            **query_keys: Keywords form of query, for example datamesh.query(datasource=&quot;my_datasource&quot;)</span>
 
 <span class="sd">        Returns:</span>
@@ -594,10 +615,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">query</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">**</span><span class="n">query_keys</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">use_dask</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">use_dask</span><span class="p">,</span> <span class="n">cache_timeout</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Connector.query_async"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.query_async">[docs]</a>    <span class="nd">@asyncwrapper</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">query_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">query_keys</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">query_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">use_dask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cache_timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">query_keys</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Make a datamesh query asynchronously</span>
 
 <span class="sd">        Args:</span>
@@ -605,6 +628,7 @@
 
 <span class="sd">        Kwargs:</span>
 <span class="sd">            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.</span>
+<span class="sd">            cache_timeout (int, optional): Local cache timeout in seconds. Defaults to 0 (no local cache). Only applies if use_dask=False. Will return an identical query from a local cache if available with an age of less than cache_timeout seconds. Does not check for more recent data on the server.</span>
 <span class="sd">            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`</span>
 <span class="sd">            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor</span>
 <span class="sd">            **query_keys: Keywords form of query, for example datamesh.query(datasource=&quot;my_datasource&quot;)</span>
@@ -615,7 +639,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">query</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">**</span><span class="n">query_keys</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">use_dask</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">use_dask</span><span class="p">,</span> <span class="n">cache_timeout</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Connector.write_datasource"><a class="viewcode-back" href="../../../oceanum.datamesh.html#oceanum.datamesh.Connector.write_datasource">[docs]</a>    <span class="k">def</span> <span class="nf">write_datasource</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>

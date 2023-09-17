@@ -134,14 +134,14 @@ class Connector(object):
         if datasource._exists:
             resp = requests.patch(
                 f"{self._proto}://{self._host}/datasource/{datasource.id}/",
-                data=datasource.json(by_alias=True),
+                data=datasource.model_dump_json(by_alias=True, warnings=False),
                 headers={**self._auth_headers, "Content-Type": "application/json"},
             )
 
         else:
             resp = requests.post(
                 f"{self._proto}://{self._host}/datasource/",
-                data=datasource.json(by_alias=True),
+                data=datasource.model_dump_json(by_alias=True, warnings=False),
                 headers={**self._auth_headers, "Content-Type": "application/json"},
             )
         if resp.status_code >= 300:
@@ -218,12 +218,14 @@ class Connector(object):
         return Datasource(**resp.json())
 
     def _stage_request(self, query, cache=False):
-        qhash = hashlib.sha224(query.model_dump_json().encode()).hexdigest()
+        qhash = hashlib.sha224(
+            query.model_dump_json(warnings=False).encode()
+        ).hexdigest()
 
         resp = requests.post(
             f"{self._gateway}/oceanql/stage/",
             headers=self._auth_headers,
-            data=query.model_dump_json(),
+            data=query.model_dump_json(warnings=False),
         )
         if resp.status_code >= 400:
             msg = resp.json()["detail"]
@@ -263,7 +265,9 @@ class Connector(object):
             )
             headers = {"Accept": transfer_format, **self._auth_headers}
             resp = requests.post(
-                f"{self._gateway}/oceanql/", headers=headers, data=query.json()
+                f"{self._gateway}/oceanql/",
+                headers=headers,
+                data=query.json(warnings=False),
             )
             if resp.status_code >= 400:
                 msg = resp.json()["detail"]
@@ -520,7 +524,7 @@ class Connector(object):
             ds.geom = geometry
         try:
             self._metadata_write(ds)
-        except:
+        except Exception as e:
             raise DatameshWriteError(f"Cannot register datasource {datasource_id}: {e}")
         return ds
 

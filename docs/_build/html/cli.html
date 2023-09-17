@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Installation &#8212; oceanum 0.11.0 documentation</title>
+    <title>Command line interface &#8212; oceanum 0.11.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -40,8 +40,8 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Usage" href="usage.html" />
-    <link rel="prev" title="Oceanum python" href="index.html" />
+    <link rel="next" title="About" href="about.html" />
+    <link rel="prev" title="oceanum.storage.FileSystem" href="classes/storage/oceanum.storage.FileSystem.html" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="docsearch:language" content="en">
   </head>
@@ -85,8 +85,8 @@
       
       <div class="navbar-center-item">
         <ul id="navbar-main-elements" class="navbar-nav">
-    <li class="toctree-l1 current active nav-item">
- <a class="current reference internal nav-link" href="#">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
   Installation
  </a>
 </li>
@@ -103,8 +103,8 @@
  </a>
 </li>
 
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="cli.html">
+<li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
   Command line interface
  </a>
 </li>
@@ -156,14 +156,15 @@
 <h3><a href="index.html">Table of Contents</a></h3>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#using-pip">Using pip</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#from-sources">From sources</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cli.html">Command line interface</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Command line interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#top-level-commands">Top level commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#datamesh-commands">Datamesh commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#storage-commands">Storage commands</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html#oceanum-python">oceanum-python</a></li>
 </ul>
@@ -189,13 +190,18 @@
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#using-pip">
-   Using pip
+  <a class="reference internal nav-link" href="#top-level-commands">
+   Top level commands
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#from-sources">
-   From sources
+  <a class="reference internal nav-link" href="#datamesh-commands">
+   Datamesh commands
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#storage-commands">
+   Storage commands
   </a>
  </li>
 </ul>
@@ -217,31 +223,102 @@
               
               <article class="bd-article" role="main">
                 
-  <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h1>
-<section id="using-pip">
-<h2>Using pip<a class="headerlink" href="#using-pip" title="Permalink to this heading">#</a></h2>
-<p>To install oceanum, run this command in your terminal:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install oceanum
+  <section id="command-line-interface">
+<h1>Command line interface<a class="headerlink" href="#command-line-interface" title="Permalink to this heading">#</a></h1>
+<p>The library has a command line interface to interact with the datamesh and storage system for bulk operations and administration tasks.</p>
+<section id="top-level-commands">
+<h2>Top level commands<a class="headerlink" href="#top-level-commands" title="Permalink to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ oceanum --help
+Usage: oceanum [OPTIONS] COMMAND [ARGS]...
+
+  Oceanum python commands.
+
+Options:
+  -t, --token TEXT  Datamesh token, defaults to DATAMESH_TOKEN env
+  --help            Show this message and exit.
+
+Commands:
+  datamesh  Oceanum datamesh commands.
+  storage   Oceanum storage commands.
 </pre></div>
 </div>
-<p>This is the preferred method to install oceanum, as it will always install the most recent stable release.</p>
-<p>If you don’t have <a class="reference external" href="https://pip.pypa.io">pip</a> installed, this <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">Python installation guide</a> can guide
-you through the process.</p>
 </section>
-<section id="from-sources">
-<h2>From sources<a class="headerlink" href="#from-sources" title="Permalink to this heading">#</a></h2>
-<p>The sources for oceanum can be downloaded from the <a class="reference external" href="https://github.com/oceanum/oceanum-python">Github repo</a>.</p>
-<p>You can either clone the public repository:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone git://github.com/oceanum/oceanum-python
+<section id="datamesh-commands">
+<h2>Datamesh commands<a class="headerlink" href="#datamesh-commands" title="Permalink to this heading">#</a></h2>
+<p>(not implmemented yet)</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ oceanum datamesh --help
+Usage: oceanum datamesh [OPTIONS] COMMAND [ARGS]...
+
+  Oceanum datamesh commands.
+
+Options:
+  --help  Show this message and exit.
 </pre></div>
 </div>
-<p>Or download the <a class="reference external" href="https://github.com/oceanum/oceanum-python/tarball/master">tarball</a>:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>curl  -OL https://github.com/oceanum/oceanum-python/tarball/master
+</section>
+<section id="storage-commands">
+<h2>Storage commands<a class="headerlink" href="#storage-commands" title="Permalink to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ oceanum storage --help
+Usage: oceanum storage [OPTIONS] COMMAND [ARGS]...
+
+  Oceanum storage commands.
+
+Options:
+  -s, --service TEXT  Storage service, defaults to STORAGE_SERVICE env or
+                      https://storage.oceanum.io
+  --help              Show this message and exit.
+
+Commands:
+  get  Copy content from SOURCE to DEST.
+  ls   List contents in the oceanum storage (the root directory by default).
+  put  Copy content from SOURCE to DEST.
+  rm   Remove PATH.
 </pre></div>
 </div>
-<p>Once you have a copy of the source, you can install it with:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python setup.py install
+<p>List content in storage system</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ oceanum storage ls --help
+Usage: oceanum storage ls [OPTIONS] [PATH]
+
+  List contents in the oceanum storage (the root directory by default).
+
+Options:
+  -l, --long            Long listing format
+  -h, --human-readable  Readable sizes with -l
+  -r, --recursive       List subdirectories recursively
+  --help                Show this message and exit.
+</pre></div>
+</div>
+<p>Copy content from storage system</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ oceanum storage get --help
+Usage: oceanum storage get [OPTIONS] SOURCE DEST
+
+  Copy content from SOURCE to DEST.
+
+Options:
+  -r, --recursive  Copy directories recursively
+  --help           Show this message and exit.
+</pre></div>
+</div>
+<p>Upload content to storage system</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ oceanum storage put --help
+Usage: oceanum storage put [OPTIONS] SOURCE DEST
+
+  Copy content from SOURCE to DEST.
+
+Options:
+  -r, --recursive  Copy directories recursively
+  --help           Show this message and exit.
+</pre></div>
+</div>
+<p>Remove content from storage system (not implemented yet)</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ oceanum storage rm --help
+Usage: oceanum storage rm [OPTIONS] PATH
+
+  Remove PATH.
+
+Options:
+  -r, --recursive  Remove directories recursively
+  --help           Show this message and exit.
 </pre></div>
 </div>
 </section>
@@ -255,17 +332,17 @@ you through the process.</p>
               <footer class="bd-footer-article">
                   <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="index.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="classes/storage/oceanum.storage.FileSystem.html" title="previous page">
       <i class="fas fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">Oceanum python</p>
+          <p class="prev-next-title">oceanum.storage.FileSystem</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="usage.html" title="next page">
+  <a class='right-next' id="next-link" href="about.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Usage</p>
+      <p class="prev-next-title">About</p>
   </div>
   <i class="fas fa-angle-right"></i>
   </a>

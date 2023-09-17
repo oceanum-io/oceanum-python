@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum.storage package &#8212; oceanum 0.9.6 documentation</title>
+    <title>oceanum.storage package &#8212; oceanum 0.11.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -102,6 +102,12 @@
 </li>
 
 <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="cli.html">
+  Command line interface
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="about.html">
   About
  </a>
@@ -151,6 +157,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command line interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html#oceanum-python">oceanum-python</a></li>
 </ul>
@@ -242,6 +249,15 @@
     </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.filesystem.get">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       get()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#oceanum.storage.filesystem.get_client">
      <code class="docutils literal notranslate">
       <span class="pre">
@@ -251,10 +267,37 @@
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.filesystem.ls">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       ls()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.filesystem.put">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       put()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#oceanum.storage.filesystem.retry_request">
      <code class="docutils literal notranslate">
       <span class="pre">
        retry_request()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#oceanum.storage.filesystem.rm">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       rm()
       </span>
      </code>
     </a>
@@ -368,14 +411,94 @@ the result of <code class="docutils literal notranslate"><span class="pre">info(
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="oceanum.storage.filesystem.get">
+<span class="sig-prename descclassname"><span class="pre">oceanum.storage.filesystem.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'https://storage.oceanum.io'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/storage/filesystem.html#get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.filesystem.get" title="Permalink to this definition">#</a></dt>
+<dd><p>Copy remote source to local dest, or multiple sources to directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<em>str</em>) – Path to get.</p></li>
+<li><p><strong>dest</strong> (<em>str</em>) – Destination path.</p></li>
+<li><p><strong>recursive</strong> (<em>bool</em>) – Get directories recursively.</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – Overwrite existing destination.</p></li>
+<li><p><strong>token</strong> (<em>str</em>) – Oceanum datamesh token.</p></li>
+<li><p><strong>service</strong> (<em>str</em>) – Oceanum storage service URL.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Directory dest defined with a trailing slash must exist, consistent with gsutil.</p></li>
+<li><p>Non-existing file dest path is allowed, consistent with gsutil (all required
+intermediate directories are created).</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="oceanum.storage.filesystem.get_client">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">oceanum.storage.filesystem.</span></span><span class="sig-name descname"><span class="pre">get_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/storage/filesystem.html#get_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.filesystem.get_client" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="oceanum.storage.filesystem.ls">
+<span class="sig-prename descclassname"><span class="pre">oceanum.storage.filesystem.</span></span><span class="sig-name descname"><span class="pre">ls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'https://storage.oceanum.io'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/storage/filesystem.html#ls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.filesystem.ls" title="Permalink to this definition">#</a></dt>
+<dd><p>List contents in the oceanum storage (the root directory by default).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – Path to list.</p></li>
+<li><p><strong>recursive</strong> (<em>bool</em>) – List subdirectories recursively.</p></li>
+<li><p><strong>detail</strong> (<em>bool</em>) – Return detailed information about each content.</p></li>
+<li><p><strong>token</strong> (<em>str</em>) – Oceanum datamesh token.</p></li>
+<li><p><strong>service</strong> (<em>str</em>) – Oceanum storage service URL.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>contents</strong> – List of contents or dictionary with detailed information about each content.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list | dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oceanum.storage.filesystem.put">
+<span class="sig-prename descclassname"><span class="pre">oceanum.storage.filesystem.</span></span><span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'https://storage.oceanum.io'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/storage/filesystem.html#put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.filesystem.put" title="Permalink to this definition">#</a></dt>
+<dd><p>Copy local source to remote dest, or multiple sources to directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<em>str</em>) – Path to get.</p></li>
+<li><p><strong>dest</strong> (<em>str</em>) – Destination path.</p></li>
+<li><p><strong>recursive</strong> (<em>bool</em>) – Get directories recursively.</p></li>
+<li><p><strong>token</strong> (<em>str</em>) – Oceanum datamesh token.</p></li>
+<li><p><strong>service</strong> (<em>str</em>) – Oceanum storage service URL.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="oceanum.storage.filesystem.retry_request">
 <span class="sig-prename descclassname"><span class="pre">oceanum.storage.filesystem.</span></span><span class="sig-name descname"><span class="pre">retry_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/storage/filesystem.html#retry_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.filesystem.retry_request" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="oceanum.storage.filesystem.rm">
+<span class="sig-prename descclassname"><span class="pre">oceanum.storage.filesystem.</span></span><span class="sig-name descname"><span class="pre">rm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'https://storage.oceanum.io'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/storage/filesystem.html#rm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.storage.filesystem.rm" title="Permalink to this definition">#</a></dt>
+<dd><p>Remove path file or directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – Path to remove.</p></li>
+<li><p><strong>recursive</strong> (<em>bool</em>) – Remove directories recursively.</p></li>
+<li><p><strong>token</strong> (<em>str</em>) – Oceanum datamesh token.</p></li>
+<li><p><strong>service</strong> (<em>str</em>) – Oceanum storage service URL.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 </section>

@@ -22,7 +22,8 @@ class LocalCache:
         if not isinstance(query, Query):
             query = Query(**query)
         return os.path.join(
-            self.cache_dir, hashlib.sha224(query.json().encode()).hexdigest()
+            self.cache_dir,
+            hashlib.sha224(query.model_dump_json(warnings=False).encode()).hexdigest(),
         )
 
     def get(self, query):

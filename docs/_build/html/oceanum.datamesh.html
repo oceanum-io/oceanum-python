@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>oceanum.datamesh package &#8212; oceanum 0.9.6 documentation</title>
+    <title>oceanum.datamesh package &#8212; oceanum 0.11.0 documentation</title>
 <script>
   document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
@@ -102,6 +102,12 @@
 </li>
 
 <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="cli.html">
+  Command line interface
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="about.html">
   About
  </a>
@@ -151,6 +157,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command line interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html#oceanum-python">oceanum-python</a></li>
 </ul>
@@ -577,6 +584,15 @@
        <code class="docutils literal notranslate">
         <span class="pre">
          Datasource.model_post_init()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#oceanum.datamesh.datasource.Datasource.validate_id">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         Datasource.validate_id
         </span>
        </code>
       </a>
@@ -1479,7 +1495,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.connection.Connector.query">
-<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#Connector.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.Connector.query" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#Connector.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.Connector.query" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a datamesh query</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1488,6 +1504,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 </dl>
 <dl class="simple">
 <dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
+cache_timeout (int, optional): Local cache timeout in seconds. Defaults to 0 (no local cache). Only applies if use_dask=False. Will return an identical query from a local cache if available with an age of less than cache_timeout seconds. Does not check for more recent data on the server.
 <a href="#id1"><span class="problematic" id="id2">**</span></a>query_keys: Keywords form of query, for example datamesh.query(datasource=”my_datasource”)</p>
 </dd>
 </dl>
@@ -1503,7 +1520,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 
 <dl class="py method">
 <dt class="sig sig-object py" id="oceanum.datamesh.connection.Connector.query_async">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#Connector.query_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.Connector.query_async" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">query_keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oceanum/datamesh/connection.html#Connector.query_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.connection.Connector.query_async" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a datamesh query asynchronously</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1512,6 +1529,7 @@ For datasources which load into an xarray Dataset, an open zarr backed dataset i
 </dl>
 <dl class="simple">
 <dt>Kwargs:</dt><dd><p>use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
+cache_timeout (int, optional): Local cache timeout in seconds. Defaults to 0 (no local cache). Only applies if use_dask=False. Will return an identical query from a local cache if available with an age of less than cache_timeout seconds. Does not check for more recent data on the server.
 loop: event loop. default=None will use <code class="xref py py-obj docutils literal notranslate"><span class="pre">asyncio.get_running_loop()</span></code>
 executor: <code class="xref py py-obj docutils literal notranslate"><span class="pre">concurrent.futures.Executor</span></code> instance. default=None will use the default executor
 <a href="#id3"><span class="problematic" id="id4">**</span></a>query_keys: Keywords form of query, for example datamesh.query(datasource=”my_datasource”)</p>
@@ -1611,9 +1629,7 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <span class="w">         </span><span class="nt">&quot;maxLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;minLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;pattern&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^[a-z0-9-_]+$&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;strip_whitespace&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Datasource ID&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;to_lower&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
 <span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
@@ -1774,7 +1790,7 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <span class="w">               </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"></span>
 <span class="w">            </span><span class="p">}</span><span class="w"></span>
 <span class="w">         </span><span class="p">],</span><span class="w"></span>
-<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-08-23T03:05:36.535108&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-09-11T20:37:28.01532&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last time datasource was modified&quot;</span><span class="p">,</span><span class="w"></span>
 <span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Last modified time&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="p">},</span><span class="w"></span>
@@ -1883,6 +1899,11 @@ executor: <code class="xref py py-obj docutils literal notranslate"><span class=
 <li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.tstart" title="oceanum.datamesh.datasource.Datasource.tstart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tstart</span> <span class="pre">(Optional[datetime.datetime])</span></code></a></p></li>
 </ul>
 </dd>
+<dt class="field-even">Validators</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.validate_id" title="oceanum.datamesh.datasource.Datasource.validate_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_id</span></code></a> » <a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.id" title="oceanum.datamesh.datasource.Datasource.id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">id</span></code></a></p></li>
+</ul>
+</dd>
 </dl>
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.coordinates">
@@ -1953,7 +1974,7 @@ Direction:”d”</p>
 <li><p><strong>__module__</strong> = oceanum.datamesh.datasource</p></li>
 <li><p><strong>__get_pydantic_core_schema__</strong> = &lt;bound method _GeometryAnnotation.__get_pydantic_core_schema__ of &lt;class ‘oceanum.datamesh.datasource._GeometryAnnotation’&gt;&gt;</p></li>
 <li><p><strong>__get_pydantic_json_schema__</strong> = &lt;bound method _GeometryAnnotation.__get_pydantic_json_schema__ of &lt;class ‘oceanum.datamesh.datasource._GeometryAnnotation’&gt;&gt;</p></li>
-<li><p><strong>__dict__</strong> = {‘__module__’: ‘oceanum.datamesh.datasource’, ‘__get_pydantic_core_schema__’: &lt;classmethod(&lt;function _GeometryAnnotation.__get_pydantic_core_schema__ at 0x7f3149bd2320&gt;)&gt;, ‘__get_pydantic_json_schema__’: &lt;classmethod(&lt;function _GeometryAnnotation.__get_pydantic_json_schema__ at 0x7f3149bd2290&gt;)&gt;, ‘__dict__’: &lt;attribute ‘__dict__’ of ‘_GeometryAnnotation’ objects&gt;, ‘__weakref__’: &lt;attribute ‘__weakref__’ of ‘_GeometryAnnotation’ objects&gt;, ‘__doc__’: None}</p></li>
+<li><p><strong>__dict__</strong> = {‘__module__’: ‘oceanum.datamesh.datasource’, ‘__get_pydantic_core_schema__’: &lt;classmethod(&lt;function _GeometryAnnotation.__get_pydantic_core_schema__ at 0x7f51dcbbf640&gt;)&gt;, ‘__get_pydantic_json_schema__’: &lt;classmethod(&lt;function _GeometryAnnotation.__get_pydantic_json_schema__ at 0x7f51dc4ac280&gt;)&gt;, ‘__dict__’: &lt;attribute ‘__dict__’ of ‘_GeometryAnnotation’ objects&gt;, ‘__weakref__’: &lt;attribute ‘__weakref__’ of ‘_GeometryAnnotation’ objects&gt;, ‘__doc__’: None}</p></li>
 <li><p><strong>__weakref__</strong> = &lt;attribute ‘__weakref__’ of ‘_GeometryAnnotation’ objects&gt;</p></li>
 </ul>
 </dd>
@@ -1972,6 +1993,11 @@ Direction:”d”</p>
 <li><p><strong>pattern</strong> = ^[a-z0-9-_]+$</p></li>
 </ul>
 </dd>
+<dt class="field-even">Validated by</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.validate_id" title="oceanum.datamesh.datasource.Datasource.validate_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_id</span></code></a></p></li>
+</ul>
+</dd>
 </dl>
 </dd></dl>
 
@@ -1983,7 +2009,7 @@ Direction:”d”</p>
 
 <dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.last_modified">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">8,</span> <span class="pre">23,</span> <span class="pre">3,</span> <span class="pre">5,</span> <span class="pre">36,</span> <span class="pre">535108)</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_modified</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.datetime(2023,</span> <span class="pre">9,</span> <span class="pre">11,</span> <span class="pre">20,</span> <span class="pre">37,</span> <span class="pre">28,</span> <span class="pre">15320)</span></em><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.last_modified" title="Permalink to this definition">#</a></dt>
 <dd><p>Last time datasource was modified</p>
 </dd></dl>
 
@@ -2044,6 +2070,11 @@ Direction:”d”</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.validate_id">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_id</span></span><em class="autodoc_pydantic_validator_arrow property">&#160; <span class="pre">»</span>&#160; </em><a class="reference internal" href="#oceanum.datamesh.datasource.Datasource.id" title="oceanum.datamesh.datasource.Datasource.id"><em class="xref py py-obj"><span class="pre">id</span></em></a><a class="reference internal" href="_modules/oceanum/datamesh/datasource.html#Datasource.validate_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#oceanum.datamesh.datasource.Datasource.validate_id" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="oceanum.datamesh.datasource.Datasource.attributes">

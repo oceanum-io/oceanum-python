@@ -26,8 +26,8 @@ Documentation
 
    installation
    usage
-   cli
    api
+   cli
    about
 
 
