@@ -277,7 +277,9 @@ class Connector(object):
                     f.write(resp.content)
                     f.seek(0)
                     if stage.container == Container.Dataset:
-                        ds = xarray.load_dataset(f.name)
+                        ds = xarray.load_dataset(
+                            f.name, decode_coords="all", mask_and_scale=True
+                        )
                         ext = ".nc"
                     elif stage.container == Container.GeoDataFrame:
                         ds = geopandas.read_parquet(f.name)
