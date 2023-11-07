@@ -113,7 +113,7 @@ class Connector(object):
     # Check the status of the metadata server
     def _status(self):
         resp = requests.get(f"{self._proto}://{self._host}", headers=self._auth_headers)
-        return rest.status_code == 200
+        return resp.status_code == 200
 
     def _metadata_request(self, datasource_id="", params={}):
         resp = requests.get(
