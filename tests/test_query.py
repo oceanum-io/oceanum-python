@@ -55,6 +55,13 @@ def test_query_geofilter():
         },
     )
 
+def test_query_geofilter_geom():
+    point=shapely.geometry.Point(0,0)
+    q = Query(
+        datasource="test",
+        geofilter={'type':'feature','geom':point}
+    )
+
 
 def test_query_coord():
     q = Query(

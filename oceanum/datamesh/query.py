@@ -1,6 +1,7 @@
 import datetime
 import pandas as pd
 import numpy as np
+import shapely
 from pydantic import (
     field_validator,
     ConfigDict,
@@ -13,7 +14,6 @@ from typing import Optional, Dict, Union, List
 from typing_extensions import Annotated
 from enum import Enum
 from geojson_pydantic import Feature, FeatureCollection
-
 
 class QueryError(Exception):
     pass
@@ -87,7 +87,7 @@ class GeoFilter(BaseModel):
     geom: Union[List, Feature] = Field(
         title="Selection geometry",
         description="""
-            - For type='feature', geojson feature.
+            - For type='feature', geojson feature as dict or shapely Geometry.
             - For type='bbox', list[x_min,y_min,x_max,y_max] in CRS units.
         """,
         # - For type='radius', list[x0,y0,radius] in CRS units.
@@ -110,6 +110,12 @@ class GeoFilter(BaseModel):
             if "properties" not in v:
                 v["properties"] = {}
             v = Feature(**v)
+        elif isinstance(v, shapely.Geometry):
+            v = Feature(type="Feature",geometry=v.__geo_interface__, properties={})
+        else:
+            raise TypeError(
+                "geofilter geom must be a geojson feature, a list of length 4 or a shapely geometry"
+            )
         return v
 
 

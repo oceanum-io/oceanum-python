@@ -28,7 +28,7 @@ class Catalog(object):
             index = self._ids.index(item)
             feature = self._geojson.features[index]
             return Datasource(
-                id=feature.id, geom=feature.geometry.dict(), **feature.properties
+                id=feature.id, geom=feature.geometry.model_dump(), **feature.properties
             )
         else:
             raise IndexError(f"Datasource {item} not in catalog")

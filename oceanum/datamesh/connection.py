@@ -22,21 +22,13 @@ from contextlib import contextmanager
 from .datasource import Datasource, _datasource_props, _datasource_driver
 from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter
-from .zarr import zarr_write
+from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
 DASK_QUERY_SIZE = 1000000000  # 1GB
-
-
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
-
-    if isinstance(obj, (datetime.datetime, datetime.date)):
-        return obj.isoformat()
-    raise TypeError("Type %s not serializable" % type(obj))
 
 
 def asyncwrapper(func):
@@ -162,19 +154,6 @@ class Connector(object):
             raise DatameshConnectError(msg)
         return True
 
-    def _zarr_proxy(self, datasource_id, parameters={}):
-        try:
-            mapper = fsspec.get_mapper(
-                f"{self._gateway}/zarr/{datasource_id}",
-                headers={
-                    **self._auth_headers,
-                    "X-PARAMETERS": json.dumps(parameters, default=json_serial),
-                },
-            )
-        except Exception as e:
-            raise DatameshConnectError(str(e))
-        return mapper
-
     def _data_request(self, datasource_id, data_format="application/json", cache=False):
         tmpfile = os.path.join(self._cachedir.name, datasource_id)
         resp = requests.get(
@@ -253,7 +232,7 @@ class Connector(object):
             )
             use_dask = True
         if use_dask and (stage.container == Container.Dataset):
-            mapper = self._zarr_proxy(stage.qhash)
+            mapper = ZarrClient(self,stage.qhash)
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
@@ -394,7 +373,7 @@ class Connector(object):
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset:
-            mapper = self._zarr_proxy(datasource_id, parameters)
+            mapper = ZarrClient(self,datasource_id, parameters=parameters)
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )

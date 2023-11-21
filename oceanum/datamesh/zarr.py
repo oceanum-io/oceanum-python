@@ -1,6 +1,7 @@
 import requests
 import re
 import time
+import datetime
 import xarray
 import numpy
 from collections.abc import MutableMapping
@@ -14,12 +15,35 @@ try:
 except:
     _VIDEO_SUPPORT = False
 
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    raise TypeError("Type %s not serializable" % type(obj))
+
+def _zarr_proxy(self, datasource_id, parameters={}):
+        try:
+            mapper = fsspec.get_mapper(
+                f"{self._gateway}/zarr/{datasource_id}",
+                headers={
+                    **self._auth_headers,
+                    "X-PARAMETERS": json.dumps(parameters, default=json_serial),
+                },
+            )
+        except Exception as e:
+            raise DatameshConnectError(str(e))
+        return mapper
 
 class ZarrClient(MutableMapping):
-    def __init__(self, connection, datasource, method="post", retries=5):
+    def __init__(self, connection, datasource, parameters={}, method="post", retries=5, nocache=False):
         self.datasource = datasource
         self.method = method
-        self.headers = {**connection._auth_headers, "cache-control": "no-transform"}
+        self.headers = {**connection._auth_headers}
+        if nocache:
+            self.headers["cache-control"]= "no-transform"
+        if parameters:
+            self.headers["X-PARAMETERS"] = json.dumps(parameters)
         self.gateway = connection._gateway + "/zarr"
         self.retries = retries
 
@@ -84,7 +108,7 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
         append = None
     else:
         ds = connection.get_datasource(datasource_id)
-    store = ZarrClient(connection, datasource_id)
+    store = ZarrClient(connection, datasource_id, nocache=True)
     if append and ds._exists:
         if append not in ds.dataschema.coords:
             raise DatameshWriteError(f"Append coordinate {append} not in existing zarr")
