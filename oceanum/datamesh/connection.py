@@ -107,6 +107,15 @@ class Connector(object):
         resp = requests.get(f"{self._proto}://{self._host}", headers=self._auth_headers)
         return resp.status_code == 200
 
+    def _validate_response(self, resp):
+        if resp.status_code >= 400:
+            try:
+                msg = resp.json()["detail"]
+            except:
+                msg = resp.text
+            raise DatameshConnectError(msg)
+
+
     def _metadata_request(self, datasource_id="", params={}):
         resp = requests.get(
             f"{self._proto}://{self._host}/datasource/{datasource_id}",
@@ -117,9 +126,7 @@ class Connector(object):
             raise DatameshConnectError(f"Datasource {datasource_id} not found")
         elif resp.status_code == 401:
             raise DatameshConnectError(f"Datasource {datasource_id} not Authorized")
-        elif resp.status_code != 200:
-            msg = resp.json()["detail"]
-            raise DatameshConnectError(msg)
+        self._validate_response(resp)
         return resp
 
     def _metadata_write(self, datasource):
@@ -136,12 +143,7 @@ class Connector(object):
                 data=datasource.model_dump_json(by_alias=True, warnings=False),
                 headers={**self._auth_headers, "Content-Type": "application/json"},
             )
-        if resp.status_code >= 300:
-            try:
-                msg = resp.json()["detail"]
-            except:
-                msg = resp.text
-            raise DatameshConnectError(msg)
+        self._validate_response(resp)
         return resp
 
     def _delete(self, datasource_id):
@@ -149,9 +151,7 @@ class Connector(object):
             f"{self._gateway}/data/{datasource_id}",
             headers=self._auth_headers,
         )
-        if resp.status_code >= 300:
-            msg = resp.json()["detail"]
-            raise DatameshConnectError(msg)
+        self._validate_response(resp)
         return True
 
     def _data_request(self, datasource_id, data_format="application/json", cache=False):
@@ -160,13 +160,10 @@ class Connector(object):
             f"{self._gateway}/data/{datasource_id}",
             headers={"Accept": data_format, **self._auth_headers},
         )
-        if not resp.status_code == 200:
-            msg = resp.json()["detail"]
-            raise DatameshConnectError(msg)
-        else:
-            with open(tmpfile, "wb") as f:
-                f.write(resp.content)
-            return tmpfile
+        self._validate_response(resp)
+        with open(tmpfile, "wb") as f:
+            f.write(resp.content)
+        return tmpfile
 
     def _data_write(
         self,
@@ -191,9 +188,7 @@ class Connector(object):
                 data=data,
                 headers=headers,
             )
-        if not resp.status_code == 200:
-            msg = resp.json()["detail"]
-            raise DatameshConnectError(msg)
+        self._validate_response(resp)
         return Datasource(**resp.json())
 
     def _stage_request(self, query, cache=False):
