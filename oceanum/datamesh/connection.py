@@ -232,6 +232,8 @@ class Connector(object):
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
         else:
+            if cache_timeout:
+                localcache.lock(query)
             transfer_format = (
                 "application/x-netcdf4"
                 if stage.container == Container.Dataset
@@ -245,6 +247,8 @@ class Connector(object):
             )
             if resp.status_code >= 400:
                 msg = resp.json()["detail"]
+                if cache_timeout:
+                    localcache.unlock(query)
                 raise DatameshQueryError(msg)
             else:
                 with tempFile("wb") as f:
@@ -262,7 +266,8 @@ class Connector(object):
                         ds = pandas.read_parquet(f.name)
                         ext = ".pq"
                     if cache_timeout:
-                        os.rename(f.name, localcache._cachepath(query) + ext)
+                        localcache.copy(query, f.name, ext)
+                        localcache.unlock(query)
                 return ds
 
     def get_catalog(self, search=None, timefilter=None, geofilter=None):
