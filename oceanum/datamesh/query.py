@@ -56,6 +56,12 @@ class GeoFilterType(Enum):
 
 
 class TimeFilterType(str, Enum):
+    """Time filter type
+    range: Select times within a range - times parameter must have 2 values
+    series: Select times in a series - times parameter must have 1 or more value(s)
+    trajectory: Select times along a trajectory - times parameter must have same number of values as subfeatures in a feature filter. For example same number of points as in a multipoints feature.
+    """
+
     range = "range"
     series = "series"
     trajectory = "trajectory"
