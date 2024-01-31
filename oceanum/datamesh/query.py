@@ -15,6 +15,7 @@ from typing_extensions import Annotated
 from enum import Enum
 from geojson_pydantic import Feature, FeatureCollection
 
+
 class QueryError(Exception):
     pass
 
@@ -56,6 +57,8 @@ class GeoFilterType(Enum):
 
 class TimeFilterType(str, Enum):
     range = "range"
+    series = "series"
+    trajectory = "trajectory"
 
 
 class ResampleType(str, Enum):
@@ -111,7 +114,7 @@ class GeoFilter(BaseModel):
                 v["properties"] = {}
             v = Feature(**v)
         elif isinstance(v, shapely.Geometry):
-            v = Feature(type="Feature",geometry=v.__geo_interface__, properties={})
+            v = Feature(type="Feature", geometry=v.__geo_interface__, properties={})
         else:
             raise TypeError(
                 "geofilter geom must be a geojson feature, a list of length 4 or a shapely geometry"

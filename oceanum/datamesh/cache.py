@@ -29,7 +29,7 @@ class LocalCache:
 
     def _locked(self,query):
         lockfile=self._cachepath(query) + ".lock"
-        return os.path.exists(lockfile) and (os.path.getmtime(lockfile) + self.lock_timeout < time.time())
+        return os.path.exists(lockfile) and (os.path.getmtime(lockfile) + self.lock_timeout > time.time())
 
     def lock(self,query):
         with open(self._cachepath(query) + ".lock", "w") as f:
