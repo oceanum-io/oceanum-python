@@ -133,3 +133,6 @@ dmypy.json
 
 #testing
 tmp.mkv
+
+#pypi config
+pypi.conf
