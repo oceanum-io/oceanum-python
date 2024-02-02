@@ -6,7 +6,7 @@ import xarray
 import numpy
 from collections.abc import MutableMapping
 
-from .exceptions import DatameshWriteError
+from .exceptions import DatameshWriteError, DatameshConnectError
 
 try:
     import xarray_video as xv
@@ -15,6 +15,7 @@ try:
 except:
     _VIDEO_SUPPORT = False
 
+
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
 
@@ -22,26 +23,36 @@ def json_serial(obj):
         return obj.isoformat()
     raise TypeError("Type %s not serializable" % type(obj))
 
+
 def _zarr_proxy(self, datasource_id, parameters={}):
-        try:
-            mapper = fsspec.get_mapper(
-                f"{self._gateway}/zarr/{datasource_id}",
-                headers={
-                    **self._auth_headers,
-                    "X-PARAMETERS": json.dumps(parameters, default=json_serial),
-                },
-            )
-        except Exception as e:
-            raise DatameshConnectError(str(e))
-        return mapper
+    try:
+        mapper = fsspec.get_mapper(
+            f"{self._gateway}/zarr/{datasource_id}",
+            headers={
+                **self._auth_headers,
+                "X-PARAMETERS": json.dumps(parameters, default=json_serial),
+            },
+        )
+    except Exception as e:
+        raise DatameshConnectError(str(e))
+    return mapper
+
 
 class ZarrClient(MutableMapping):
-    def __init__(self, connection, datasource, parameters={}, method="post", retries=5, nocache=False):
+    def __init__(
+        self,
+        connection,
+        datasource,
+        parameters={},
+        method="post",
+        retries=5,
+        nocache=False,
+    ):
         self.datasource = datasource
         self.method = method
         self.headers = {**connection._auth_headers}
         if nocache:
-            self.headers["cache-control"]= "no-transform"
+            self.headers["cache-control"] = "no-transform"
         if parameters:
             self.headers["X-PARAMETERS"] = json.dumps(parameters)
         self.gateway = connection._gateway + "/zarr"
@@ -61,7 +72,12 @@ class ZarrClient(MutableMapping):
     def __getitem__(self, item):
         resp = self._get(f"{self.gateway}/{self.datasource}/{item}")
         if resp.status_code >= 300:
-            raise KeyError(item)
+            if resp.status_code == 404:
+                raise DatameshConnectError(
+                    f"Datasource {self.datasource} not found or not authorized"
+                )
+            else:
+                raise KeyError(item)
         return resp.content
 
     def __setitem__(self, item, value):
