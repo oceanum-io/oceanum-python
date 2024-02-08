@@ -72,12 +72,7 @@ class ZarrClient(MutableMapping):
     def __getitem__(self, item):
         resp = self._get(f"{self.gateway}/{self.datasource}/{item}")
         if resp.status_code >= 300:
-            if resp.status_code == 404:
-                raise DatameshConnectError(
-                    f"Datasource {self.datasource} not found or not authorized"
-                )
-            else:
-                raise KeyError(item)
+            raise KeyError(item)
         return resp.content
 
     def __setitem__(self, item, value):

@@ -4,6 +4,7 @@ import datetime
 import shapely
 
 from oceanum.datamesh import Query
+from oceanum.datamesh.query import Stage
 
 
 def test_query_datasource():
@@ -55,16 +56,26 @@ def test_query_geofilter():
         },
     )
 
+
 def test_query_geofilter_geom():
-    point=shapely.geometry.Point(0,0)
-    q = Query(
-        datasource="test",
-        geofilter={'type':'feature','geom':point}
-    )
+    point = shapely.geometry.Point(0, 0)
+    q = Query(datasource="test", geofilter={"type": "feature", "geom": point})
 
 
 def test_query_coord():
     q = Query(
-        datasource="test",
-        coordfilter=[{"coord": "ensemble", "values": [1,2,3]}]
+        datasource="test", coordfilter=[{"coord": "ensemble", "values": [1, 2, 3]}]
+    )
+
+
+def test_stage_resp():
+    s = Stage(
+        query={"datasource": "my-datasource"},
+        qhash="abc",
+        formats=["nc"],
+        size=1000,
+        dlen=100,
+        coordmap={"var": "tyx"},
+        coords={"var": "tyx"},
+        container="dataset",
     )
