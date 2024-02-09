@@ -20,10 +20,6 @@ End-user classes
     Catalog
     Query
 
-Storage
----------------------
-.. currentmodule:: oceanum.storage
-
 
 End-user classes
 
