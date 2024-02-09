@@ -19,7 +19,7 @@ import asyncio
 from functools import wraps, partial
 from contextlib import contextmanager
 
-from .datasource import Datasource, _datasource_props, _datasource_driver
+from .datasource import Datasource
 from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter
 from .zarr import zarr_write, ZarrClient
@@ -114,7 +114,6 @@ class Connector(object):
             except:
                 msg = resp.text
             raise DatameshConnectError(msg)
-
 
     def _metadata_request(self, datasource_id="", params={}):
         resp = requests.get(
@@ -227,7 +226,7 @@ class Connector(object):
             )
             use_dask = True
         if use_dask and (stage.container == Container.Dataset):
-            mapper = ZarrClient(self,stage.qhash)
+            mapper = ZarrClient(self, stage.qhash)
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
@@ -373,7 +372,7 @@ class Connector(object):
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset:
-            mapper = ZarrClient(self,datasource_id, parameters=parameters)
+            mapper = ZarrClient(self, datasource_id, parameters=parameters)
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
@@ -446,7 +445,9 @@ class Connector(object):
         self,
         datasource_id,
         data,
-        geometry=None,
+        geometry=None,  # Deprecating this option so property is consistent with the rest of the code
+        coordinates=None,
+        geom=None,
         append=None,
         overwrite=False,
         **properties,
@@ -457,6 +458,7 @@ class Connector(object):
             datasource_id (string): Unique datasource id
             data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`, None]):  The data to be written to datamesh. If data is None, just update metadata properties.
             geometry (:obj:`oceanum.datasource.Geometry`, optional): GeoJSON geometry of the datasource
+            coordinates (Dict[:obj:`oceanum.datasource.Coordinates`,str], optional): Coordinate mapping for xarray datasets. default=None
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource`
@@ -498,11 +500,25 @@ class Connector(object):
                 raise DatameshWriteError(e)
         elif overwrite:
             ds = Datasource(id=datasource_id, geom=geometry, **properties)
-        for key in properties:
-            if key not in ["driver", "schema"]:
-                setattr(ds, key, properties[key])
-        if geometry:
-            ds.geom = geometry
+        try:
+            for key in properties:
+                if key not in ["driver", "schema"]:
+                    setattr(ds, key, properties[key])
+            if coordinates:
+                ds.coordinates = coordinates
+            if geom or geometry:
+                ds.geom = geom or geometry
+            if data is not None:
+                ds._guess_props(data)
+            if not ds.geom:
+                warnings.warn(
+                    "Geometry not set for datasource, will have a default geometry of Point(0,0)"
+                )
+        except:
+            raise DatameshWriteError(
+                "Cannot set properties for datasource, check that the properties are valid"
+            )
+
         try:
             self._metadata_write(ds)
         except Exception as e:
@@ -518,7 +534,7 @@ class Connector(object):
         Args:
             datasource_id (string): Unique datasource id
             data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`, None]): The data to be written to datamesh. If data is None, just update metadata properties.
-            geometry (:obj:`oceanum.datasource.Geometry`): GeoJSON geometry of the datasource
+            geom (:obj:`oceanum.datasource.Geometry`): GeoJSON geometry of the datasource
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource` constructor
@@ -529,6 +545,38 @@ class Connector(object):
         return self.write_datasource(
             datasource_id, data, append, overwrite, **properties
         )
+
+    def update_metadata(self, datasource_id, **properties):
+        """Update the metadata of a datasource in datamesh
+
+        Args:
+            datasource_id (string): Unique datasource id
+            **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource` constructor
+
+        Returns:
+            :obj:`oceanum.datamesh.Datasource`: The datasource instance that was updated
+        """
+        ds = self.get_datasource(datasource_id)
+        for key in properties:
+            if key not in ["driver", "schema", "driver_args"]:
+                setattr(ds, key, properties[key])
+            elif key in ["driver", "driver_args"]:
+                warnings.warn(f"{key} is not and updatable property of a datasource")
+        self._metadata_write(ds)
+        return ds
+
+    @asyncwrapper
+    def update_metadata_async(self, datasource_id, **properties):
+        """Update the metadata of a datasource in datamesh asynchronously
+
+        Args:
+            datasource_id (string): Unique datasource id
+            **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource` constructor
+
+        Returns:
+            Coroutine<:obj:`oceanum.datamesh.Datasource`>: The datasource instance that was updated
+        """
+        return self.update_metadata(datasource_id, **properties)
 
     def delete_datasource(self, datasource_id):
         """Delete a datasource from datamesh. This will delete the datamesh registration and any stored data.

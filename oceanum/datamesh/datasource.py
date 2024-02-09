@@ -6,6 +6,7 @@ import geopandas
 import xarray
 import asyncio
 import shapely
+import warnings
 from pydantic import (
     ConfigDict,
     BaseModel,
@@ -197,9 +198,10 @@ class Datasource(BaseModel):
         description="Additional parameters for accessing datasource",
         default={},
     )
-    geom: Geometry = Field(
+    geom: Optional[Geometry] = Field(
         title="Datasource geometry",
         description="Valid shapely or geoJSON geometry describing the spatial extent of the datasource",
+        default=None,
     )
     tstart: Optional[datetime.datetime] = Field(
         title="Start time of datasource",
@@ -224,7 +226,7 @@ class Datasource(BaseModel):
     info: Optional[dict] = Field(
         title="Datasource metadata",
         description="Additional datasource descriptive metadata",
-        default="",
+        default={},
     )
     dataschema: Optional[Schema] = Field(
         alias="schema",
@@ -253,6 +255,7 @@ class Datasource(BaseModel):
 
         Example {"t":"time","x":"longitude","y":"latitude"}
         """,
+        default={},
     )
     details: Optional[AnyHttpUrl] = Field(
         title="Details",
@@ -322,37 +325,45 @@ class Datasource(BaseModel):
     def geometry(self):
         return self.geom
 
-
-def _datasource_props(datasource_id, props, _data):
-    properties = {**props}
-    properties["id"] = datasource_id
-    data = _data if isinstance(_data, xarray.Dataset) else _data.to_xarray()
-    if "schema" not in props:
-        properties["schema"] = data.to_dict(data=False)
-    if "coordinates" not in props:  # Try to guess the coordinate mapping
-        coords = {}
-        for c in data.coords:
-            pref = c[:3].lower()
-            if pref in COORD_MAPPING:
-                coords[COORD_MAPPING[pref]] = c
-        properties["coordinates"] = coords
-    if "name" not in props:
-        properties["name"] = re.sub("[_-]", " ", datasource_id.capitalize())
-    if "tstart" not in props:
-        if "time" in data:
-            properties["tstart"] = pandas.Timestamp(
-                min(data["time"]).values
-            ).to_pydatetime()
-        else:
-            properties["tstart"] = datetime.datetime(1970, 1, 1, tzinfo=None)
-    if "tend" not in props:
-        if "time" in data:
-            properties["tend"] = pandas.Timestamp(
-                max(data["time"]).values
-            ).to_pydatetime()
-        else:
-            properties["tend"] = datetime.datetime.utcnow()
-    return properties
+    def _guess_props(self, data):
+        if self.dataschema.dims == {}:
+            _data = data if isinstance(data, xarray.Dataset) else data.to_xarray()
+            self.dataschema = _data.to_dict(data=False)
+        if len(self.coordinates) == 0:  # Try to guess the coordinate mapping
+            coords = {}
+            for c in data.coords:
+                pref = c[:3].lower()
+                if pref in COORD_MAPPING:
+                    coords[COORD_MAPPING[pref]] = c
+            ds.coordinates = coords
+        if self.geom is None or self.geom == shapely.geometry.Point(0, 0):
+            if "x" in self.coordinates and "y" in self.coordinates:
+                warnings.warn("Setting geometry as a bbox from x and y coordinates")
+                self.geom = shapely.geometry.box(
+                    min(data[self.coordinates["x"]]),
+                    min(data[self.coordinates["y"]]),
+                    max(data[self.coordinates["x"]]),
+                    max(data[self.coordinates["y"]]),
+                )
+        if not self.name:
+            self.name = re.sub("[_-]", " ", self.id.capitalize())
+        if not self.tstart:
+            if "t" in self.coordinates:
+                self.tstart = pandas.Timestamp(
+                    min(data[self.coordinates["t"]]).values
+                ).to_pydatetime()
+            else:
+                self.tstart = datetime.datetime(1970, 1, 1, tzinfo=None)
+                warnings.warn("Setting tstart to 1970-01-01T00:00:00Z")
+        if not self.tend:
+            if "t" in self.coordinates:
+                self.tend = pandas.Timestamp(
+                    max(data[self.coordinates["t"]]).values
+                ).to_pydatetime()
+            else:
+                self.tend = datetime.datetime.utcnow()
+                warnings.warn("Setting tend to current time")
+        return self
 
 
 def _datasource_driver(data):

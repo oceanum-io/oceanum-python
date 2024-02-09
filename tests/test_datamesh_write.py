@@ -58,6 +58,19 @@ def test_write_dataset(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
+def test_write_dataset_guess(conn, dataset):
+    datasource_id = "test-write-dataset"
+    conn.write_datasource(
+        datasource_id,
+        dataset,
+        overwrite=True,
+        coordinates={"t": "time", "x": "longitude", "y": "latitude"},
+    )
+    dsrc = conn.get_datasource(datasource_id)
+    assert dsrc.geom.bounds == (173, -38, 174, -37)
+    conn.delete_datasource(datasource_id)
+
+
 def test_append_dataset(conn, dataset):
     datasource_id = "test-write-dataset"
     dataset2 = dataset.copy()

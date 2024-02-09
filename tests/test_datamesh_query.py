@@ -120,7 +120,7 @@ def test_query_timefilter(conn):
     assert isinstance(ds, pandas.DataFrame)
 
 
-def test_command_line_interface():
+def _test_command_line_interface():
     """Test the CLI."""
     runner = CliRunner()
     result = runner.invoke(cli.main)

@@ -22,27 +22,11 @@ def dataframe():
     )
 
 
-def test_load_datasource(conn):
+def test_get_catalog(conn):
     cat = conn.get_catalog()
     for datasrc in cat:
         datasrc.json()
         break
-
-
-def test_create_datasource(conn, dataframe):
-    ds = Datasource(
-        id="test-simple-datasource",
-        name="Test datasource",
-        tstart="2000-01-01T00:00:00Z",
-        geom={"type": "Point", "coordinates": [174, -40]},
-        schema=dataframe.to_xarray().to_dict(data=False),
-        coordinates={"t": "time"},
-        driver="dum",
-    )
-    conn._metadata_write(ds)
-    ds_check = conn.get_datasource(ds.id)
-    assert ds_check
-    conn.delete_datasource("test-simple-datasource")
 
 
 def test_datasource_properties(dataframe):

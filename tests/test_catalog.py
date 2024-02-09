@@ -41,12 +41,3 @@ def test_catalog_geofilter(conn):
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)
     assert len(cat)
-
-
-def test_catalog_geofilter(conn):
-    bbox = shapely.geometry.box(0, 0, 10, 10)
-    cat = conn.get_catalog(geofilter=bbox)
-    ds0 = cat.ids[0]
-    assert ds0 in str(cat)
-    assert isinstance(cat[ds0], Datasource)
-    assert len(cat)

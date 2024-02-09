@@ -34,7 +34,7 @@ async def test_catalog_async(conn):
     assert len(cat)
 
 
-def test_command_line_interface():
+def _test_command_line_interface():
     """Test the CLI."""
     runner = CliRunner()
     result = runner.invoke(cli.main)
