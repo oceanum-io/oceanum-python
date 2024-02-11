@@ -9,11 +9,8 @@ import geopandas
 import xarray
 import numpy
 
-from click.testing import CliRunner
-
 from oceanum.datamesh import Connector, Datasource
 from oceanum.datamesh.exceptions import DatameshWriteError
-from oceanum import cli
 
 HERE = os.path.dirname(__file__)
 

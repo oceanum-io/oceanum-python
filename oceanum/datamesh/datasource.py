@@ -335,7 +335,7 @@ class Datasource(BaseModel):
                 pref = c[:3].lower()
                 if pref in COORD_MAPPING:
                     coords[COORD_MAPPING[pref]] = c
-            ds.coordinates = coords
+            self.coordinates = coords
         if self.geom is None or self.geom == shapely.geometry.Point(0, 0):
             if "x" in self.coordinates and "y" in self.coordinates:
                 warnings.warn("Setting geometry as a bbox from x and y coordinates")

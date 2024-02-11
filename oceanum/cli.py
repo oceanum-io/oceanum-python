@@ -2,8 +2,6 @@
 
 import click
 
-from oceanum.storage import filesystem
-
 
 def bytes_to_human(size):
     """Convert bytes to human-readable format."""
