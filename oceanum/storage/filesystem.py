@@ -187,6 +187,8 @@ class FileSystem(AsyncFileSystem):
     async def _get_file(
         self, rpath, lpath, chunk_size=5 * 2**20, callback=_DEFAULT_CALLBACK, **kwargs
     ):
+        if os.path.isdir(lpath):
+            return
         logger.debug(rpath)
         if rpath[-1] == "/":
             os.makedirs(lpath, exist_ok=True)

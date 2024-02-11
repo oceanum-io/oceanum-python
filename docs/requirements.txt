@@ -1,5 +1,5 @@
 oceanum
 autodoc-pydantic
 pydata-sphinx-theme
-sphinx-programoutput
+sphinxcontrib-programoutput
 decorator

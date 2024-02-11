@@ -9,7 +9,7 @@ import fsspec
 
 from oceanum.storage import FileSystem
 
-REMOTE_PATH = "/test_storage"
+REMOTE_PATH = "test_storage"
 
 
 @pytest.fixture
@@ -74,6 +74,6 @@ def test_open(fs, dummy_files):
     fs.put(os.path.join(dummy_files.name, "test"), REMOTE_PATH, recursive=True)
 
     with fsspec.open(
-        "oceanum:/" + os.path.join(REMOTE_PATH, "test", "file1.txt"), "r"
+        "oceanum://" + os.path.join(REMOTE_PATH, "test", "file1.txt"), "r"
     ) as f:
         assert f.read() == "hello"
