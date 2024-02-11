@@ -3,7 +3,7 @@
 =================
 API documentation
 =================
-Version |version}
+Version |version|
 
 Datamesh
 ---------------------
