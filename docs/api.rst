@@ -21,6 +21,11 @@ End-user classes
     Query
 
 
+Storage
+---------------------
+.. currentmodule:: oceanum.storage
+
+
 End-user classes
 
 .. autosummary::
