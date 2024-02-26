@@ -34,7 +34,7 @@ dependencies = [
   "click",
   "decorator",
   "fsspec",
-  "geojson-pydantic>=1.0",
+  "geojson-pydantic",
   "geopandas",
   "h5netcdf",
   "numpy",

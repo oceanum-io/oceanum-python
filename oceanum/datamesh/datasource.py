@@ -326,6 +326,8 @@ class Datasource(BaseModel):
         return self.geom
 
     def _guess_props(self, data):
+        if isinstance(data, pandas.DataFrame):
+            data = data.reset_index()
         if self.dataschema.dims == {}:
             _data = data if isinstance(data, xarray.Dataset) else data.to_xarray()
             self.dataschema = _data.to_dict(data=False)

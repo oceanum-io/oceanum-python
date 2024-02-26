@@ -43,7 +43,10 @@ def dataset():
 def test_write_dataframe(conn, dataframe):
     datasource_id = "test-write-dataframe"
     conn.write_datasource(
-        datasource_id, dataframe, {"type": "Point", "coordinates": [174, -39]}
+        datasource_id,
+        dataframe,
+        {"type": "Point", "coordinates": [174, -39]},
+        overwrite=True,
     )
     df = conn.load_datasource(datasource_id)
     assert (df == dataframe).all().all()
