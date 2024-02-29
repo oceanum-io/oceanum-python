@@ -14,7 +14,11 @@ To install oceanum, run this command in your terminal:
 
     $ pip install oceanum
 
-This is the preferred method to install oceanum, as it will always install the most recent stable release.
+This is the preferred method to install oceanum, as it will always install the most recent stable release. There is also a conda package which may work better on Windows installations:
+
+.. code-block:: console
+
+    $ conda install -c conda-forge oceanum
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
