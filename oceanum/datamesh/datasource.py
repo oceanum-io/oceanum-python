@@ -213,6 +213,11 @@ class Datasource(BaseModel):
         description="Latest time in datasource. Must be a valid ISO8601 datetime string",
         default=None,
     )
+    pforecast: Optional[Timeperiod] = Field(
+        title="Datasource forecast horizon period",
+        description="Duration of a forecast horizon (time after present). Must be a valid ISO8601 interval string or None.",
+        default=None,
+    )
     parchive: Optional[Timeperiod] = Field(
         title="Datasource rolling archive period",
         description="Duration of a rolling archive (time before present). Must be a valid ISO8601 interval string or None.",
@@ -357,7 +362,7 @@ class Datasource(BaseModel):
             else:
                 self.tstart = datetime.datetime(1970, 1, 1, tzinfo=None)
                 warnings.warn("Setting tstart to 1970-01-01T00:00:00Z")
-        if not self.tend:
+        if not self.tend and not self.pforecast:
             if "t" in self.coordinates:
                 self.tend = pandas.Timestamp(
                     max(data[self.coordinates["t"]]).values

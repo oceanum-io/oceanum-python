@@ -41,7 +41,6 @@ dependencies = [
   "orjson",
   "pandas",
   "pyarrow",
-  "python-snappy",
   "requests",
   "shapely",
   "xarray",

@@ -129,18 +129,22 @@ class Connector(object):
         return resp
 
     def _metadata_write(self, datasource):
+        data = datasource.model_dump_json(by_alias=True, warnings=False).encode(
+            "utf-8", "ignore"
+        )
+        headers = {**self._auth_headers, "Content-Type": "application/json"}
         if datasource._exists:
             resp = requests.patch(
                 f"{self._proto}://{self._host}/datasource/{datasource.id}/",
-                data=datasource.model_dump_json(by_alias=True, warnings=False),
-                headers={**self._auth_headers, "Content-Type": "application/json"},
+                data=data,
+                headers=headers,
             )
 
         else:
             resp = requests.post(
                 f"{self._proto}://{self._host}/datasource/",
-                data=datasource.model_dump_json(by_alias=True, warnings=False),
-                headers={**self._auth_headers, "Content-Type": "application/json"},
+                data=data,
+                headers=headers,
             )
         self._validate_response(resp)
         return resp
