@@ -357,7 +357,7 @@ class Datasource(BaseModel):
         if not self.tstart:
             if "t" in self.coordinates:
                 self.tstart = pandas.Timestamp(
-                    min(data[self.coordinates["t"]]).values
+                    min(data[self.coordinates["t"]])
                 ).to_pydatetime()
             else:
                 self.tstart = datetime.datetime(1970, 1, 1, tzinfo=None)
@@ -365,7 +365,7 @@ class Datasource(BaseModel):
         if not self.tend and not self.pforecast:
             if "t" in self.coordinates:
                 self.tend = pandas.Timestamp(
-                    max(data[self.coordinates["t"]]).values
+                    max(data[self.coordinates["t"]])
                 ).to_pydatetime()
             else:
                 self.tend = datetime.datetime.utcnow()

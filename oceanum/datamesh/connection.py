@@ -21,7 +21,7 @@ from contextlib import contextmanager
 
 from .datasource import Datasource
 from .catalog import Catalog
-from .query import Query, Stage, Container, TimeFilter, GeoFilter
+from .query import Query, Stage, Container, TimeFilter, GeoFilter, GeoFilterType
 from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
@@ -292,10 +292,13 @@ class Connector(object):
             query["in_trange"] = f"{times[0]}Z,{times[1]}Z"
         if geofilter:
             if isinstance(geofilter, GeoFilter):
-                geos = geofilter.geom
+                if geofilter.type == GeoFilterType.feature:
+                    geos = geofilter.geom.geometry
+                elif geofilter.type == GeoFilterType.bbox:
+                    geos = shapely.geometry.box(*geofilter.geom)
             else:
                 geos = shapely.geometry.shape(geofilter)
-            query["geom_intersects"] = str(geofilter)
+            query["geom_intersects"] = geos.wkt
         meta = self._metadata_request(params=query)
         cat = Catalog(meta.json())
         cat._connector = self

@@ -9,6 +9,7 @@ import shapely
 from click.testing import CliRunner
 
 from oceanum.datamesh import Connector, Datasource
+from oceanum.datamesh.query import GeoFilter
 from oceanum import cli
 
 
@@ -34,9 +35,36 @@ def test_catalog_timefilter(conn):
     assert len(cat)
 
 
-def test_catalog_geofilter(conn):
+def test_catalog_geofilter_shapely(conn):
     bbox = shapely.geometry.box(0, 0, 10, 10)
     cat = conn.get_catalog(geofilter=bbox)
+    ds0 = cat.ids[0]
+    assert ds0 in str(cat)
+    assert isinstance(cat[ds0], Datasource)
+    assert len(cat)
+
+
+def test_catalog_geofilter_bbox(conn):
+    geofilter = GeoFilter(type="bbox", geom=[0, 0, 10, 10])
+    cat = conn.get_catalog(geofilter=geofilter)
+    ds0 = cat.ids[0]
+    assert ds0 in str(cat)
+    assert isinstance(cat[ds0], Datasource)
+    assert len(cat)
+
+
+def test_catalog_geofilter_feature(conn):
+    geofilter = GeoFilter(
+        type="feature",
+        geom={
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[[0, 0], [0, 10], [10, 10], [10, 0], [0, 0]]],
+            },
+        },
+    )
+    cat = conn.get_catalog(geofilter=geofilter)
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)

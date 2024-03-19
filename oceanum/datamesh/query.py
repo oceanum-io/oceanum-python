@@ -265,5 +265,6 @@ class Stage(BaseModel):
     formats: List[str] = Field(title="Available download formats")
     size: int = Field(title="Request size")
     dlen: int = Field(title="Domain size")
-    coordmap: dict = Field(title="coordinates dictionary")
+    coordmap: dict = Field(title="coordinates map")
+    coordkeys: dict = Field(title="coordinates keys")
     container: Container = Field(title="Data container type")
