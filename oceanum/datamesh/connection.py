@@ -224,6 +224,13 @@ class Connector(object):
         if stage is None:
             warnings.warn("No data found for query")
             return None
+        elif stage.dlen >= 2000000 and stage.container in [
+            Container.GeoDataFrame,
+            Container.DataFrame,
+        ]:
+            warnings.warn(
+                "Query limited to 2000000 rows, not all data may be returned. Use a more specific query."
+            )
         elif stage.size > DASK_QUERY_SIZE:
             warnings.warn(
                 "Query is too large for direct access, using lazy access with dask"
