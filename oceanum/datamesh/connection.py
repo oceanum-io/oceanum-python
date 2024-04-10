@@ -204,6 +204,8 @@ class Connector(object):
             headers=self._auth_headers,
             data=query.model_dump_json(warnings=False),
         )
+        if resp.status_code >= 500:
+            raise DatameshConnectError("Datamesh server error")
         if resp.status_code >= 400:
             msg = resp.json()["detail"]
             raise DatameshQueryError(msg)
