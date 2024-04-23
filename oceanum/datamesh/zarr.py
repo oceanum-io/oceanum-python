@@ -45,7 +45,7 @@ class ZarrClient(MutableMapping):
         datasource,
         parameters={},
         method="post",
-        retries=5,
+        retries=8,
         nocache=False,
     ):
         self.datasource = datasource

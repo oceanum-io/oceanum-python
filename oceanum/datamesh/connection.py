@@ -112,7 +112,7 @@ class Connector(object):
             try:
                 msg = resp.json()["detail"]
             except:
-                msg = resp.text
+                raise DatameshConnectError("Datamesh server error: " + resp.text)
             raise DatameshConnectError(msg)
 
     def _metadata_request(self, datasource_id="", params={}):
@@ -204,11 +204,12 @@ class Connector(object):
             headers=self._auth_headers,
             data=query.model_dump_json(warnings=False),
         )
-        if resp.status_code >= 500:
-            raise DatameshConnectError("Datamesh server error")
         if resp.status_code >= 400:
-            msg = resp.json()["detail"]
-            raise DatameshQueryError(msg)
+            try:
+                msg = resp.json()["detail"]
+                raise DatameshQueryError(msg)
+            except:
+                raise DatameshConnectError("Datamesh server error: " + resp.text)
         elif resp.status_code == 204:
             return None
         else:
@@ -258,7 +259,10 @@ class Connector(object):
                 data=query.model_dump_json(warnings=False),
             )
             if resp.status_code >= 400:
-                msg = resp.json()["detail"]
+                try:
+                    msg = resp.json()["detail"]
+                except:
+                    raise DatameshConnectError("Datamesh server error: " + resp.text)
                 if cache_timeout:
                     localcache.unlock(query)
                 raise DatameshQueryError(msg)
