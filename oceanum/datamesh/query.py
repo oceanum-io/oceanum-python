@@ -55,6 +55,17 @@ class GeoFilterType(Enum):
     bbox = "bbox"
 
 
+class GeoFilterInterp(str, Enum):
+    """
+    Interpolation method for geofilter. Can be one of:
+    - 'nearest': Nearest neighbor
+    - 'linear': Linear interpolation
+    """
+
+    nearest = "nearest"
+    linear = "linear"
+
+
 class TimeFilterType(str, Enum):
     """Time filter type
     range: Select times within a range - times parameter must have 2 values
@@ -100,6 +111,11 @@ class GeoFilter(BaseModel):
             - For type='bbox', list[x_min,y_min,x_max,y_max] in CRS units.
         """,
         # - For type='radius', list[x0,y0,radius] in CRS units.
+    )
+    interp: Optional[GeoFilterInterp] = Field(
+        title="Interpolation method",
+        default=GeoFilterInterp.linear,
+        description="Interpolation method to use for feature filters",
     )
     resolution: Optional[float] = Field(
         title="Maximum spatial resolution of data",
