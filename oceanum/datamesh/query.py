@@ -2,6 +2,7 @@ import datetime
 import pandas as pd
 import numpy as np
 import shapely
+import geojson_pydantic
 from pydantic import (
     field_validator,
     ConfigDict,
@@ -13,7 +14,23 @@ from pydantic import (
 from typing import Optional, Dict, Union, List
 from typing_extensions import Annotated
 from enum import Enum
-from geojson_pydantic import Feature, FeatureCollection
+from geojson_pydantic import (
+    Feature,
+    FeatureCollection,
+    Point,
+    MultiPoint,
+    Polygon,
+)
+
+# Monkey patch the set of allowed geometries to include only Point, MultiPoint and Polygon
+geojson_pydantic.geometries.Geometry = Annotated[
+    Union[
+        Point,
+        MultiPoint,
+        Polygon,
+    ],
+    Field(discriminator="type"),
+]
 
 
 class QueryError(Exception):
@@ -82,7 +99,7 @@ class ResampleType(str, Enum):
     mean = "mean"
 
 
-class DatasourceGeom(BaseModel):
+class FilterGeometry(BaseModel):
     id: str = Field(title="Datasource ID")
     parameters: Optional[Dict] = Field(
         title="Optional parameters to access datasource", default={}
