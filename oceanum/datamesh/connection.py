@@ -3,6 +3,7 @@ import io
 import re
 import shutil
 import json
+import time
 import datetime
 import tempfile
 import hashlib
@@ -218,7 +219,7 @@ class Connector(object):
         else:
             return Stage(**resp.json())
 
-    def _query(self, query, use_dask=False, cache_timeout=0):
+    def _query(self, query, use_dask=False, cache_timeout=0, retry=0):
         if not isinstance(query, Query):
             query = Query(**query)
         if cache_timeout and not use_dask:
@@ -261,6 +262,14 @@ class Connector(object):
                 headers=headers,
                 data=query.model_dump_json(warnings=False),
             )
+            if resp.status_code >= 500:
+                if cache_timeout:
+                    localcache.unlock(query)
+                if retry < 5:
+                    time.sleep(retry)
+                    return self._query(query, use_dask, cache_timeout, retry + 1)
+                else:
+                    raise DatameshConnectError("Datamesh server error: " + resp.text)
             if resp.status_code >= 400:
                 try:
                     msg = resp.json()["detail"]
@@ -375,7 +384,7 @@ class Connector(object):
         """
         return self.get_datasource(datasource_id)
 
-    def load_datasource(self, datasource_id, parameters={}, use_dask=True):
+    def load_datasource(self, datasource_id, parameters={}, use_dask=False):
         """Load a datasource into the work environment.
         For datasources which load into DataFrames or GeoDataFrames, this returns an in memory instance of the DataFrame.
         For datasources which load into an xarray Dataset, an open zarr backed dataset is returned.
@@ -383,7 +392,7 @@ class Connector(object):
         Args:
             datasource_id (string): Unique datasource id
             parameters (dict): Additional datasource parameters
-            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
 
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
@@ -407,12 +416,12 @@ class Connector(object):
             return pandas.read_parquet(tmpfile)
 
     @asyncwrapper
-    def load_datasource_async(self, datasource_id, parameters={}, use_dask=True):
+    def load_datasource_async(self, datasource_id, parameters={}, use_dask=False):
         """Load a datasource asynchronously into the work environment
 
         Args:
             datasource_id (string): Unique datasource id
-            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to True.
+            use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
             loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
             executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
 
