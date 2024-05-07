@@ -8,6 +8,7 @@ import pandas
 import geopandas
 import xarray
 import numpy
+import dask.dataframe
 
 from click.testing import CliRunner
 
@@ -50,6 +51,21 @@ def test_write_dataframe(conn, dataframe):
     )
     df = conn.load_datasource(datasource_id)
     assert (df == dataframe).all().all()
+    conn.delete_datasource(datasource_id)
+
+
+def test_write_dask_dataframe(conn, dataframe):
+    datasource_id = "test-write-dask-dataframe"
+    conn.write_datasource(
+        datasource_id,
+        dask.dataframe.from_pandas(dataframe),
+        {"type": "Point", "coordinates": [174, -39]},
+        overwrite=True,
+    )
+    df = conn.load_datasource(datasource_id, use_dask=True)
+    assert isinstance(df, xarray.Dataset)
+    df = df.compute()
+    assert (df["u10"] == dataframe["u10"]).all()
     conn.delete_datasource(datasource_id)
 
 

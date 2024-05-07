@@ -76,6 +76,6 @@ def test_stage_resp():
         size=1000,
         dlen=100,
         coordmap={"var": "tyx"},
-        coords={"var": "tyx"},
+        coordkeys={"var": "tyx"},
         container="dataset",
     )

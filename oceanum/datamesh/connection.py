@@ -12,6 +12,7 @@ import xarray
 import geopandas
 import pandas
 import shapely
+import dask
 import warnings
 import tempfile
 from urllib.parse import urlparse
@@ -92,6 +93,8 @@ class Connector(object):
         }
         self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
+        if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
+            warnings.warn("Gateway and service domain do not match")
 
     @property
     def host(self):
@@ -391,7 +394,7 @@ class Connector(object):
         if stage is None:
             warnings.warn("No data found for query")
             return None
-        if stage.container == Container.Dataset:
+        if stage.container == Container.Dataset or use_dask:
             mapper = ZarrClient(self, datasource_id, parameters=parameters)
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
@@ -470,6 +473,7 @@ class Connector(object):
         geom=None,
         append=None,
         overwrite=False,
+        index=None,
         **properties,
     ):
         """Write a datasource to datamesh from the work environment
@@ -504,9 +508,26 @@ class Connector(object):
                         append,
                         overwrite,
                     )
+                elif isinstance(data, dask.dataframe.DataFrame):
+                    for part in data.partitions:
+                        with tempFile("w+b") as f:
+                            part.compute().to_parquet(
+                                f, compression="gzip", index="True"
+                            )
+                            f.seek(0)
+                            ds = self._data_write(
+                                datasource_id,
+                                f.read(),
+                                "application/parquet",
+                                append,
+                                overwrite,
+                            )
+                        append = True
+                        overwrite = False
+                    ds.driver_args["index"] = data.index.name
                 else:
                     with tempFile("w+b") as f:
-                        data.to_parquet(f, index=True)
+                        data.to_parquet(f, compression="gzip", index="True")
                         f.seek(0)
                         ds = self._data_write(
                             datasource_id,

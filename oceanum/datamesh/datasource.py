@@ -51,6 +51,12 @@ def parse_period(period):
         raise "Period string not valid"
 
 
+def to_datetime(v):
+    if isinstance(v, xarray.DataArray):
+        v = v.values
+    return pandas.Timestamp(v).to_pydatetime()
+
+
 Timeperiod = Annotated[datetime.timedelta, BeforeValidator(parse_period)]
 
 
@@ -356,17 +362,13 @@ class Datasource(BaseModel):
             self.name = re.sub("[_-]", " ", self.id.capitalize())
         if not self.tstart:
             if "t" in self.coordinates:
-                self.tstart = pandas.Timestamp(
-                    min(data[self.coordinates["t"]])
-                ).to_pydatetime()
+                self.tstart = to_datetime(data[self.coordinates["t"]].min())
             else:
                 self.tstart = datetime.datetime(1970, 1, 1, tzinfo=None)
                 warnings.warn("Setting tstart to 1970-01-01T00:00:00Z")
         if not self.tend and not self.pforecast:
             if "t" in self.coordinates:
-                self.tend = pandas.Timestamp(
-                    max(data[self.coordinates["t"]])
-                ).to_pydatetime()
+                self.tend = to_datetime(data[self.coordinates["t"]].max())
             else:
                 self.tend = datetime.datetime.utcnow()
                 warnings.warn("Setting tend to current time")
