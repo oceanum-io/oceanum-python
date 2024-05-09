@@ -172,6 +172,8 @@ class TimeFilter(BaseModel):
         description="""
         Type of the timefilter. Can be one of:
             - 'range': Select times within a range
+            - 'series': Select times in a series
+            - 'trajectory': Select times along a trajectory
         """,
     )
     times: List[Union[Timestamp, None]] = Field(
