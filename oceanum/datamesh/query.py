@@ -171,9 +171,9 @@ class TimeFilter(BaseModel):
         default=TimeFilterType.range,
         description="""
         Type of the timefilter. Can be one of:
-            - 'range': Select times within a range
-            - 'series': Select times in a series
-            - 'trajectory': Select times along a trajectory
+            - 'range': Select times within a range, times are a list of [timestart, tend]
+            - 'series': Select times in a series, times are a list of times
+            - 'trajectory': Select times along a trajectory, times are a list of times corresponding to subfeatures in a feature filter
         """,
     )
     times: List[Union[Timestamp, None]] = Field(

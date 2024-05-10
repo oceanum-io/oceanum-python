@@ -45,6 +45,7 @@ dependencies = [
   "shapely",
   "xarray",
   "zarr",
+  "dask"
 ]
 dynamic = ["version"]
 
