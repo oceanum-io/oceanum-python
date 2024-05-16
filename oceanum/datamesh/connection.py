@@ -14,6 +14,7 @@ import geopandas
 import pandas
 import shapely
 import dask
+import dask.dataframe
 import warnings
 import tempfile
 from urllib.parse import urlparse
