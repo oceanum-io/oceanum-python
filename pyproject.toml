@@ -45,7 +45,7 @@ dependencies = [
   "shapely",
   "xarray",
   "zarr",
-  "dask"
+  "dask[dataframe]"
 ]
 dynamic = ["version"]
 
@@ -54,7 +54,7 @@ test = [
   "pytest",
   "pytest-env",
 ]
-extra = [
+video = [
     "xarray_video",
 ]
 docs = [

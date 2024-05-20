@@ -121,7 +121,7 @@ class GeoFilter(BaseModel):
         """,
         # - 'radius': Select within radius of point
     )
-    geom: Union[List, Feature] = Field(
+    geom: Union[List[float], Feature] = Field(
         title="Selection geometry",
         description="""
             - For type='feature', geojson feature as dict or shapely Geometry.
