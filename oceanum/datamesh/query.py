@@ -97,7 +97,8 @@ class TimeFilterType(str, Enum):
 
 class ResampleType(str, Enum):
     mean = "mean"
-
+    nearest = "nearest"
+    slinear = "linear"
 
 class FilterGeometry(BaseModel):
     id: str = Field(title="Datasource ID")
@@ -191,7 +192,7 @@ class TimeFilter(BaseModel):
     )
     resample: Optional[ResampleType] = Field(
         title="Temporal resampling method",
-        default=ResampleType.mean,
+        default=ResampleType.slinear,
         description="Resampling method applied when reducing tempral resolution. Only valid with range type",
     )
 
