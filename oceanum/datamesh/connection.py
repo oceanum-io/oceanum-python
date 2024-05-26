@@ -313,9 +313,13 @@ class Connector(object):
         query = {}
         if search:
             query["search"] = search
+        if isinstance(timefilter, list):
+            timefilter = TimeFilter(times=timefilter)
         if timefilter:
-            times = TimeFilter(times=timefilter).times
-            query["in_trange"] = f"{times[0]}Z,{times[1]}Z"
+            times = timefilter.times
+            query["in_trange"] = (
+                f"{times[0] or datetime.datetime(1,1,1)}Z,{times[1] or datetime.datetime(2500,1,1)}Z"
+            )
         if geofilter:
             if isinstance(geofilter, GeoFilter):
                 if geofilter.type == GeoFilterType.feature:

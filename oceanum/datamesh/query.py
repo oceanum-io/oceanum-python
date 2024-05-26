@@ -38,6 +38,8 @@ class QueryError(Exception):
 
 
 def parse_time(v):
+    if v is None:
+        return None
     if not (
         isinstance(v, str)
         or isinstance(v, datetime.datetime)

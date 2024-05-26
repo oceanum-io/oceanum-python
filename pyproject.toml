@@ -57,6 +57,9 @@ test = [
 video = [
     "xarray_video",
 ]
+eidos= [
+    "oceanum.eidos",
+]
 docs = [
   "autodoc-pydantic",
   "pydata-sphinx-theme",
