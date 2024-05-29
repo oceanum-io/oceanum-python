@@ -25,6 +25,7 @@ requirements:
     - python >=3.8
     - aiohttp
     - click
+    - dask
     - decorator
     - fsspec
     - geojson-pydantic
@@ -34,10 +35,10 @@ requirements:
     - orjson
     - pandas
     - pyarrow
+    - pydantic
     - requests
     - shapely
     - xarray
-    - zarr
 
 test:
   imports:
