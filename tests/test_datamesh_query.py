@@ -59,7 +59,13 @@ def test_query_table_cache(conn):
 
 
 def test_query_dataset_lazy(conn):
-    ds = conn.query({"datasource": "era5_wind10m"})
+    tstart = pandas.Timestamp("2000-01-01T00:00:00")
+    tend = pandas.Timestamp("2000-02-01T00:00:00Z")
+    q = Query(
+        datasource="era5_wind10m",
+        timefilter={"times": [tstart, tend]},
+    )
+    ds = conn.query(q)
     assert isinstance(ds, xarray.Dataset) and len(ds.chunks) == 3
 
 
@@ -96,7 +102,7 @@ def test_query_dataset_cache(conn):
 
 
 def test_query_timefilter(conn):
-    tstart = pandas.Timestamp("2000-01-01T00:00:00")
+    tstart = pandas.Timestamp("2000-01-01T00:00:00Z")
     tend = pandas.Timestamp("2001-01-01T00:00:00Z")
     q = Query(
         datasource="oceanum-sea-level-rise",
