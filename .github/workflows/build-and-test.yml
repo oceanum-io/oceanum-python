@@ -2,8 +2,6 @@ name: Build and test the library
 
 on:
   push:
-    branches:
-      - pypi-publish-action
 
 jobs:
   build-and-test:
