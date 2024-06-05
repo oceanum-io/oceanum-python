@@ -4,13 +4,12 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: read
-
 jobs:
   pypi-publish:
     name: Upload release to PyPI
     runs-on: ubuntu-latest
+    env:
+      DATAMESH_TOKEN: ${{ secrets.DATAMESH_TOKEN }}
     environment:
       name: pypi
       url: https://pypi.org/p/oceanum
@@ -32,8 +31,7 @@ jobs:
         pip install . 'oceanum[extra,test]'
     -
       name: Test
-      run: |
-        pytest -s -v tests
+      run: pytest -s -v tests
     -
       name: Build package
       run: |
