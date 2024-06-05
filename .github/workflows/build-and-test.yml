@@ -12,6 +12,9 @@ jobs:
   build-and-test:
     name: Build and test
     runs-on: ubuntu-latest
+    env:
+      DATAMESH_TOKEN: ${{ secrets.DATAMESH_TOKEN }}
+      STORAGE_SERVICE: ${{ secrets.STORAGE_SERVICE }}
     steps:
     -
       name: Checkout repo
