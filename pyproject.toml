@@ -52,7 +52,7 @@ dynamic = ["version"]
 [project.optional-dependencies]
 test = [
   "pytest",
-  # "pytest-env",
+  "pytest-env",
 ]
 extra = [
     "xarray_video",
