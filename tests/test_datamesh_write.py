@@ -58,7 +58,7 @@ def test_write_dask_dataframe(conn, dataframe):
     datasource_id = "test-write-dask-dataframe"
     conn.write_datasource(
         datasource_id,
-        dask.dataframe.from_pandas(dataframe),
+        dask.dataframe.from_pandas(dataframe, npartitions=1),
         {"type": "Point", "coordinates": [174, -39]},
         overwrite=True,
     )
