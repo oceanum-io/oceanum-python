@@ -38,6 +38,8 @@ class QueryError(Exception):
 
 
 def parse_time(v):
+    if v is None:
+        return None
     if not (
         isinstance(v, str)
         or isinstance(v, datetime.datetime)
@@ -83,6 +85,17 @@ class GeoFilterInterp(str, Enum):
     linear = "linear"
 
 
+class LevelFilterInterp(str, Enum):
+    """
+    Interpolation method for levelfilter. Can be one of:
+    - 'nearest': Nearest neighbor
+    - 'linear': Linear interpolation
+    """
+
+    nearest = "nearest"
+    linear = "linear"
+
+
 class TimeFilterType(str, Enum):
     """Time filter type
     range: Select times within a range - times parameter must have 2 values
@@ -93,6 +106,16 @@ class TimeFilterType(str, Enum):
     range = "range"
     series = "series"
     trajectory = "trajectory"
+
+
+class LevelFilterType(str, Enum):
+    """Level filter type
+    range: Select levels within a range - levels parameter must have 2 values
+    series: Select levels in a series - levels parameter must have 1 or more value(s)
+    """
+
+    range = "range"
+    series = "series"
 
 
 class ResampleType(str, Enum):
@@ -122,7 +145,7 @@ class GeoFilter(BaseModel):
         """,
         # - 'radius': Select within radius of point
     )
-    geom: Union[List, Feature] = Field(
+    geom: Union[List[float], Feature] = Field(
         title="Selection geometry",
         description="""
             - For type='feature', geojson feature as dict or shapely Geometry.
@@ -160,6 +183,33 @@ class GeoFilter(BaseModel):
                 "geofilter geom must be a geojson feature, a list of length 4 or a shapely geometry"
             )
         return v
+
+
+class LevelFilter(BaseModel):
+    """LevelFilter class
+    Describes a vertical subset or interpolation
+    """
+
+    type: LevelFilterType = Field(
+        title="Levelfilter type",
+        default=LevelFilterType.range,
+        description="""
+        Type of the levelfilter. Can be one of:
+            - 'range': Select levels within a range, levels are a list of [levelstart, levelend]
+            - 'series': Select levels in a series, levels are a list of levels
+        """,
+    )
+    levels: List[Union[float, None]] = Field(
+        title="Selection levels",
+        description="""
+            - For type='range', [levelstart, levelend].
+        """,
+    )
+    interp: Optional[LevelFilterInterp] = Field(
+        title="Interpolation method",
+        default=LevelFilterInterp.linear,
+        description="Interpolation method to use for series type level filters",
+    )
 
 
 class TimeFilter(BaseModel):
@@ -273,6 +323,9 @@ class Query(BaseModel):
     )
     geofilter: Optional[GeoFilter] = Field(
         title="Spatial filter or interpolator", default=None
+    )
+    levelfilter: Optional[LevelFilter] = Field(
+        title="Vertical filter or interpolator", default=None
     )
     coordfilter: Optional[List[CoordSelector]] = Field(
         title="List of additional coordinate filters", default=None

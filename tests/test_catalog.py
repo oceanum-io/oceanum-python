@@ -9,7 +9,7 @@ import shapely
 from click.testing import CliRunner
 
 from oceanum.datamesh import Connector, Datasource
-from oceanum.datamesh.query import GeoFilter
+from oceanum.datamesh.query import GeoFilter, TimeFilter
 from oceanum import cli
 
 
@@ -28,7 +28,15 @@ def test_catalog_search(conn):
 
 
 def test_catalog_timefilter(conn):
-    cat = conn.get_catalog(timefilter=["2010-01-01", "2020-01-01"])
+    cat = conn.get_catalog(timefilter=TimeFilter(times=["2010-01-01", "2020-01-01"]))
+    ds0 = cat.ids[0]
+    assert ds0 in str(cat)
+    assert isinstance(cat[ds0], Datasource)
+    assert len(cat)
+
+
+def test_catalog_timefilter_none(conn):
+    cat = conn.get_catalog(timefilter=["2010-01-01", None])
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)

@@ -191,7 +191,7 @@ class Datasource(BaseModel):
     name: str = Field(
         title="Datasource name",
         description="Human readable name for the datasource",
-        max_length=64,
+        max_length=128,
     )
     description: Optional[str] = Field(
         title="Datasource description",
