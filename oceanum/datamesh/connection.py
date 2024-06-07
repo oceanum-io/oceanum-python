@@ -459,9 +459,7 @@ class Connector(object):
         return self._query(query, use_dask, cache_timeout)
 
     @asyncwrapper
-    async def query_async(
-        self, query, *, use_dask=False, cache_timeout=0, **query_keys
-    ):
+    def query_async(self, query, *, use_dask=False, cache_timeout=0, **query_keys):
         """Make a datamesh query asynchronously
 
         Args:
