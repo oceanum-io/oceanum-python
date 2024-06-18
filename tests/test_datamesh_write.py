@@ -90,6 +90,23 @@ def test_write_dataset_guess(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
+def test_bad_coordinates_fail(conn, dataset):
+    datasource_id = "test-write-dataset"
+    with pytest.raises(DatameshWriteError):
+        conn.write_datasource(
+            datasource_id,
+            dataset,
+            overwrite=True,
+            coordinates={
+                "t": "time",
+                "x": "longitude",
+                "y": "latitude",
+                "z": "i_do_not_exist",
+            },
+        )
+    conn.delete_datasource(datasource_id)
+
+
 def test_append_dataset(conn, dataset):
     datasource_id = "test-write-dataset"
     dataset2 = dataset.copy()

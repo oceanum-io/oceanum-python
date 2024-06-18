@@ -567,6 +567,9 @@ class Connector(object):
                 ds.geom = geom or geometry
             if data is not None:
                 ds._guess_props(data)
+            badcoords = ds._check_coordinates()
+            if badcoords:
+                raise DatameshWriteError(f"Coordinates {badcoords} not found in data")
             if not ds.geom:
                 warnings.warn(
                     "Geometry not set for datasource, will have a default geometry of Point(0,0)"

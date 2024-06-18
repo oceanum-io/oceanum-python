@@ -123,6 +123,7 @@ class ResampleType(str, Enum):
     nearest = "nearest"
     slinear = "linear"
 
+
 class FilterGeometry(BaseModel):
     id: str = Field(title="Datasource ID")
     parameters: Optional[Dict] = Field(
@@ -287,7 +288,7 @@ class Aggregate(BaseModel):
 
 class CoordSelector(BaseModel):
     coord: str = Field(title="Coordinate name")
-    values: List[Union[str, int, float]] = Field(title="Coordinate value")
+    values: List[Union[str, int, float]] = Field(title="Coordinate values")
 
 
 class Query(BaseModel):

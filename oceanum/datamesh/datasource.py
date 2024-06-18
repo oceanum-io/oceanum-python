@@ -340,7 +340,9 @@ class Datasource(BaseModel):
         if isinstance(data, pandas.DataFrame):
             data = data.reset_index()
         if self.dataschema.dims == {}:
-            _data = data if isinstance(data, xarray.Dataset) else data.to_xarray()
+            _data = (
+                data if isinstance(data, xarray.Dataset) else data.head(1).to_xarray()
+            )
             self.dataschema = _data.to_dict(data=False)
         if len(self.coordinates) == 0:  # Try to guess the coordinate mapping
             coords = {}
@@ -373,6 +375,16 @@ class Datasource(BaseModel):
                 self.tend = datetime.datetime.utcnow()
                 warnings.warn("Setting tend to current time")
         return self
+
+    def _check_coordinates(self):
+        badcoords = []
+        for c in self.coordinates:
+            if (
+                self.coordinates[c] not in self.dataschema.coords
+                and self.coordinates[c] not in self.dataschema.data_vars
+            ):
+                badcoords.append(self.coordinates[c])
+        return badcoords if len(badcoords) > 0 else None
 
 
 def _datasource_driver(data):
