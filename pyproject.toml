@@ -46,7 +46,8 @@ dependencies = [
   "xarray",
   "zarr",
   "dask[dataframe]",
-  "msgpack"
+  "msgpack",
+  "cftime"
 ]
 dynamic = ["version"]
 
