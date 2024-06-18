@@ -45,7 +45,8 @@ dependencies = [
   "shapely",
   "xarray",
   "zarr",
-  "dask[dataframe]"
+  "dask[dataframe]",
+  "msgpack"
 ]
 dynamic = ["version"]
 
