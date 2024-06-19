@@ -78,7 +78,7 @@ def test_write_dataset(conn, dataset):
 
 
 def test_write_dataset_guess(conn, dataset):
-    datasource_id = "test-write-dataset"
+    datasource_id = "test-write-dataset-guess"
     conn.write_datasource(
         datasource_id,
         dataset,
@@ -108,7 +108,7 @@ def test_bad_coordinates_fail(conn, dataset):
 
 
 def test_append_dataset(conn, dataset):
-    datasource_id = "test-write-dataset"
+    datasource_id = "test-write-dataset-append"
     dataset2 = dataset.copy()
     dataset2["time"] = dataset["time"] + numpy.timedelta64(1, "D")
     conn.write_datasource(datasource_id, dataset, overwrite=True)
@@ -120,7 +120,7 @@ def test_append_dataset(conn, dataset):
 
 
 def test_append_dataset_fail(conn, dataset):
-    datasource_id = "test-write-dataset"
+    datasource_id = "test-write-dataset-fail"
     dataset2 = dataset.copy()
     dataset2["time"] = pandas.date_range(
         dataset["time"][10].values, dataset["time"][20].values, 49
