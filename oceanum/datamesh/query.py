@@ -358,3 +358,4 @@ class Stage(BaseModel):
     coordmap: dict = Field(title="coordinates map")
     coordkeys: dict = Field(title="coordinates keys")
     container: Container = Field(title="Data container type")
+    sig: str = Field(title="Signature hash")
