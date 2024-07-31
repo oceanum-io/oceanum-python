@@ -11,7 +11,7 @@ from pydantic import (
     BeforeValidator,
     WithJsonSchema,
 )
-from typing import Optional, Dict, Union, List
+from typing import Optional, Dict, Union, List, Any
 from typing_extensions import Annotated
 from enum import Enum
 from geojson_pydantic import (
@@ -275,6 +275,15 @@ class Aggregate(BaseModel):
     )
 
 
+class Function(BaseModel):
+    id: str = Field(title="Function id")
+    args: Dict[str, Any] = Field(title="function arguments")
+    vselect: Optional[List[str]] = Field(
+        title="Apply function to variables", default=None
+    )
+    replace: Optional[bool] = Field(title="Replace input dataset", default=False)
+
+
 # Geofilter selection process
 # a features select can either be a Feature/FeatureCollection or the geometry of another datasource
 # grid    ∩  bbox -> subgrid (optional resolution)
@@ -341,6 +350,9 @@ class Query(BaseModel):
         default=None,
         description="Optional aggregation operators to apply to query after filtering",
     )
+    functions: Optional[List[Function]] = Field(title="Functions", default=[])
+    limit: Optional[int] = Field(title="Limit size of response", default=None)
+    id: Optional[str] = Field(title="Unique ID of this query", default=None)
 
 
 class Container(str, Enum):

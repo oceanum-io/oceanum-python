@@ -78,4 +78,5 @@ def test_stage_resp():
         coordmap={"var": "tyx"},
         coordkeys={"var": "tyx"},
         container="dataset",
+        sig="efg"
     )
