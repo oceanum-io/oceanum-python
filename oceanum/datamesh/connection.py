@@ -65,6 +65,7 @@ class Connector(object):
     def __init__(
         self,
         token=None,
+        bearer=None,
         service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
         gateway=os.environ.get("DATAMESH_GATEWAY", None),
     ):
@@ -78,20 +79,26 @@ class Connector(object):
         Raises:
             ValueError: Missing or invalid arguments
         """
-        if token is None:
+        if token is None and bearer is None:
             token = os.environ.get("DATAMESH_TOKEN", None)
             if token is None:
                 raise ValueError(
                     "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
                 )
         self._token = token
+        self._bearer = bearer
         url = urlparse(service)
         self._proto = url.scheme
         self._host = url.netloc
-        self._auth_headers = {
-            "Authorization": "Token " + self._token,
-            "X-DATAMESH-TOKEN": self._token,
-        }
+        if self._token is not None:
+            self._auth_headers = {
+                "Authorization": "Token " + self._token,
+                "X-DATAMESH-TOKEN": self._token,
+            }
+        elif self._bearer is not None:
+            self._auth_headers = {
+                "Authorization": "Bearer " + self._bearer,
+            }
         self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
@@ -298,18 +305,21 @@ class Connector(object):
                         localcache.unlock(query)
                 return ds
 
-    def get_catalog(self, search=None, timefilter=None, geofilter=None):
+    def get_catalog(self, search=None, timefilter=None, geofilter=None, limit=None):
         """Get datamesh catalog
 
         Args:
             search (string, optional): Search string for filtering datasources
             timefilter (Union[:obj:`oceanum.datamesh.query.TimeFilter`, list], Optional): Time filter as valid Query TimeFilter or list of [start,end]
             geofilter (Union[:obj:`oceanum.datamesh.query.GeoFilter`, dict, shapely.geometry], Optional): Spatial filter as valid Query Geofilter or geojson geometry as dict or shapely Geometry
+            limit (int, optional): Limit the number of datasources returned. Defaults to None.
 
         Returns:
             :obj:`oceanum.datamesh.Catalog`: A datamesh catalog instance
         """
         query = {}
+        if limit:
+            query["limit"] = limit
         if search:
             query["search"] = search
         if timefilter:

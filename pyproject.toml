@@ -71,7 +71,7 @@ docs = [
 "Tracker" = "https://github.com/oceanum-io/oceanum-python/issues"
 
 [project.scripts]
-oceanum = "oceanum.cli:main"
+oceanum = "oceanum.__main__:main"
 
 [project.entry-points."fsspec.specs"]
 "oceanum" = "oceanum.storage:FileSystem"
