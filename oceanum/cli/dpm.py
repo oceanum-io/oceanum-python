@@ -2,10 +2,11 @@
 import click
 import httpx
 
-from .base import get
-from .auth import login_required
-from .models import TokenResponse
 
+from .main import main
+from .auth import login_required
+
+from .models import TokenResponse
 
 class DPMHttpClient:
     def __init__(self, token: TokenResponse, domain: str, prefix: str = 'api/'):
@@ -37,6 +38,13 @@ class DPMHttpClient:
     def put(self, endpoint, **kwargs) -> httpx.Response:
         return self._request('PUT', endpoint, **kwargs)
 
+@main.group()
+def dpm():
+    pass
+
+@dpm.group()
+def get():
+    pass
 
 @get.command()
 @click.pass_context
@@ -45,5 +53,6 @@ def projects(ctx: click.Context):
     click.echo('Fetching DPM projects...')
     client = DPMHttpClient(ctx.obj.token, ctx.obj.domain)
     response = client.get('projects')
-    for project in response.json():
+    projects_json = response.json()
+    for project in projects_json:
         click.echo(f'{project["name"]}: {project["status"]}')

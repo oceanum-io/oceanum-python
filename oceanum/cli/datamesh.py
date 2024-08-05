@@ -1,18 +1,24 @@
 """  Datamesh CLI commands """
 
 import click
-import httpx
 
-from .base import get
+from .main import main
 from .auth import login_required
 from ..datamesh.connection import Connector
 
+@main.group()
+def datamesh():
+    pass
+
+@datamesh.group()
+def get():
+    pass
 
 class DatameshClient:
     def __init__(self, ctx: click.Context) -> None:
         service_url = f'https://datamesh.{ctx.obj.domain}/'
         self.connector = Connector(
-            bearer=ctx.obj.token.access_token, 
+            token= f'Bearer {ctx.obj.token.access_token}', 
             service=service_url
         )
 
@@ -24,11 +30,11 @@ class DatameshClient:
 
 @get.command()
 @click.pass_context
-@click.option('--search', help='Search string', default=None)
+@click.option('--search', help='Search string', default=None, type=str)
 @click.option('--limit', help='Limit results', default=10)
 @login_required
 def datasources(ctx: click.Context, search: str, limit: int):
     with DatameshClient(ctx) as client:
         datasources = client.get_catalog(search=search, limit=limit)
-        print(datasources)
+        click.echo(datasources)
 

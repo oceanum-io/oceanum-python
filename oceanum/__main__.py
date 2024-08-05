@@ -2,12 +2,14 @@ import sys
 
 import click
 
-from .cli.main import main
+# When adding a new module, must be imported here
+from .cli import main, auth, dpm, datamesh, storage
 
 try:
-    main()
+    main.main()
 except KeyboardInterrupt:
     sys.exit(1)
 except Exception as e:
     click.echo(f'Error: {e}')
-    sys.exit(1)
+    raise e
+    #sys.exit(1)

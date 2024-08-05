@@ -1,16 +1,11 @@
-import click
+import json
 
-from .models import ContextObject, TokenResponse
 
-@click.group()
-@click.option('--domain', help='Domain to use', default='oceanum.tech') 
-@click.pass_context
-def main(ctx: click.Context, domain):
-    token = TokenResponse.load()
-    ctx.obj = ContextObject(domain=domain, token=token)
-    click.help_option('-h', '--help')
-    click.echo(f'Using domain: {domain}')
 
-@main.group()
-def get():
-    pass
+class BaseRenderer:
+    def __init__(self, raw_json: str):
+        self._raw = raw_json
+        self.data = json.loads(raw_json)
+
+    def render(self):
+        raise NotImplementedError("You must implement the render method.")

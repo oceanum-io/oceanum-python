@@ -44,7 +44,13 @@ class TokenResponse(BaseModel):
             self._path.unlink()
             return True
         return False
-    
+
+class Auth0Config(BaseModel):
+    domain: str
+    client_id: str
+
 class ContextObject(BaseModel):
-    domain: str = Field(default='oceanum.tech')
-    token: TokenResponse|None = None
+    domain: str
+    token: TokenResponse|None=None
+    auth0: Auth0Config|None=None
+    

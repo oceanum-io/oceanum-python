@@ -65,7 +65,6 @@ class Connector(object):
     def __init__(
         self,
         token=None,
-        bearer=None,
         service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
         gateway=os.environ.get("DATAMESH_GATEWAY", None),
     ):
@@ -79,30 +78,29 @@ class Connector(object):
         Raises:
             ValueError: Missing or invalid arguments
         """
-        if token is None and bearer is None:
-            token = os.environ.get("DATAMESH_TOKEN", None)
-            if token is None:
-                raise ValueError(
-                    "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
-                )
-        self._token = token
-        self._bearer = bearer
+        self._token = token or os.environ.get("DATAMESH_TOKEN")
         url = urlparse(service)
         self._proto = url.scheme
         self._host = url.netloc
-        if self._token is not None:
-            self._auth_headers = {
-                "Authorization": "Token " + self._token,
-                "X-DATAMESH-TOKEN": self._token,
-            }
-        elif self._bearer is not None:
-            self._auth_headers = {
-                "Authorization": "Bearer " + self._bearer,
-            }
+        self._init_auth_headers(self._token)
         self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
+
+    def _init_auth_headers(self, token: str| None):
+        if token is not None:
+            if token.startswith("Bearer "):
+                self._auth_headers = {"Authorization": token}
+            else:
+                self._auth_headers = {
+                    "Authorization": "Token " + token,
+                    "X-DATAMESH-TOKEN": token,
+                }
+        else:
+            raise ValueError(
+                "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
+            )
 
     @property
     def host(self):
