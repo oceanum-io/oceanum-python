@@ -21,6 +21,25 @@ try:
 except:
     _VIDEO_SUPPORT = False
 
+class DriverQuery(BaseModel):
+    query: Optional[Query]
+    driver_args: Optional[Dict] = {} 
+    chunks: Optional[Dict] = {}
+    coords: Optional[Dict] = {}
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "query": {"datasource":"test_datasource"},
+                    "driver_args": {"urlpath": "/data/tide/nz_2km",
+                                    "allow_direct_read": True},
+                    "chunks": {},
+                    "coords": {},
+                }
+            ]
+        }
+    }
+    
 class ZarrProxyGetRequestParams(BaseModel):
     query: Optional[Query]
     parameters: Optional[Dict[str, str]]
