@@ -8,6 +8,10 @@ import numpy
 import requests
 import xarray
 
+from typing import Optional, Dict
+from pydantic import BaseModel
+
+from .query import Query
 from .exceptions import DatameshConnectError, DatameshWriteError
 
 try:
@@ -17,6 +21,12 @@ try:
 except:
     _VIDEO_SUPPORT = False
 
+class ZarrProxyGetRequestParams(BaseModel):
+    query: Optional[Query]
+    parameters: Optional[Dict[str, str]]
+    chunks: Optional[Dict[str, int]]
+    downsample: Optional[Dict[str, int]]
+    filtered: Optional[str]
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
