@@ -1,7 +1,7 @@
 
 import click
 import os
-import httpx
+import yaml
 from pathlib import Path
 import pprint
 
@@ -35,8 +35,8 @@ class DpmContextedClient:
 def dpm():
     pass
 
-@dpm.group()
-def get():
+@dpm.group(name='list')
+def list_():
     pass
 
 @dpm.group()
@@ -57,7 +57,7 @@ def validate(ctx: click.Context, specfile: click.Path):
 @click.option('--name', help='Overwrite project name from suplied specfile', required=False, type=str)
 @click.option('--org', help='Overwrite organization name', required=False, type=str)
 @click.option('--user', help='Overwrite user email', required=False, type=str)
-@click.option('--wait', help='Wait for project to be deployed', is_flag=True)
+@click.option('--wait', help='Wait for project to be deployed', default=True)
 @click.argument('specfile', type=click.Path(exists=True))
 @click.pass_context
 @login_required
@@ -66,7 +66,8 @@ def deploy(
     specfile: click.Path, 
     name: str|None, 
     org: str|None, 
-    user: str|None
+    user: str|None,
+    wait: bool,
 ):
     click.echo('Creating DPM Project...')
     with DpmContextedClient(ctx) as client:
@@ -80,7 +81,7 @@ def deploy(
         project = client.deploy_project(project_spec)
     click.echo(f'Project created or updated successfully: {project.name}')
 
-@get.command()
+@list_.command()
 @click.pass_context
 @click.option('--search', help='Search by project name or description', default=None, type=str)
 @click.option('--org', help='filter by Organization name', default=None, type=str)
@@ -116,78 +117,102 @@ def projects(ctx: click.Context, search: str|None, org: str|None, user: str|None
         ))
 
 @describe.command()
+@click.option('--show-spec', help='Show project spec', default=False, type=bool, is_flag=True)
+@click.option('--only-spec', help='Show only project spec', default=False, type=bool, is_flag=True)
 @click.argument('project_name', type=str)
 @click.pass_context
 @login_required
-def project(ctx: click.Context, project_name: str):
-    click.echo()
-    click.echo(f"Describing project '{project_name}'...")
-    click.echo()
+def project(ctx: click.Context, project_name: str, show_spec: bool=False, only_spec: bool=False):
     with DpmContextedClient(ctx) as client:
         project = client.get_project(project_name)
-    output = [
-        ['Name', project.name],
-        ['Org', project.org],
-        ['User', project.last_revision.spec.member_ref],
-        ['Status', project.status],
-        ['Created', project.created_at],
-    ]
-    if project.last_revision is not None:
-        output.append(
-            ['Last Revision', [
-                ['Number', project.last_revision.number],
-                ['Created', project.last_revision.created_at],
-                ['User', project.last_revision.spec.member_ref],
-                ['Status', project.last_revision.status],
-            ]]
-        )
-    if project.stages:
-        stages = []
-        for stage in project.stages:
-            stages.extend([
-                ['Name', stage.name],
-                ['Status', stage.status],
-                ['Message', stage.error_message],
-                ['Updated', stage.updated_at],
-                
-            ])
-        output.append(['Stages', stages])
-    if project.builds:
-        builds = []
-        for build in project.builds:
-            builds.extend([
-                ['Name', build.name],
-                ['Stage', build.stage],
-                ['Image Digest', build.image_digest.root[:12] if build.image_digest else ''],
-                ['Source Commit', build.commit_sha.root[:8] if build.commit_sha else ''],
-                ['Workflow', build.workflow_ref],
-                ['Status', build.status],
-                ['Updated', build.updated_at],
-            ])
-        output.append(['Builds', builds])
-        
-    if project.routes:
-        routes = []
-        for route in project.routes:
-            routes.extend([
-                ['Name', route.name],
-                ['Status', route.status],
-                ['URL', route.url],
-                ['Custom Domains', os.linesep.join(route.custom_domains)],
-            ])
-        output.append(['Routes', routes])
+    if not only_spec:
+        click.echo()
+        click.echo(f"Describing project '{project_name}'...")
+        click.echo()
+        output = [
+            ['Name', project.name],
+            ['Org', project.org],
+            ['User', project.last_revision.spec.member_ref],
+            ['Status', project.status],
+            ['Created', project.created_at],
+        ]
+        if project.last_revision is not None:
+            output.append(
+                ['Last Revision', [
+                    ['Number', project.last_revision.number],
+                    ['Created', project.last_revision.created_at],
+                    ['User', project.last_revision.spec.member_ref],
+                    ['Status', project.last_revision.status],
+                ]]
+            )
+        if project.stages:
+            stages = []
+            for stage in project.stages:
+                stages.extend([
+                    ['Name', stage.name],
+                    ['Status', stage.status],
+                    ['Message', stage.error_message],
+                    ['Updated', stage.updated_at],
+                    
+                ])
+            output.append(['Stages', stages])
+        if project.builds:
+            builds = []
+            for build in project.builds:
+                build_output = [
+                    ['Name', build.name],
+                    ['Status', build.status],
+                    ['Stage', build.stage],
+                    ['Workflow', build.workflow_ref],
+                    ['Updated', build.updated_at],
+                ]
+                if build.image_digest is not None:
+                    image_digest = getattr(build.image_digest, 'root', None)
+                    build_output.append(['Image Digest', image_digest])
+                if build.commit_sha is not None:
+                    commit_sha = getattr(build.commit_sha, 'root', None)
+                    build_output.append(['Source Commit', commit_sha])
+                builds.extend(build_output)
+            output.append(['Builds', builds])
+            
+        if project.routes:
+            routes = []
+            for route in project.routes:
+                route_output =  [
+                    ['Name', route.name],
+                    ['Status', route.status],
+                    ['URL', route.url],
+                ] 
+                if route.custom_domains:
+                    route_output.append([
+                        'Custom Domains', os.linesep.join(route.custom_domains)
+                    ])
+                routes.extend(route_output)
+            output.append(['Routes', routes])
 
-    def print_line(output: list, indent: int = 2):
-        for l,line in enumerate(output):
-            if isinstance(line[1], list):
-                click.echo(f"{' ' * indent}{line[0]}:")
-                print_line(line[1], indent=indent + 2)
-            else:
-                prefix = ((' '*(indent-2))+'- ') if indent > 2 and l==0 else (' '* indent)
-                click.echo(f"{prefix}{line[0]}: {line[1]}")
-    print_line(output)
+        def print_line(output: list, indent: int = 2):
+            for l,line in enumerate(output):
+                if isinstance(line[1], list):
+                    click.echo(f"{' ' * indent}{line[0]}:")
+                    print_line(line[1], indent=indent + 2)
+                else:
+                    prefix = ((' '*(indent-2))+'- ') if indent > 2 and l==0 else (' '* indent)
+                    click.echo(f"{prefix}{line[0]}: {line[1]}")
+        print_line(output)
 
-@get.command()
+    if show_spec or only_spec:
+        if not only_spec:
+            click.echo()
+            click.echo('Project Spec:')
+            click.echo('---')
+        # clear stage status, this will be details above
+        for stage in project.last_revision.spec.resources.stages:
+            stage.status = None
+        click.echo(yaml.dump(project.last_revision.spec.model_dump(
+            exclude_none=True, exclude_unset=True, by_alias=True, mode='json'
+        )))
+
+@list_.command()
 @click.pass_context
 @login_required
 def users(ctx: click.Context):
@@ -195,7 +220,7 @@ def users(ctx: click.Context):
         for user in client.get_users():
             click.echo(pprint.pprint(user.model_dump()))
 
-@get.command()
+@list_.command()
 @click.pass_context
 @click.option('--search', help='Search by route name, project_name or project description', 
               default=None, type=str)
