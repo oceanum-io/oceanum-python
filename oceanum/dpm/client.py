@@ -3,14 +3,14 @@ from typing import Literal
 from pathlib import Path
 
 import yaml
-import httpx
+import requests
 
 
 from . import models
 
 
 class DPMHttpClient:
-    def __init__(self, 
+    def __init__(self,
         token: str|None=None, 
         service: str|None=None,
     ):
@@ -19,27 +19,27 @@ class DPMHttpClient:
 
     def _request(self, 
             method: Literal['GET', 'POST', 'PUT','DELETE'], 
-            endpoint, **kwargs) -> httpx.Response:
+            endpoint, **kwargs) -> requests.Response:
         assert self.service is not None, 'Service URL is required'
         if self.token is not None:
             headers = kwargs.pop('headers', {})|{
                 'Authorization': f'{self.token}'
             }
         url = f"{self.service.removesuffix('/')}/{endpoint}"
-        response = httpx.request(method, url, headers=headers, **kwargs)
+        response = requests.request(method, url, headers=headers, **kwargs)
         response.raise_for_status()
         return response
  
-    def _get(self, endpoint, **kwargs) -> httpx.Response:
+    def _get(self, endpoint, **kwargs) -> requests.Response:
         return self._request('GET', endpoint, **kwargs)
     
-    def _post(self, endpoint, **kwargs) -> httpx.Response:
+    def _post(self, endpoint, **kwargs) -> requests.Response:
         return self._request('POST', endpoint, **kwargs)
     
-    def _put(self, endpoint, **kwargs) -> httpx.Response:
+    def _put(self, endpoint, **kwargs) -> requests.Response:
         return self._request('PUT', endpoint, **kwargs)
     
-    def _delete(self, endpoint, **kwargs) -> httpx.Response:
+    def _delete(self, endpoint, **kwargs) -> requests.Response:
         return self._request('DELETE', endpoint, **kwargs)
     
     def load_spec(self, specfile: Path) -> models.ProjectSpec:
@@ -57,7 +57,7 @@ class DPMHttpClient:
         project = response.json()
         return models.ProjectSpec(**project)
     
-    def delete_project(self, project_id: str) -> httpx.Response:
+    def delete_project(self, project_id: str) -> requests.Response:
         return self._delete(f'projects/{project_id}')
     
     def get_users(self) -> list[models.UserSchema]:
@@ -65,7 +65,7 @@ class DPMHttpClient:
         users_json = response.json()
         return [models.UserSchema(**user) for user in users_json]
 
-    def get_projects(self, **filters) -> list[models.ProjectSchema]:
+    def list_projects(self, **filters) -> list[models.ProjectSchema]:
         response = self._get('projects', params=filters or None)
         projects_json = response.json()
         return [models.ProjectSchema(**project) for project in projects_json]
@@ -75,7 +75,7 @@ class DPMHttpClient:
         project_json = response.json()
         return models.ProjectSchema(**project_json)
     
-    def get_routes(self, **filters) -> list[models.RouteSchema]:
+    def list_routes(self, **filters) -> list[models.RouteSchema]:
         response = self._get('routes', params=filters or None)
         routes_json = response.json()
         return [models.RouteSchema(**route) for route in routes_json]

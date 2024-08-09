@@ -1,10 +1,9 @@
 import time
 
 import click
-import httpx
+import requests
 
 from functools import update_wrapper
-from dotenv import load_dotenv
 
 from .main import main
 from .models import DeviceCodeResponse, TokenResponse, Auth0Config
@@ -14,12 +13,12 @@ class Auth0Client:
     def __init__(self, config: Auth0Config):
         self.config = config
 
-    def _request(self, method, endpoint, **kwargs) -> httpx.Response:
+    def _request(self, method, endpoint, **kwargs) -> requests.Response:
         url = f'https://{self.config.domain}/' + endpoint
         kwargs.setdefault('headers', {
             'Content-Type': 'application/x-www-form-urlencoded'
         })
-        response = httpx.request(method, url, **kwargs)
+        response = requests.request(method, url, **kwargs)
         response.raise_for_status()
         return response
 
@@ -58,7 +57,7 @@ class Auth0Client:
             try:
                 time.sleep(device_code.interval)
                 token = self.get_token(device_code.device_code)
-            except httpx.HTTPError as e:
+            except requests.HTTPError as e:
                 continue
             else:
                 break

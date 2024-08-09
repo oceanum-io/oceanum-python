@@ -97,7 +97,7 @@ def projects(ctx: click.Context, search: str|None, org: str|None, user: str|None
             'user': user,
             'status': status
         }
-        projects = client.get_projects(**{
+        projects = client.list_projects(**{
             k: v for k, v in filters.items() if v is not None
         })
         
@@ -254,7 +254,7 @@ def routes(ctx: click.Context,
         'search': search
     } 
     with DpmContextedClient(ctx) as client:
-        for route in client.get_routes(**{
+        for route in client.list_routes(**{
             k: v for k, v in filters.items() if v is not None
         }):
             custom_domains = [f'https://{d}' for d in route.custom_domains]
