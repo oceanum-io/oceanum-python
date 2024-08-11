@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Literal
 from pathlib import Path
 
@@ -16,6 +17,7 @@ class DPMHttpClient:
     ):
         self.token = token or os.getenv('DPM_TOKEN')
         self.service = service or os.getenv('DPM_API_URL')
+        self._lag = 2 # seconds
 
     def _request(self, 
             method: Literal['GET', 'POST', 'PUT','DELETE'], 

@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime, timezone
 from platformdirs import user_data_dir
 
 USER_DATA_DIR = Path(user_data_dir('oceanum',  'Oceanum LTD.'))
@@ -26,4 +27,10 @@ def item_to_long(item, human_readable=False):
         size = ""
     modified = item["modified"] or ""
     return f"{size:>10}  {modified:>32}  {item['name']}", item["size"]
+import time
+time.tzname
 
+
+def format_dt(dt:datetime, fmt:str=r'%x %X %Z') -> str:
+    """Localize datetime to the machine timezone and return a string with language localized date format."""
+    return dt.astimezone().strftime(fmt)

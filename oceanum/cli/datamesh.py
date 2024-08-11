@@ -10,8 +10,8 @@ from ..datamesh.connection import Connector
 def datamesh():
     pass
 
-@datamesh.group()
-def get():
+@datamesh.group(name='list')
+def list_():
     pass
 
 class DatameshClient:
@@ -28,7 +28,7 @@ class DatameshClient:
     def __exit__(self, exc_type, exc_value, traceback):
         pass
 
-@get.command()
+@list_.command()
 @click.pass_context
 @click.option('--search', help='Search string', default=None, type=str)
 @click.option('--limit', help='Limit results', default=10)

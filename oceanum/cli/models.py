@@ -1,3 +1,5 @@
+import base64
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -32,6 +34,24 @@ class TokenResponse(BaseModel):
         if cls._path.exists():
             with cls._path.open() as f:
                 return cls(**json.load(f))
+            
+    @property
+    def active_org(self) -> str|None:
+        if self.access_token is not None:
+            payload = base64.b64decode(self.access_token.split('.')[1]+'==').decode('utf-8')
+            payload_dict = json.loads(payload)
+            return payload_dict.get('https://oceanum.io/active_org', None)
+        
+    @property
+    def email(self) -> str|None:
+        if self.access_token is not None:
+            payload = base64.b64decode(self.access_token.split('.')[1]+'==').decode('utf-8')
+            payload_dict = json.loads(payload)
+            return payload_dict.get('https://oceanum.io/email', None)
+        
+    @property
+    def is_expired(self) -> bool:
+        return self.created_at.timestamp() + self.expires_in < time.time()
                 
     def save(self) -> None:
         if not self._path.parent.exists():

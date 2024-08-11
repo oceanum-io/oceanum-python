@@ -2,6 +2,7 @@
 import click
 import os
 import yaml
+import time
 from pathlib import Path
 import pprint
 
@@ -11,7 +12,7 @@ from .main import main
 from .auth import login_required
 from .models import TokenResponse
 from ..dpm.client import DPMHttpClient
-from ..dpm.models import UserRef
+from ..dpm.models import UserRef, ProjectSchema
 
 class DpmContextedClient:
     def __init__(self, ctx: click.Context) -> None:
@@ -69,8 +70,107 @@ def deploy(
     user: str|None,
     wait: bool,
 ):
-    click.echo('Creating DPM Project...')
+    start = time.time()
     with DpmContextedClient(ctx) as client:
+        def _wait_project_commit(project_name: str) -> bool:
+            while True:
+                project = client.get_project(project_name)
+                if project.last_revision is not None:
+                    if project.last_revision.status == 'created':
+                        time.sleep(client._lag)
+                        click.echo(f'Waiting for Revision #{project.last_revision.number} to be committed...')
+                        continue
+                    elif project.last_revision.status == 'no-change':
+                        click.echo('No changes to commit, exiting...')
+                        return False
+                    elif project.last_revision.status == 'failed':
+                        click.echo(f"Revision #{project.last_revision.number} failed to commit, exiting...")
+                        return False
+                    elif project.last_revision.status == 'commited':
+                        click.echo(f"Revision #{project.last_revision.number} committed successfully")
+                        return True
+                else:
+                    click.echo('No project revision found, exiting...')
+                    break
+            return True
+        
+        def _wait_stages_start_updating(project_name: str) -> ProjectSchema:
+            counter = 0
+            while True:
+                project = client.get_project(project_name)
+                updating = any([s.status in ['updating'] for s in project.stages])
+                ready_stages = all([s.status in ['ready', 'error'] for s in project.stages])
+                if updating:
+                    break
+                elif counter > 5 and ready_stages:
+                    #click.echo(f"Project '{project.name}' finished being updated in {time.time()-start:.2f}s")
+                    break
+                else:
+                    click.echo('Waiting for project to start updating...')
+                    pass
+                    time.sleep(client._lag)
+                    counter += 1
+            return project
+        
+        def _wait_builds_to_finish(project_name: str) -> bool:
+            messaged = False
+            project = client.get_project(project_name)
+            
+            if project.last_revision is not None \
+            and project.last_revision.spec.resources \
+            and project.last_revision.spec.resources.builds:                
+                click.echo('Revision expects one or more images to be built, this can take several minutes...')
+                time.sleep(10)
+                while True:
+                    updating_builds = []
+                    ready_builds = []
+                    errors = []
+                    project = client.get_project(project_name)
+                    for build in project.builds:
+                        if build.status in ['updating', 'pending']:
+                            updating_builds.append(build)
+                        elif build.status in ['error']:
+                            click.echo(f"Build '{build.name}' operation failed!")
+                            errors.append(build)
+                            ready_builds.append(build)
+                        elif build.status in ['success']:
+                            click.echo(f"Build '{build.name}' operation succeeded!")
+                            ready_builds.append(build)
+
+                    if errors:
+                        click.echo(f"Project '{project.name}' failed to build images! Exiting...")
+                        return False
+                    elif updating_builds and not messaged:
+                        click.echo('Waiting for image-builds to finish, this can take several minutes...')
+                        messaged = True
+                        continue
+                    if len(ready_builds) == len(project.builds):
+                        click.echo('All builds are finished!')
+                        break
+                    time.sleep(client._lag)
+                    project = client.get_project(project_name)
+                
+            return True
+        
+        def _wait_stages_finish_updating(project_name: str) -> ProjectSchema:
+            counter = 0
+            click.echo('Waiting for all stages to finish updating...')
+            while True:
+                project = client.get_project(project_name)
+                updating = any([s.status in ['building'] for s in project.stages])
+                all_finished = all([s.status in ['ready', 'error'] for s in project.stages])
+                if updating:
+                    time.sleep(client._lag)
+                    continue
+                elif all_finished:
+                    click.echo(f"Project '{project.name}' finished being updated in {time.time()-start:.2f}s")
+                    break
+                else:
+                    time.sleep(client._lag)
+                    counter += 1
+            return project
+
+        
         project_spec = client.load_spec(Path(str(specfile)))
         if name:
             project_spec.name = name
@@ -78,8 +178,31 @@ def deploy(
             project_spec.user_ref = UserRef(org)
         if user:
             project_spec.member_ref = user
-        project = client.deploy_project(project_spec)
-    click.echo(f'Project created or updated successfully: {project.name}')
+
+        user_org = project_spec.user_ref or ctx.obj.token.active_org
+        user_email = project_spec.member_ref or ctx.obj.token.email
+        try: project = client.get_project(project_spec.name)
+        except: project = None
+        if project is not None:
+            click.echo(f"Updating existing DPM Project:")
+        else:
+            click.echo(f"Deploying new DPM Project:")
+        click.echo(f'  Name: {project_spec.name}')
+        click.echo(f'  Org.: {user_org}')
+        click.echo(f'  User: {user_email}')
+        click.echo()
+        click.echo('Safe to Ctrl+C at any time...')
+        click.echo()
+        client.deploy_project(project_spec)
+        project = client.get_project(project_spec.name)
+        if project.last_revision is not None:
+            click.echo(f"Revision #{project.last_revision.number} created successfully!")
+            if wait:
+                committed = _wait_project_commit(project.name)
+                if committed:
+                    _wait_stages_start_updating(project.name)
+                    _wait_builds_to_finish(project.name)
+                    _wait_stages_finish_updating(project.name)        
 
 @list_.command()
 @click.pass_context

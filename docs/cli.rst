@@ -10,12 +10,59 @@ Top level commands
 .. command-output:: oceanum --help
 
 
+Auth commands
+------------------
+
+.. command-output:: oceanum auth --help
+
 Datamesh commands
 -----------------
-(not implmemented yet)  
 
 .. command-output:: oceanum datamesh --help
 
+List Datasources
+
+.. command-output:: oceanum datamesh list datasources --help
+
+Deploy-manager commands
+-----------------------
+
+.. command-output:: oceanum dpm --help
+
+Project commands
+================
+
+Validate project specification
+
+.. command-output:: oceanum dpm validate --help
+
+Create or update a project specification
+
+.. command-output:: oceanum dpm deploy --help
+
+Descbribe project status and resources
+
+.. command-output:: oceanum dpm describe project --help
+
+List project specifications
+
+.. command-output:: oceanum dpm list project --help
+
+Delete project
+
+.. command-output:: oceanum dpm delete project --help
+
+
+Route commands
+==============
+
+List services and apps routes
+
+.. command-output:: oceanum dpm list routes --help
+
+Upload route thumbnail
+
+....
 
 Storage commands
 ----------------

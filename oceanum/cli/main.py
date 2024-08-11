@@ -6,7 +6,7 @@ import click
 from .models import ContextObject, TokenResponse, Auth0Config
 
 @click.group()
-@click.option('--domain', help='Domain to use', default='oceanum.tech')
+@click.option('--domain', help='Platform domain to use', default='oceanum.tech')
 @click.pass_context
 def main(ctx: click.Context, domain:str):
     token = TokenResponse.load()
@@ -22,4 +22,3 @@ def main(ctx: click.Context, domain:str):
         )
     ctx.obj = ContextObject(domain=domain, token=token, auth0=auth0_config)
     click.help_option('-h', '--help')
-    click.echo(f'Using domain: {domain}')
