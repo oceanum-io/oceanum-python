@@ -1,4 +1,5 @@
 import time
+import urllib.parse
 
 import click
 import requests
@@ -10,8 +11,9 @@ from .models import DeviceCodeResponse, TokenResponse, Auth0Config
 
 
 class Auth0Client:
-    def __init__(self, config: Auth0Config):
-        self.config = config
+    def __init__(self, ctx: click.Context) -> None:
+        self.config = ctx.obj.auth0
+        self.ctx = ctx
 
     def _request(self, method, endpoint, **kwargs) -> requests.Response:
         url = f'https://{self.config.domain}/' + endpoint
@@ -25,7 +27,7 @@ class Auth0Client:
     def get_device_code(self) -> DeviceCodeResponse:
         data = {
             'client_id': self.config.client_id,
-            'scope': 'offline_access'
+            'scope': 'offline_access',
         }
         response = self._request('POST', 'oauth/device/code', data=data)
         device_code = DeviceCodeResponse(**response.json())
@@ -38,7 +40,7 @@ class Auth0Client:
             'device_code': device_code
         }
         response = self._request('POST', 'oauth/token', data=data)
-        return TokenResponse(**response.json())
+        return TokenResponse(domain=self.ctx.obj.domain, **response.json())
     
     def refresh_token(self, token: TokenResponse) -> TokenResponse:
         if token.refresh_token is None:
@@ -49,7 +51,7 @@ class Auth0Client:
             'refresh_token': token.refresh_token
         }
         response = self._request('POST', 'oauth/token', data=data)
-        return TokenResponse(**response.json())
+        return TokenResponse(domain=self.ctx.obj.domain, **response.json())
     
     def wait_for_confirmation(self, device_code: DeviceCodeResponse) -> TokenResponse:
         t0 = time.time()
@@ -76,7 +78,7 @@ def login_required(func):
             raise Exception('You need to login first!')
         elif ctx.obj.token.is_expired:
             click.echo('Refreshing access token...')
-            token = Auth0Client(config=ctx.obj.auth0).refresh_token(ctx.obj.token)
+            token = Auth0Client(ctx=ctx).refresh_token(ctx.obj.token)
             token.save()
             ctx.obj.token = token
         return ctx.invoke(func, *args, **kwargs)
@@ -86,7 +88,7 @@ def login_required(func):
 @click.pass_context
 def login(ctx: click.Context):
     click.echo('Logging in...')
-    client = Auth0Client(ctx.obj.auth0)
+    client = Auth0Client(ctx=ctx)
     device_code = client.get_device_code()
     click.echo(f'Please visit {device_code.verification_uri_complete} and confirm the code: {device_code.user_code}')
     client.wait_for_confirmation(device_code)

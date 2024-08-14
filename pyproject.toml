@@ -32,6 +32,7 @@ requires-python = ">=3.8"
 dependencies = [
   "aiohttp",
   "click",
+  "dask",
   "decorator",
   "fsspec",
   "geojson-pydantic",
@@ -40,12 +41,14 @@ dependencies = [
   "numpy",
   "orjson",
   "pandas",
+  "platformdirs",
   "pyarrow",
+  "pydantic[email]",
   "requests",
   "shapely",
+  "tabulate",
   "xarray",
   "zarr",
-  "dask"
 ]
 dynamic = ["version"]
 

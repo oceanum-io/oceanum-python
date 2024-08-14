@@ -44,17 +44,21 @@ def list_():
 def describe():
     pass
 
-@dpm.command()
+@dpm.group()
+def delete():
+    pass
+
+@dpm.command(name='validate')
 @click.argument('specfile', type=click.Path(exists=True))
 @click.pass_context
 @login_required
-def validate(ctx: click.Context, specfile: click.Path):
+def validate_project(ctx: click.Context, specfile: click.Path):
     click.echo('Validating DPM Project Spec...')
     with DpmContextedClient(ctx) as client:
         client.validate(Path(str(specfile)))
     click.echo('Project spec is valid!')
 
-@dpm.command()
+@dpm.command(name='deploy')
 @click.option('--name', help='Overwrite project name from suplied specfile', required=False, type=str)
 @click.option('--org', help='Overwrite organization name', required=False, type=str)
 @click.option('--user', help='Overwrite user email', required=False, type=str)
@@ -62,7 +66,7 @@ def validate(ctx: click.Context, specfile: click.Path):
 @click.argument('specfile', type=click.Path(exists=True))
 @click.pass_context
 @login_required
-def deploy(
+def deploy_project(
     ctx: click.Context, 
     specfile: click.Path, 
     name: str|None, 
@@ -204,14 +208,25 @@ def deploy(
                     _wait_builds_to_finish(project.name)
                     _wait_stages_finish_updating(project.name)        
 
-@list_.command()
+
+@delete.command(name='project')
+@click.argument('project_name', type=str)
+@click.pass_context
+@login_required
+def delete_project(ctx: click.Context, project_name: str):
+    click.echo(f'Deleting project {project_name}...')
+    with DpmContextedClient(ctx) as client:
+        client.delete_project(project_name)
+    click.echo(f'Project {project_name} deleted!')
+
+@list_.command(name='projects')
 @click.pass_context
 @click.option('--search', help='Search by project name or description', default=None, type=str)
 @click.option('--org', help='filter by Organization name', default=None, type=str)
 @click.option('--user', help='filter by User email', default=None, type=str)
 @click.option('--status', help='filter by Project status', default=None, type=str)
 @login_required
-def projects(ctx: click.Context, search: str|None, org: str|None, user: str|None, status: str|None):
+def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str|None, status: str|None):
     click.echo('Fetching DPM projects...')
     with DpmContextedClient(ctx) as client:
         filters = {
@@ -239,13 +254,13 @@ def projects(ctx: click.Context, search: str|None, org: str|None, user: str|None
             headers=['Name', 'Org', 'User', 'Status']
         ))
 
-@describe.command()
+@describe.command(name='project')
 @click.option('--show-spec', help='Show project spec', default=False, type=bool, is_flag=True)
 @click.option('--only-spec', help='Show only project spec', default=False, type=bool, is_flag=True)
 @click.argument('project_name', type=str)
 @click.pass_context
 @login_required
-def project(ctx: click.Context, project_name: str, show_spec: bool=False, only_spec: bool=False):
+def describe_project(ctx: click.Context, project_name: str, show_spec: bool=False, only_spec: bool=False):
     with DpmContextedClient(ctx) as client:
         project = client.get_project(project_name)
     if not only_spec:
@@ -335,15 +350,15 @@ def project(ctx: click.Context, project_name: str, show_spec: bool=False, only_s
             exclude_none=True, exclude_unset=True, by_alias=True, mode='json'
         )))
 
-@list_.command()
+@list_.command(name='users')
 @click.pass_context
 @login_required
-def users(ctx: click.Context):
+def list_users(ctx: click.Context):
     with DpmContextedClient(ctx) as client:
         for user in client.get_users():
             click.echo(pprint.pprint(user.model_dump()))
 
-@list_.command()
+@list_.command(name='routes')
 @click.pass_context
 @click.option('--search', help='Search by route name, project_name or project description', 
               default=None, type=str)
@@ -355,7 +370,7 @@ def users(ctx: click.Context):
 @click.option('--apps', help='Show only App routes', default=None, type=bool, is_flag=True)
 @click.option('--services', help='Show only Service routes', default=None, type=bool, is_flag=True)
 @login_required
-def routes(ctx: click.Context,
+def list_routes(ctx: click.Context,
     search: str|None,
     org: str|None,
     stage: str|None,

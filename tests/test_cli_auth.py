@@ -20,7 +20,8 @@ def test_auth_login():
     token = models.TokenResponse(
         access_token='123',
         expires_in=3600,
-        token_type='Bearer'
+        token_type='Bearer',
+        domain='oceanum.test'
     )
     with patch.object(auth.Auth0Client, 'get_token') as mock_save:
         mock_save.return_value = token
