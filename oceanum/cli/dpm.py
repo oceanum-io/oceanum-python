@@ -8,11 +8,14 @@ import pprint
 
 from tabulate import tabulate
 
+
+from ..dpm.client import DPMHttpClient
+from ..dpm.models import UserRef, ProjectSchema
+
 from .main import main
 from .auth import login_required
 from .models import TokenResponse
-from ..dpm.client import DPMHttpClient
-from ..dpm.models import UserRef, ProjectSchema
+from .renderer import Renderer, format_option
 
 class DpmContextedClient:
     def __init__(self, ctx: click.Context) -> None:
@@ -264,92 +267,95 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
 def describe_project(ctx: click.Context, project_name: str, show_spec: bool=False, only_spec: bool=False):
     with DpmContextedClient(ctx) as client:
         project = client.get_project(project_name)
-    if not only_spec:
-        click.echo()
-        click.echo(f"Describing project '{project_name}'...")
-        click.echo()
-        output = [
-            ['Name', project.name],
-            ['Org', project.org],
-            ['User', project.last_revision.spec.member_ref],
-            ['Status', project.status],
-            ['Created', project.created_at],
-        ]
-        if project.last_revision is not None:
-            output.append(
-                ['Last Revision', [
-                    ['Number', project.last_revision.number],
-                    ['Created', project.last_revision.created_at],
-                    ['User', project.last_revision.spec.member_ref],
-                    ['Status', project.last_revision.status],
-                ]]
-            )
-        if project.stages:
-            stages = []
-            for stage in project.stages:
-                stages.extend([
-                    ['Name', stage.name],
-                    ['Status', stage.status],
-                    ['Message', stage.error_message],
-                    ['Updated', stage.updated_at],
-                    
-                ])
-            output.append(['Stages', stages])
-        if project.builds:
-            builds = []
-            for build in project.builds:
-                build_output = [
-                    ['Name', build.name],
-                    ['Status', build.status],
-                    ['Stage', build.stage],
-                    ['Workflow', build.workflow_ref],
-                    ['Updated', build.updated_at],
-                ]
-                if build.image_digest is not None:
-                    image_digest = getattr(build.image_digest, 'root', None)
-                    build_output.append(['Image Digest', image_digest])
-                if build.commit_sha is not None:
-                    commit_sha = getattr(build.commit_sha, 'root', None)
-                    build_output.append(['Source Commit', commit_sha])
-                builds.extend(build_output)
-            output.append(['Builds', builds])
-            
-        if project.routes:
-            routes = []
-            for route in project.routes:
-                route_output =  [
-                    ['Name', route.name],
-                    ['Status', route.status],
-                    ['URL', route.url],
-                ] 
-                if route.custom_domains:
-                    route_output.append([
-                        'Custom Domains', os.linesep.join(route.custom_domains)
-                    ])
-                routes.extend(route_output)
-            output.append(['Routes', routes])
-
-        def print_line(output: list, indent: int = 2):
-            for l,line in enumerate(output):
-                if isinstance(line[1], list):
-                    click.echo(f"{' ' * indent}{line[0]}:")
-                    print_line(line[1], indent=indent + 2)
-                else:
-                    prefix = ((' '*(indent-2))+'- ') if indent > 2 and l==0 else (' '* indent)
-                    click.echo(f"{prefix}{line[0]}: {line[1]}")
-        print_line(output)
-
-    if show_spec or only_spec:
+    if project.last_revision is not None:
         if not only_spec:
             click.echo()
-            click.echo('Project Spec:')
-            click.echo('---')
-        # clear stage status, this will be details above
-        for stage in project.last_revision.spec.resources.stages:
-            stage.status = None
-        click.echo(yaml.dump(project.last_revision.spec.model_dump(
-            exclude_none=True, exclude_unset=True, by_alias=True, mode='json'
-        )))
+            click.echo(f"Describing project '{project_name}'...")
+            click.echo()
+            output = [
+                ['Name', project.name],
+                ['Org', project.org],
+                ['User', project.last_revision.spec.member_ref],
+                ['Status', project.status],
+                ['Created', project.created_at],
+            ]
+            if project.last_revision is not None:
+                output.append(
+                    ['Last Revision', [
+                        ['Number', project.last_revision.number],
+                        ['Created', project.last_revision.created_at],
+                        ['User', project.last_revision.spec.member_ref],
+                        ['Status', project.last_revision.status],
+                    ]]
+                )
+            if project.stages:
+                stages = []
+                for stage in project.stages:
+                    stages.extend([
+                        ['Name', stage.name],
+                        ['Status', stage.status],
+                        ['Message', stage.error_message],
+                        ['Updated', stage.updated_at],
+                        
+                    ])
+                output.append(['Stages', stages])
+            if project.builds:
+                builds = []
+                for build in project.builds:
+                    build_output = [
+                        ['Name', build.name],
+                        ['Status', build.status],
+                        ['Stage', build.stage],
+                        ['Workflow', build.workflow_ref],
+                        ['Updated', build.updated_at],
+                    ]
+                    if build.image_digest is not None:
+                        image_digest = getattr(build.image_digest, 'root', None)
+                        build_output.append(['Image Digest', image_digest])
+                    if build.commit_sha is not None:
+                        commit_sha = getattr(build.commit_sha, 'root', None)
+                        build_output.append(['Source Commit', commit_sha])
+                    builds.extend(build_output)
+                output.append(['Builds', builds])
+                
+            if project.routes:
+                routes = []
+                for route in project.routes:
+                    route_output =  [
+                        ['Name', route.name],
+                        ['Status', route.status],
+                        ['URL', route.url],
+                    ] 
+                    if route.custom_domains:
+                        route_output.append([
+                            'Custom Domains', os.linesep.join(route.custom_domains)
+                        ])
+                    routes.extend(route_output)
+                output.append(['Routes', routes])
+
+            def print_line(output: list, indent: int = 2):
+                for l,line in enumerate(output):
+                    if isinstance(line[1], list):
+                        click.echo(f"{' ' * indent}{line[0]}:")
+                        print_line(line[1], indent=indent + 2)
+                    else:
+                        prefix = ((' '*(indent-2))+'- ') if indent > 2 and l==0 else (' '* indent)
+                        click.echo(f"{prefix}{line[0]}: {line[1]}")
+            print_line(output)
+
+        if show_spec or only_spec:
+            if not only_spec:
+                click.echo()
+                click.echo('Project Spec:')
+                click.echo('---')
+            # clear stage status, this will be details above
+            for stage in project.last_revision.spec.resources.stages:
+                stage.status = None
+            click.echo(yaml.dump(project.last_revision.spec.model_dump(
+                exclude_none=True, exclude_unset=True, by_alias=True, mode='json'
+            )))
+    else:
+        click.echo(f"Project '{project_name}' does not have any revisions!")
 
 @list_.command(name='users')
 @click.pass_context
@@ -370,6 +376,7 @@ def list_users(ctx: click.Context):
 @click.option('--open-access', help='Show only open-access routes', default=None, type=bool, is_flag=True)
 @click.option('--apps', help='Show only App routes', default=None, type=bool, is_flag=True)
 @click.option('--services', help='Show only Service routes', default=None, type=bool, is_flag=True)
+@format_option
 @login_required
 def list_routes(ctx: click.Context,
     search: str|None,
@@ -380,6 +387,7 @@ def list_routes(ctx: click.Context,
     project: bool|None,
     apps: bool|None,
     services: bool|None,
+    output: str='table',
     ):
     routes_table = []
     filters = {
@@ -393,21 +401,18 @@ def list_routes(ctx: click.Context,
         'search': search
     } 
     with DpmContextedClient(ctx) as client:
-        for route in client.list_routes(**{
+        fields = {
+            'Name': '$.name',
+            'Project' : '$.project',
+            'Stage': '$.stage',
+            'Status': '$.status',
+            'URL': '$.url',
+        }
+        routes =  client.list_routes(**{
             k: v for k, v in filters.items() if v is not None
-        }):
-            custom_domains = [f'https://{d}' for d in route.custom_domains]
-            route_urls = [route.url] if route.url is not None else []
-            routes_table.append([
-                route.name,
-                route.project,
-                route.stage,
-                route.status,
-                os.linesep.join(custom_domains or route_urls)
-            ])            
-    if not routes_table:
-        click.echo('No routes found!')
-    else:
-        click.echo(tabulate(routes_table,
-            headers=['Name', 'Project', 'Stage', 'Status', 'URL']
-        ))
+        })
+        if not routes:
+            click.echo('No routes found!')
+        else:
+            click.echo(Renderer(data=routes, fields=fields).render(output_format=output))
+        
