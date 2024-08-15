@@ -244,12 +244,13 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
     else:
         projects_table = []
         for project in projects:
-            projects_table.append([
-                project.name, 
-                project.org, 
-                project.last_revision.spec.member_ref, 
-                project.status
-            ])
+            if project.last_revision is not None:
+                projects_table.append([
+                    project.name, 
+                    project.org, 
+                    project.last_revision.spec.member_ref, 
+                    project.status
+                ])
         click.echo(tabulate(projects_table,
             headers=['Name', 'Org', 'User', 'Status']
         ))
