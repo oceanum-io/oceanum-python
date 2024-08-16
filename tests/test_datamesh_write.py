@@ -6,6 +6,7 @@ import os
 import pytest
 import pandas
 import geopandas
+import pyproj
 import xarray
 import numpy
 import dask.dataframe
@@ -90,6 +91,28 @@ def test_write_dataset_guess(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
+def test_write_dataset_crs(conn, dataset):
+    datasource_id = "test-write-dataset-crs"
+    dataset_2193 = dataset.copy().rename(
+        {"longitude": "easting", "latitude": "northing"}
+    )
+    x, y = pyproj.Transformer.from_crs(
+        pyproj.CRS("EPSG:4326"), pyproj.CRS("EPSG:2193"), always_xy=True
+    ).transform(dataset["longitude"], dataset["latitude"])
+    dataset_2193["easting"] = x
+    dataset_2193["northing"] = y
+    conn.write_datasource(
+        datasource_id,
+        dataset_2193,
+        overwrite=True,
+        coordinates={"t": "time", "x": "easting", "y": "northing"},
+        crs=2193,
+    )
+    dsrc = conn.get_datasource(datasource_id)
+    assert dsrc.geom.bounds[0] == 173
+    conn.delete_datasource(datasource_id)
+
+
 def test_bad_coordinates_fail(conn, dataset):
     datasource_id = "test-write-dataset"
     with pytest.raises(DatameshWriteError):
@@ -160,4 +183,22 @@ def test_update_metadata(conn, dataframe):
     )
     ds = conn.get_datasource(datasource_id)
     assert ds.name == "new name"
+    conn.delete_datasource(datasource_id)
+
+
+def test_write_metadata_with_crs(conn, dataframe):
+    datasource_id = "test-write-dataframe"
+    conn.write_datasource(
+        datasource_id,
+        None,
+        name=datasource_id,
+        coordinates={},
+        driver="null",
+        geometry={"type": "Point", "coordinates": [1686592, 5682747]},
+        tstart="2020-01-01T00:00:00Z",
+        crs=2193,
+    )
+    ds = conn.get_datasource(datasource_id)
+    assert ds.dataschema.attrs["crs"] == 2193
+    assert abs(ds.geom.x - 174) < 1e-4
     conn.delete_datasource(datasource_id)

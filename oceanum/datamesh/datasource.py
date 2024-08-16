@@ -3,6 +3,7 @@ import datetime
 import re
 import pandas
 import geopandas
+import pyproj
 import xarray
 import asyncio
 import shapely
@@ -159,8 +160,10 @@ class Coordinates(Enum):
 COORD_MAPPING = {
     "lon": Coordinates.Easting,
     "x": Coordinates.Easting,
+    "eas": Coordinates.Easting,
     "lat": Coordinates.Northing,
     "y": Coordinates.Northing,
+    "nor": Coordinates.Northing,
     "dep": Coordinates.Vertical,
     "lev": Coordinates.Vertical,
     "z": Coordinates.Vertical,
@@ -287,6 +290,7 @@ class Datasource(BaseModel):
         default={},
     )
     driver: str = Field(frozen=True)
+
     _exists: bool = PrivateAttr(default=False)
     _detail: bool = PrivateAttr(default=False)
     # TODO[pydantic]: The following keys were removed: `json_encoders`.
@@ -344,6 +348,7 @@ class Datasource(BaseModel):
                 data if isinstance(data, xarray.Dataset) else data.head(1).to_xarray()
             )
             self.dataschema = _data.to_dict(data=False)
+
         if len(self.coordinates) == 0:  # Try to guess the coordinate mapping
             coords = {}
             for c in data.coords:
@@ -360,8 +365,6 @@ class Datasource(BaseModel):
                     max(data[self.coordinates["x"]]),
                     max(data[self.coordinates["y"]]),
                 )
-        if not self.name:
-            self.name = re.sub("[_-]", " ", self.id.capitalize())
         if not self.tstart:
             if "t" in self.coordinates:
                 self.tstart = to_datetime(data[self.coordinates["t"]].min())
@@ -385,6 +388,21 @@ class Datasource(BaseModel):
             ):
                 badcoords.append(self.coordinates[c])
         return badcoords if len(badcoords) > 0 else None
+
+    def _set_crs(self, _crs, overwrite=False):
+        crs = pyproj.CRS(_crs)
+        if crs.to_epsg() != "4326":
+            self.dataschema.attrs["crs"] = crs.to_epsg()
+            if (
+                overwrite
+            ):  # Only transform the geometry if we are overwriting the datasource
+                self.geom = shapely.ops.transform(
+                    lambda x, y: pyproj.Transformer.from_crs(
+                        crs, pyproj.CRS("EPSG:4326"), always_xy=True
+                    ).transform(x, y),
+                    self.geom,
+                )
+            return crs
 
 
 def _datasource_driver(data):

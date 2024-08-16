@@ -485,11 +485,11 @@ class Connector(object):
         datasource_id,
         data,
         geometry=None,  # Deprecating this option so property is consistent with the rest of the code
-        coordinates=None,
         geom=None,
         append=None,
         overwrite=False,
         index=None,
+        crs=None,
         **properties,
     ):
         """Write a datasource to datamesh from the work environment
@@ -497,10 +497,11 @@ class Connector(object):
         Args:
             datasource_id (string): Unique datasource id
             data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`, None]):  The data to be written to datamesh. If data is None, just update metadata properties.
-            geometry (:obj:`oceanum.datasource.Geometry`, optional): GeoJSON geometry of the datasource
+            geom (:obj:`oceanum.datasource.Geometry`, optional): GeoJSON geometry of the datasource in WGS84 if crs=None else in the specified crs. If not provided the geometry will be infered from the data if possible. default=None
             coordinates (Dict[:obj:`oceanum.datasource.Coordinates`,str], optional): Coordinate mapping for xarray datasets. default=None
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
+            crs (Union[string,int], optional): Coordinate reference system for the datasource if not WGS84. If overwrite is True, this will update the geom property of the datasource to WGS84 before registering. default=None
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource`
 
         Returns:
@@ -510,10 +511,38 @@ class Connector(object):
             raise DatameshWriteError(
                 "Datasource ID must only contain lowercase letters, numbers, dashes and underscores"
             )
+
+        # Create the initial datasource object and check properties
+        try:
+            geom = geom or geometry or None
+            name = properties.pop("name", None)
+            driver = properties.pop("driver", "_null")
+            _ds = Datasource(
+                id=datasource_id,
+                name=name or re.sub("[_-]", " ", datasource_id.capitalize()),
+                geom=geom,
+                driver=driver,
+                **properties,
+            )
+        except Exception as e:
+            raise DatameshWriteError(
+                f"Cannot create datasource: {str(e)}. Check that the properties are valid"
+            )
+
+        # Try to get an existing datasoure with the same id
         try:
             ds = self.get_datasource(datasource_id)
         except DatameshConnectError as e:
             overwrite = True
+            ds = _ds
+
+        if ds._exists and overwrite:
+            try:
+                self._delete(datasource_id)
+            except Exception as e:
+                raise DatameshWriteError(f"Cannot delete existing datasource")
+
+        # Write data to datasource
         if data is not None:
             try:
                 if isinstance(data, xarray.Dataset):
@@ -556,29 +585,33 @@ class Connector(object):
             except Exception as e:
                 raise DatameshWriteError(e)
         elif overwrite:
-            ds = Datasource(id=datasource_id, geom=geometry, **properties)
-        try:
-            for key in properties:
-                if key not in ["driver", "schema"]:
-                    setattr(ds, key, properties[key])
-            if coordinates:
-                ds.coordinates = coordinates
-            if geom or geometry:
-                ds.geom = geom or geometry
-            if data is not None:
-                ds._guess_props(data)
-            badcoords = ds._check_coordinates()
-            if badcoords:
-                raise DatameshWriteError(f"Coordinates {badcoords} not found in data")
-            if not ds.geom:
-                warnings.warn(
-                    "Geometry not set for datasource, will have a default geometry of Point(0,0)"
-                )
-        except:
-            raise DatameshWriteError(
-                "Cannot set properties for datasource, check that the properties are valid"
+            ds = _ds
+
+        # Update the datasource properties
+        for key in properties:
+            if key not in ["driver", "schema", "crs"]:
+                setattr(ds, key, properties[key])
+        if name:
+            ds.name = name
+        if geom:
+            ds.geom = geom
+
+        # Do some property sniffing for missing properties
+        if data is not None:
+            ds._guess_props(data)
+
+        # Do some final checks and conversions
+        if crs:
+            ds._set_crs(crs, overwrite)
+        badcoords = ds._check_coordinates()
+        if badcoords:
+            raise DatameshWriteError(f"Coordinates {badcoords} not found in data")
+        if not ds.geom:
+            warnings.warn(
+                "Geometry not set for datasource, will have a default geometry of Point(0,0)"
             )
 
+        # Write the metadata
         try:
             self._metadata_write(ds)
         except Exception as e:
