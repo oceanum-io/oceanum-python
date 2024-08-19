@@ -13,6 +13,7 @@ import xarray
 import geopandas
 import pandas
 import shapely
+import pyproj
 import dask
 import dask.dataframe
 import warnings
@@ -501,7 +502,7 @@ class Connector(object):
             coordinates (Dict[:obj:`oceanum.datasource.Coordinates`,str], optional): Coordinate mapping for xarray datasets. default=None
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
-            crs (Union[string,int], optional): Coordinate reference system for the datasource if not WGS84. If overwrite is True, this will update the geom property of the datasource to WGS84 before registering. default=None
+            crs (Union[string,int], optional): Coordinate reference system for the datasource if not WGS84. The geom argument is also assumed to be in this CRS. default=None
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource`
 
         Returns:
@@ -515,6 +516,15 @@ class Connector(object):
         # Create the initial datasource object and check properties
         try:
             geom = geom or geometry or None
+            if crs:
+                crs = pyproj.CRS(crs)
+                if geom:
+                    geom = shapely.ops.transform(
+                        pyproj.Transformer.from_crs(
+                            crs, 4326, always_xy=True
+                        ).transform,
+                        shapely.geometry.shape(geom),
+                    )
             name = properties.pop("name", None)
             driver = properties.pop("driver", "_null")
             _ds = Datasource(
@@ -598,11 +608,11 @@ class Connector(object):
 
         # Do some property sniffing for missing properties
         if data is not None:
-            ds._guess_props(data)
+            ds._guess_props(data, crs)
 
         # Do some final checks and conversions
         if crs:
-            ds._set_crs(crs, overwrite)
+            ds._set_crs(crs)
         badcoords = ds._check_coordinates()
         if badcoords:
             raise DatameshWriteError(f"Coordinates {badcoords} not found in data")

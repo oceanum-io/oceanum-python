@@ -89,6 +89,8 @@ class _GeometryAnnotation:
                     geometry = shapely.geometry.shape(geometry)
                 except:
                     "Not a valid GeoJSON dictionary"
+            if not geometry.within(shapely.geometry.box(-180, -90, 360, 90)):
+                raise ValueError("Geometry must be in WGS84 coordinates")
             if (
                 isinstance(geometry, shapely.geometry.Point)
                 or isinstance(geometry, shapely.geometry.MultiPoint)
@@ -340,7 +342,7 @@ class Datasource(BaseModel):
     def geometry(self):
         return self.geom
 
-    def _guess_props(self, data):
+    def _guess_props(self, data, crs=None):
         if isinstance(data, pandas.DataFrame):
             data = data.reset_index()
         if self.dataschema.dims == {}:
@@ -365,6 +367,13 @@ class Datasource(BaseModel):
                     max(data[self.coordinates["x"]]),
                     max(data[self.coordinates["y"]]),
                 )
+                if crs:
+                    self.geom = shapely.ops.transform(
+                        pyproj.Transformer.from_crs(
+                            crs, 4326, always_xy=True
+                        ).transform,
+                        self.geom,
+                    )
         if not self.tstart:
             if "t" in self.coordinates:
                 self.tstart = to_datetime(data[self.coordinates["t"]].min())
@@ -389,19 +398,9 @@ class Datasource(BaseModel):
                 badcoords.append(self.coordinates[c])
         return badcoords if len(badcoords) > 0 else None
 
-    def _set_crs(self, _crs, overwrite=False):
-        crs = pyproj.CRS(_crs)
+    def _set_crs(self, crs):
         if crs.to_epsg() != "4326":
             self.dataschema.attrs["crs"] = crs.to_epsg()
-            if (
-                overwrite
-            ):  # Only transform the geometry if we are overwriting the datasource
-                self.geom = shapely.ops.transform(
-                    lambda x, y: pyproj.Transformer.from_crs(
-                        crs, pyproj.CRS("EPSG:4326"), always_xy=True
-                    ).transform(x, y),
-                    self.geom,
-                )
             return crs
 
 

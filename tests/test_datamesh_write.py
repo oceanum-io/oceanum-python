@@ -202,3 +202,17 @@ def test_write_metadata_with_crs(conn, dataframe):
     assert ds.dataschema.attrs["crs"] == 2193
     assert abs(ds.geom.x - 174) < 1e-4
     conn.delete_datasource(datasource_id)
+
+
+def test_write_metadata_with_bad_crs(conn, dataframe):
+    datasource_id = "test-write-dataframe"
+    with pytest.raises(DatameshWriteError):
+        conn.write_datasource(
+            datasource_id,
+            None,
+            name=datasource_id,
+            coordinates={},
+            driver="null",
+            geometry={"type": "Point", "coordinates": [1686592, 5682747]},
+            tstart="2020-01-01T00:00:00Z",
+        )
