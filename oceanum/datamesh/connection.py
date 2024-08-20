@@ -580,7 +580,7 @@ class Connector(object):
                         append = True
                         overwrite = False
                     ds.driver_args["index"] = data.index.name
-                else:
+                elif isinstance(data, pandas.DataFrame):
                     with tempFile("w+b") as f:
                         data.to_parquet(f, compression="gzip", index="True")
                         f.seek(0)
@@ -591,6 +591,10 @@ class Connector(object):
                             append,
                             overwrite,
                         )
+                else:
+                    raise DatameshWriteError(
+                        "Data must be a pandas.DataFrame, geopandas.GeoDataFrame or xarray.Dataset"
+                    )
                 ds._exists = True
             except Exception as e:
                 raise DatameshWriteError(e)

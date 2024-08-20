@@ -8,6 +8,7 @@ import pandas
 import geopandas
 import pyproj
 import xarray
+import rioxarray
 import numpy
 import dask.dataframe
 
@@ -39,6 +40,12 @@ def dataframe():
 @pytest.fixture
 def dataset():
     ds = xarray.open_dataset(os.path.join(HERE, "data", "grid_data_1.nc"))
+    return ds
+
+
+@pytest.fixture
+def geotiff():
+    ds = xarray.open_dataset(os.path.join(HERE, "data", "raster_data_1.tif"))
     return ds
 
 
@@ -216,3 +223,11 @@ def test_write_metadata_with_bad_crs(conn, dataframe):
             geometry={"type": "Point", "coordinates": [1686592, 5682747]},
             tstart="2020-01-01T00:00:00Z",
         )
+
+
+def test_write_raster(conn, geotiff):
+    datasource_id = "test-write-raster"
+    conn.write_datasource(datasource_id, geotiff, overwrite=True)
+    ds = conn.load_datasource(datasource_id)
+    assert ds["band"]
+    conn.delete_datasource(datasource_id)

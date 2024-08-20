@@ -350,7 +350,8 @@ class Datasource(BaseModel):
                 data if isinstance(data, xarray.Dataset) else data.head(1).to_xarray()
             )
             self.dataschema = _data.to_dict(data=False)
-
+        if isinstance(data, xarray.Dataset) and data.rio.crs:
+            crs = crs or data.rio.crs
         if len(self.coordinates) == 0:  # Try to guess the coordinate mapping
             coords = {}
             for c in data.coords:
