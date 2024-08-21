@@ -3,6 +3,7 @@ import datetime
 import re
 import pandas
 import geopandas
+import pyproj
 import xarray
 import asyncio
 import shapely
@@ -88,6 +89,8 @@ class _GeometryAnnotation:
                     geometry = shapely.geometry.shape(geometry)
                 except:
                     "Not a valid GeoJSON dictionary"
+            if not geometry.within(shapely.geometry.box(-180, -90, 360, 90)):
+                raise ValueError("Geometry must be in WGS84 coordinates")
             if (
                 isinstance(geometry, shapely.geometry.Point)
                 or isinstance(geometry, shapely.geometry.MultiPoint)
@@ -159,8 +162,10 @@ class Coordinates(Enum):
 COORD_MAPPING = {
     "lon": Coordinates.Easting,
     "x": Coordinates.Easting,
+    "eas": Coordinates.Easting,
     "lat": Coordinates.Northing,
     "y": Coordinates.Northing,
+    "nor": Coordinates.Northing,
     "dep": Coordinates.Vertical,
     "lev": Coordinates.Vertical,
     "z": Coordinates.Vertical,
@@ -287,6 +292,7 @@ class Datasource(BaseModel):
         default={},
     )
     driver: str = Field(frozen=True)
+
     _exists: bool = PrivateAttr(default=False)
     _detail: bool = PrivateAttr(default=False)
     # TODO[pydantic]: The following keys were removed: `json_encoders`.
@@ -336,7 +342,7 @@ class Datasource(BaseModel):
     def geometry(self):
         return self.geom
 
-    def _guess_props(self, data):
+    def _guess_props(self, data, crs=None):
         if isinstance(data, pandas.DataFrame):
             data = data.reset_index()
         if self.dataschema.dims == {}:
@@ -344,6 +350,8 @@ class Datasource(BaseModel):
                 data if isinstance(data, xarray.Dataset) else data.head(1).to_xarray()
             )
             self.dataschema = _data.to_dict(data=False)
+        if isinstance(data, xarray.Dataset) and data.rio.crs:
+            crs = crs or data.rio.crs
         if len(self.coordinates) == 0:  # Try to guess the coordinate mapping
             coords = {}
             for c in data.coords:
@@ -360,8 +368,13 @@ class Datasource(BaseModel):
                     max(data[self.coordinates["x"]]),
                     max(data[self.coordinates["y"]]),
                 )
-        if not self.name:
-            self.name = re.sub("[_-]", " ", self.id.capitalize())
+                if crs:
+                    self.geom = shapely.ops.transform(
+                        pyproj.Transformer.from_crs(
+                            crs, 4326, always_xy=True
+                        ).transform,
+                        self.geom,
+                    )
         if not self.tstart:
             if "t" in self.coordinates:
                 self.tstart = to_datetime(data[self.coordinates["t"]].min())
@@ -385,6 +398,11 @@ class Datasource(BaseModel):
             ):
                 badcoords.append(self.coordinates[c])
         return badcoords if len(badcoords) > 0 else None
+
+    def _set_crs(self, crs):
+        if crs.to_epsg() != "4326":
+            self.dataschema.attrs["crs"] = crs.to_epsg()
+            return crs
 
 
 def _datasource_driver(data):
