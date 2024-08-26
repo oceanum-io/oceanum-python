@@ -30,7 +30,7 @@ class Renderer:
     }
 
     def __init__(self, 
-        data: list[dict|Type[BaseModel]]|dict|Type[BaseModel], 
+        data: list[dict]|list[Type[BaseModel]]|dict|Type[BaseModel], 
         output: Literal['table', 'json', 'yaml'] = 'table',
         fields: dict[str, str] | None = None
     ) -> None:
@@ -38,7 +38,7 @@ class Renderer:
         self.parsed_data = self._init_data(data)
         self.fields = fields or self.default_fields
 
-    def _init_data(self, data: list[dict|Type[BaseModel]]|dict|Type[BaseModel]) -> list[dict]:
+    def _init_data(self, data: list[dict]|list[Type[BaseModel]]|dict|Type[BaseModel]) -> list[dict]:
         """
         Convert the input data to a list of dictionaries.
         """
@@ -66,7 +66,7 @@ class Renderer:
                     row.append(match.obj)
                 else:
                     row.append(None)
-                    print(f"WARNING: Could not find a data field for 'path'")
+                    print(f"WARNING: Could not find a data field for '{header}' at path '{path}'")
             table_data.append(row)
         return tabulate(table_data, headers=list((fields.keys())))
 

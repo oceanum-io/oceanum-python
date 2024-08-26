@@ -241,22 +241,18 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
         projects = client.list_projects(**{
             k: v for k, v in filters.items() if v is not None
         })
+
+    fields = {
+        'Name': '$.name',
+        'Org': '$.org',
+        'Last Author': '$.last_revision.spec.member_ref',
+        'Status': '$.status',
+    }
         
     if not projects:
         click.echo('No projects found!')
     else:
-        projects_table = []
-        for project in projects:
-            if project.last_revision is not None:
-                projects_table.append([
-                    project.name, 
-                    project.org, 
-                    project.last_revision.spec.member_ref, 
-                    project.status
-                ])
-        click.echo(tabulate(projects_table,
-            headers=['Name', 'Org', 'User', 'Status']
-        ))
+        click.echo(Renderer(data=projects, fields=fields).render(output_format='table'))
 
 @describe.command(name='project')
 @click.option('--show-spec', help='Show project spec', default=False, type=bool, is_flag=True)
@@ -362,8 +358,14 @@ def describe_project(ctx: click.Context, project_name: str, show_spec: bool=Fals
 @login_required
 def list_users(ctx: click.Context):
     with DpmContextedClient(ctx) as client:
-        for user in client.get_users():
-            click.echo(pprint.pprint(user.model_dump()))
+        fields = {
+            'Username': '$.username',
+            'Email': '$.email',
+            'Current Org': '$.current_org.name',
+        }
+        users = client.get_users()
+        click.echo(Renderer(data=users, fields=fields).render(output_format='table'))
+            
 
 @list_.command(name='routes')
 @click.pass_context

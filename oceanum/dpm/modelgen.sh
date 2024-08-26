@@ -1,7 +1,7 @@
 #!/bin/bash
-
+DPM_API_URL=${DPM_API_URL:-http://localhost:8000}
 datamodel-codegen \
-    --url "http://localhost:8000/api/openapi.json" \
+    --url "$DPM_API_URL/api/openapi.json" \
     --input-file-type=openapi \
     --output=models.py \
     --target-python-version=3.11 \
