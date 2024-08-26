@@ -1,6 +1,8 @@
 import os
 import time
-from typing import Literal
+from datetime import datetime
+from typing import Literal, Generator
+from pydantic import SecretStr, BaseModel, RootModel
 from pathlib import Path
 
 import yaml
@@ -8,6 +10,36 @@ import requests
 
 
 from . import models
+
+def dump_with_secrets(spec: models.ProjectSpec) -> dict:
+    def _reveal_secrets(payload: dict) -> dict:
+        for k, v in payload.items():
+            if isinstance(v, SecretStr):
+                payload[k] = v.get_secret_value()
+            elif isinstance(v, RootModel):
+                if isinstance(v.root, SecretStr):
+                    payload[k] = v.root.get_secret_value()
+            elif isinstance(v, dict):
+               payload[k] = _reveal_secrets(v)
+            elif isinstance(v, list):
+                for i, item in enumerate(v):
+                    if isinstance(item, SecretStr):
+                        v[i] = item.get_secret_value()
+                    elif isinstance(item, dict):
+                       _reveal_secrets(item)
+                payload[k] = v
+            elif isinstance(v, datetime):
+                payload[k] = v.isoformat()
+        return payload
+            
+    spec_dict = spec.model_dump(
+        exclude_none=True,
+        exclude_unset=True,
+        by_alias=True,
+        mode='python'
+    )
+    spec_dict = _reveal_secrets(spec_dict)
+    return spec_dict
 
 
 class DPMHttpClient:
@@ -50,12 +82,8 @@ class DPMHttpClient:
         return models.ProjectSpec(**spec_dict)
     
     def deploy_project(self, spec: models.ProjectSpec) -> models.ProjectSpec:
-        response = self._post('projects', json=spec.model_dump(
-            exclude_none=True,
-            exclude_unset=True,
-            by_alias=True,
-            mode='json'
-        ))
+        payload = dump_with_secrets(spec)
+        response = self._post('projects', json=payload)
         project = response.json()
         return models.ProjectSpec(**project)
     
