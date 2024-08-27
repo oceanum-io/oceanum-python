@@ -76,7 +76,8 @@ class DPMHttpClient:
     def _delete(self, endpoint, **kwargs) -> requests.Response:
         return self._request('DELETE', endpoint, **kwargs)
     
-    def load_spec(self, specfile: Path) -> models.ProjectSpec:
+    @classmethod
+    def load_spec(cls, specfile: Path) -> models.ProjectSpec:
         with specfile.open() as f:
             spec_dict = yaml.safe_load(f)
         return models.ProjectSpec(**spec_dict)
@@ -109,6 +110,11 @@ class DPMHttpClient:
         response = self._get('routes', params=filters or None)
         routes_json = response.json()
         return [models.RouteSchema(**route) for route in routes_json]
+    
+    def get_route(self, route_name: str) -> models.RouteSchema:
+        response = self._get(f'routes/{route_name}')
+        route_json = response.json()
+        return models.RouteSchema(**route_json)
     
     def validate(self, specfile: Path) -> models.ProjectSpec:
         with specfile.open() as f:

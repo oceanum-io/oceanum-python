@@ -6,7 +6,7 @@ from .main import main
 from .auth import login_required
 from ..datamesh.connection import Connector
 
-@main.group()
+@main.group(help='Datamesh Datasources commands')
 def datamesh():
     pass
 

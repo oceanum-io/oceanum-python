@@ -17,7 +17,7 @@ from tabulate import tabulate
 
 from pydantic import BaseModel
 
-format_option = click.option(
+output_format_option = click.option(
     '-o','--output', 
     type=click.Choice(['table', 'json', 'yaml']), 
     default='table',
@@ -30,13 +30,15 @@ class Renderer:
     }
 
     def __init__(self, 
-        data: list[dict]|list[Type[BaseModel]]|dict|Type[BaseModel], 
+        data:list|dict|Type[BaseModel], 
         output: Literal['table', 'json', 'yaml'] = 'table',
-        fields: dict[str, str] | None = None
+        fields: dict[str, str] | None = None,
+        ignore_fields: list[str] | None = None
     ) -> None:
         self.raw_data = data
         self.parsed_data = self._init_data(data)
         self.fields = fields or self.default_fields
+        self.ignore_fields = ignore_fields or []
 
     def _init_data(self, data: list[dict]|list[Type[BaseModel]]|dict|Type[BaseModel]) -> list[dict]:
         """
@@ -55,7 +57,7 @@ class Renderer:
             dict_data.append(data)
         return dict_data
         
-    def render_table(self, fields:dict[str, str]|None=None) -> str:
+    def render_table(self, fields:dict[str, str]|None=None, tablefmt='simple') -> str:
         fields = fields or self.fields
         table_data = []
         for item in self.parsed_data:
@@ -68,7 +70,11 @@ class Renderer:
                     row.append(None)
                     print(f"WARNING: Could not find a data field for '{header}' at path '{path}'")
             table_data.append(row)
-        return tabulate(table_data, headers=list((fields.keys())))
+        if tablefmt == 'plain':
+            table_data = zip(list(fields.keys()), table_data[0])
+            return tabulate(table_data, tablefmt=tablefmt)
+        else:
+            return tabulate(table_data, headers=list((fields.keys())), tablefmt=tablefmt)
 
     def render_json(self) -> str:
         return json.dumps(self.parsed_data, indent=4)
@@ -76,8 +82,10 @@ class Renderer:
     def render_yaml(self) -> str:
         return yaml.dump(self.parsed_data, indent=4)
     
-    def render(self, output_format:str='table') -> str:
-        if output_format == 'table':
+    def render(self, output_format:str='plain') -> str:
+        if output_format == 'plain':
+            return self.render_table(tablefmt='plain')
+        elif output_format == 'table':
             return self.render_table()
         elif output_format == 'json':
             return self.render_json()

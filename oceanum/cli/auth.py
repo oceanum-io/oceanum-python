@@ -67,7 +67,7 @@ class Auth0Client:
         return token
 
 
-@main.group()
+@main.group(help='Authentication commands')
 def auth():
     pass
 

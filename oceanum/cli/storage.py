@@ -12,7 +12,7 @@ from .auth import login_required
 # =====================================================================================
 @main.group()
 def storage():
-    """Oceanum storage commands."""
+    """Oceanum storage commands"""
     click.help_option('-h', '--help')
 
 @storage.command()
