@@ -45,15 +45,18 @@ def parse_time(v):
         or isinstance(v, datetime.datetime)
         or isinstance(v, datetime.date)
         or isinstance(v, pd.Timestamp)
+        or isinstance(v, np.datetime64)
     ):
-        raise TypeError("datetime or time string required")
+        raise ValueError("datetime or time string required")
     try:
+        if isinstance(v, np.datetime64):
+            v = str(v)
         time = pd.Timestamp(v)
         if not time.tz:
             time = time.tz_localize("UTC")
         return pd.to_datetime(time.tz_convert(None))
     except Exception as e:
-        raise TypeError(f"Timestamp format not valid: {e}")
+        raise ValueError(f"Timestamp format not valid: {e}")
 
 
 Timestamp = Annotated[
@@ -67,6 +70,36 @@ Timestamp = Annotated[
     WithJsonSchema({"type": "string", "format": "date-time"}),
 ]
 
+
+def parse_timedelta(v):
+    if v is None:
+        return None
+    if not (
+        isinstance(v, str)
+        or isinstance(v, datetime.timedelta)
+        or isinstance(v, pd.Timedelta)
+        or isinstance(v, np.timedelta64)
+    ):
+        raise ValueError("timedelta or time period string required")
+    try:
+        if isinstance(v, np.timedelta64):
+            v = str(v)
+        dt = pd.Timedelta(v)
+        return dt.to_pytimedelta()
+    except Exception as e:
+        raise ValueError(f"Timedelta format not valid: {e}")
+
+
+Timedelta = Annotated[
+    datetime.timedelta,
+    Field(
+        default=None,
+        title="Timedelta",
+        description="Timedelta as python timedelta, numpy timedelta64 or pandas Timedelta",
+    ),
+    BeforeValidator(parse_timedelta),
+    WithJsonSchema({"type": "string", "format": "time-period"}),
+]
 
 class GeoFilterType(str, Enum):
     feature = "feature"
@@ -164,6 +197,10 @@ class GeoFilter(BaseModel):
         default=0.0,
         description="Maximum resolution of the data for downsampling in CRS units. Only works for feature datasources.",
     )
+    alltouched: Optional[bool] = Field(
+        title="Include all touched grid pixels",
+        default=None
+    )
 
     @field_validator("geom", mode="before")
     @classmethod
@@ -228,7 +265,7 @@ class TimeFilter(BaseModel):
             - 'trajectory': Select times along a trajectory, times are a list of times corresponding to subfeatures in a feature filter
         """,
     )
-    times: List[Union[Timestamp, None]] = Field(
+    times: List[Union[Timestamp, Timedelta, None]] = Field(
         title="Selection times",
         description="""
             - For type='range', [timestart, tend].
@@ -354,6 +391,22 @@ class Query(BaseModel):
     functions: Optional[List[Function]] = Field(title="Functions", default=[])
     limit: Optional[int] = Field(title="Limit size of response", default=None)
     id: Optional[str] = Field(title="Unique ID of this query", default=None)
+
+    def __bool__(self):
+        for k,v in self.__dict__.items():
+            if not k in ["datasource", "description", "id", "limit", "crs", "aggregate"] and v:
+                return True
+        return False
+
+    def __hash__(self):
+        return hash(self.model_dump_json(warnings=False))
+
+
+class Workspace(BaseModel):
+    data: List[Query] = Field(title="Datamesh queries")
+    id: Optional[str] = Field(title="Unique ID of this package", default=None)
+    name: Optional[str] = Field(title="Package name", default="OceanQL package")
+    description: Optional[str] = Field(title="Package description", default="")
 
 
 class Container(str, Enum):
