@@ -25,7 +25,7 @@ def test_query_timefilter():
     )
     q = Query(
         datasource="test",
-        timefilter={"times": [np.datetime64("2000-01-01T00:00:00"), np.datetime64("2001-01-01T00:00:00Z")]},
+        timefilter={"times": [numpy.datetime64("2000-01-01T00:00:00"), numpy.datetime64("2001-01-01T00:00:00")]},
     )
     q = Query(
         datasource="test",
@@ -33,7 +33,7 @@ def test_query_timefilter():
     )
     q = Query(
         datasource="test",
-        timefilter={"times": [np.timedelta64("P5D"), np.timedelta64("P2D")]}
+        timefilter={"times": [-numpy.timedelta64(5,"D"), numpy.timedelta64(2,"D")]}
         )
     q = Query(
         datasource="test",
