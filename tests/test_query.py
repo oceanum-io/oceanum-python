@@ -2,6 +2,7 @@ import os
 import pytest
 import datetime
 import shapely
+import numpy
 
 from oceanum.datamesh import Query
 from oceanum.datamesh.query import Stage
@@ -22,7 +23,22 @@ def test_query_timefilter():
         datasource="test",
         timefilter={"times": ["2000-01-01T00:00:00", "2001-01-01T00:00:00Z"]},
     )
-
+    q = Query(
+        datasource="test",
+        timefilter={"times": [np.datetime64("2000-01-01T00:00:00"), np.datetime64("2001-01-01T00:00:00Z")]},
+    )
+    q = Query(
+        datasource="test",
+        timefilter={"times": ["P5D","P2D"]},
+    )
+    q = Query(
+        datasource="test",
+        timefilter={"times": [np.timedelta64("P5D"), np.timedelta64("P2D")]}
+        )
+    q = Query(
+        datasource="test",
+        timefilter={"times": [-datetime.timedelta(5), -datetime.timedelta(2)]}
+        )
 
 def test_query_aggregate():
     q = Query(
