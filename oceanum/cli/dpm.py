@@ -3,6 +3,7 @@ import click
 import os
 import yaml
 import time
+import requests
 from pathlib import Path
 import pprint
 
@@ -261,11 +262,26 @@ def deploy_project(
 @click.pass_context
 @login_required
 def delete_project(ctx: click.Context, project_name: str):
-    click.echo(f'Deleting project {project_name}...')
     with DpmContextedClient(ctx) as client:
-        client.dpm.delete_project(project_name)
-    click.echo(f'Project {project_name} deleted!')
-
+        try:
+            project = client.dpm.get_project(project_name)
+        except requests.exceptions.HTTPError as e:
+            click.echo(f"Project '{project_name}' not found!")
+            return
+        else:
+            _n = os.linesep
+            click.confirm(
+                f"Deleting project:{_n}"\
+                f"{_n}"\
+                f"Project Name: {project_name}{_n}"\
+                f"Org: {project.org}{_n}"\
+                f"Owner: {project.owner}{_n}"\
+                f"{_n}"\
+                "This will attempt to remove all deployed resources for this project! Are you sure?",
+                abort=True)
+            client.dpm.delete_project(project_name)
+            click.echo(f'Project {project_name} deleted! Deployed resources will be removed shortly...')
+        
 @list_.command(name='projects')
 @click.pass_context
 @click.option('--search', help='Search by project name or description', default=None, type=str)
