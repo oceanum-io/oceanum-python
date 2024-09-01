@@ -74,9 +74,9 @@ def auth():
 def login_required(func):
     @click.pass_context
     def refresh_wrapper(ctx: click.Context, *args, **kwargs):
-        if not ctx.obj.token:
+        if not ctx.obj.token or not ctx.obj.token.refresh_token:
             raise Exception('You need to login first!')
-        elif ctx.obj.token.is_expired:
+        elif ctx.obj.token.is_expired and ctx.obj.token.refresh_token:
             click.echo('Refreshing access token...')
             token = Auth0Client(ctx=ctx).refresh_token(ctx.obj.token)
             token.save()
