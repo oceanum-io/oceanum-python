@@ -3,7 +3,8 @@ import sys
 import click
 
 # When adding a new module, must be imported here
-from .cli import main, auth, dpm, datamesh, storage
+from .cli import main, auth, datamesh, storage
+from .cli.dpm import dpm, project, user, route
 
 try:
     main.main()
