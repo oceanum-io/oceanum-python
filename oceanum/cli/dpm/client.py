@@ -82,59 +82,6 @@ class DeployManagerClient:
     def _delete(self, endpoint, **kwargs) -> requests.Response:
         return self._request('DELETE', endpoint, **kwargs)
     
-    @classmethod
-    def load_spec(cls, specfile: Path) -> models.ProjectSpec:
-        with specfile.open() as f:
-            spec_dict = yaml.safe_load(f)
-        return models.ProjectSpec(**spec_dict)
-    
-    def deploy_project(self, spec: models.ProjectSpec) -> models.ProjectSpec:
-        payload = dump_with_secrets(spec)
-        response = self._post('projects', json=payload)
-        project = response.json()
-        return models.ProjectSpec(**project)
-    
-    def patch_project(self, project_name: str, ops: list[models.JSONPatchOpSchema]) -> models.ProjectSchema:
-        payload = [op.model_dump(exclude_none=True, mode='json') for op in ops]
-        response = self._patch(f'projects/{project_name}', json=payload)
-        project = response.json()
-        return models.ProjectSchema(**project)
-    
-    def delete_project(self, project_id: str) -> requests.Response:
-        return self._delete(f'projects/{project_id}')
-    
-    def get_users(self) -> list[models.UserSchema]:
-        response = self._get('users')
-        users_json = response.json()
-        return [models.UserSchema(**user) for user in users_json]
-
-    def list_projects(self, **filters) -> list[models.ProjectSchema]:
-        response = self._get('projects', params=filters or None)
-        projects_json = response.json()
-        return [models.ProjectSchema(**project) for project in projects_json]
-    
-    def get_project(self, project_name: str) -> models.ProjectSchema:
-        response = self._get(f'projects/{project_name}')
-        project_json = response.json()
-        return models.ProjectSchema(**project_json)
-    
-    def list_routes(self, **filters) -> list[models.RouteSchema]:
-        response = self._get('routes', params=filters or None)
-        routes_json = response.json()
-        return [models.RouteSchema(**route) for route in routes_json]
-    
-    def get_route(self, route_name: str) -> models.RouteSchema:
-        response = self._get(f'routes/{route_name}')
-        route_json = response.json()
-        return models.RouteSchema(**route_json)
-    
-    def validate(self, specfile: Path) -> models.ProjectSpec:
-        with specfile.open() as f:
-            spec_dict = yaml.safe_load(f)
-        response = self._post('validate', json=spec_dict)
-        project_spec = response.json()
-        return models.ProjectSpec(**project_spec)
-
     def _wait_project_commit(self, project_name: str) -> bool:
         while True:
             project = self.get_project(project_name)
@@ -240,8 +187,67 @@ class DeployManagerClient:
             self._wait_builds_to_finish(project_name)
             self._wait_stages_finish_updating(project_name)
         return True
+    
+    @classmethod
+    def load_spec(cls, specfile: Path) -> models.ProjectSpec:
+        with specfile.open() as f:
+            spec_dict = yaml.safe_load(f)
+        return models.ProjectSpec(**spec_dict)
+    
+    def deploy_project(self, spec: models.ProjectSpec) -> models.ProjectSpec:
+        payload = dump_with_secrets(spec)
+        response = self._post('projects', json=payload)
+        project = response.json()
+        return models.ProjectSpec(**project)
+    
+    def patch_project(self, project_name: str, ops: list[models.JSONPatchOpSchema]) -> models.ProjectSchema:
+        payload = [op.model_dump(exclude_none=True, mode='json') for op in ops]
+        response = self._patch(f'projects/{project_name}', json=payload)
+        project = response.json()
+        return models.ProjectSchema(**project)
+    
+    def delete_project(self, project_id: str) -> requests.Response:
+        return self._delete(f'projects/{project_id}')
+    
+    def get_users(self) -> list[models.UserSchema]:
+        response = self._get('users')
+        users_json = response.json()
+        return [models.UserSchema(**user) for user in users_json]
 
+    def list_projects(self, **filters) -> list[models.ProjectSchema]:
+        response = self._get('projects', params=filters or None)
+        projects_json = response.json()
+        return [models.ProjectSchema(**project) for project in projects_json]
+    
+    def get_project(self, project_name: str) -> models.ProjectSchema:
+        response = self._get(f'projects/{project_name}')
+        project_json = response.json()
+        return models.ProjectSchema(**project_json)
+    
+    def list_routes(self, **filters) -> list[models.RouteSchema]:
+        response = self._get('routes', params=filters or None)
+        routes_json = response.json()
+        return [models.RouteSchema(**route) for route in routes_json]
+    
+    def get_route(self, route_name: str) -> models.RouteSchema:
+        response = self._get(f'routes/{route_name}')
+        route_json = response.json()
+        return models.RouteSchema(**route_json)
+    
+    def update_route_thumbnail(self, route_name: str, thumbnail: click.File) -> models.RouteSchema:
+        files = {'thumbnail': thumbnail}
+        response = self._post(f'routes/{route_name}/thumbnail', files=files)
+        route_json = response.json()
+        return models.RouteThumbnailSchema(**route_json)
+    
+    def validate(self, specfile: Path) -> models.ProjectSpec:
+        with specfile.open() as f:
+            spec_dict = yaml.safe_load(f)
+        response = self._post('validate', json=spec_dict)
+        project_spec = response.json()
+        return models.ProjectSpec(**project_spec)
 
+    
 
 
 

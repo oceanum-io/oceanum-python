@@ -12,5 +12,5 @@ except KeyboardInterrupt:
     sys.exit(1)
 except Exception as e:
     click.echo(f'Error: {e}')
-    #raise e
+    raise e
     sys.exit(1)

@@ -1,4 +1,4 @@
-import os
+from os import linesep
 from pathlib import Path
 
 
@@ -15,6 +15,8 @@ from . import models
 @update_group.group(name='project', help='Update DPM Project resources')
 def update_project_group():
     pass
+
+project_name_option = click.option('-p', '--project', help='Set project name', required=True, type=str)
 
 @list_group.command(name='projects', help='List DPM Projects')
 @click.pass_context
@@ -157,14 +159,13 @@ def delete_project(ctx: click.Context, project_name: str):
         click.echo(f"Project '{project_name}' not found!")
         return
     else:
-        _n = os.linesep
         click.confirm(
-            f"Deleting project:{_n}"\
-            f"{_n}"\
-            f"Project Name: {project_name}{_n}"\
-            f"Org: {project.org}{_n}"\
-            f"Owner: {project.owner}{_n}"\
-            f"{_n}"\
+            f"Deleting project:{linesep}"\
+            f"{linesep}"\
+            f"Project Name: {project_name}{linesep}"\
+            f"Org: {project.org}{linesep}"\
+            f"Owner: {project.owner}{linesep}"\
+            f"{linesep}"\
             "This will attempt to remove all deployed resources for this project! Are you sure?",
             abort=True)
         client.delete_project(project_name)
@@ -242,7 +243,7 @@ def describe_project(ctx: click.Context, project_name: str, show_spec: bool=Fals
                     ] 
                     if route.custom_domains:
                         route_output.append([
-                            'Custom Domains', os.linesep.join(route.custom_domains)
+                            'Custom Domains', linesep.join(route.custom_domains)
                         ])
                     routes.extend(route_output)
                 output.append(['Routes', routes])
@@ -288,5 +289,28 @@ def update_description(ctx: click.Context, project_name: str, description: str):
         )
         client.patch_project(project.name, [op])
         click.echo(f"Project '{project_name}' description updated!")
+    else:
+        click.echo(f"Project '{project_name}' not found!")
+
+
+@update_project_group.command(name='active', help='Update project status')
+@click.argument('project_name', type=str)
+@click.argument('active', type=bool)
+@click.pass_context
+@login_required
+def update_active(ctx: click.Context, project_name: str, active: str):
+    client = DeployManagerClient(ctx)
+    project = client.get_project(project_name)
+    if project is not None:
+        op = models.JSONPatchOpSchema(
+            op=models.Op('replace'),
+            path='/active',
+            value=active
+        )
+        client.patch_project(project.name, [op])
+        if active:
+            click.echo(f"Project '{project_name}' activated!")
+        else:
+            click.echo(f"Project '{project_name}' deactivated, deployed resources will be removed shortly!")
     else:
         click.echo(f"Project '{project_name}' not found!")

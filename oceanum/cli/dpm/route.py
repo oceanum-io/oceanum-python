@@ -3,8 +3,12 @@ import click
 
 from ..renderer import Renderer, output_format_option
 from ..auth import login_required
-from .dpm import list_group, describe_group
+from .dpm import list_group, describe_group, update_group
 from .client import DeployManagerClient
+
+@update_group.group(name='route', help='Update DPM Routes')
+def update_route():
+    pass
 
 @list_group.command(name='routes', help='List DPM Routes')
 @click.pass_context
@@ -86,5 +90,25 @@ def describe_route(ctx: click.Context, route_name: str):
     #         output.append(['Open Access', route.open_access])
         #route_dict = route.model_dump(mode='json', by_alias=True, exclude_none=True, exclude_unset=True)
 #        click.echo(yaml.dump(route_dict))
+    else:
+        click.echo(f"Route '{route_name}' not found!")
+
+
+@update_route.command(name='thumbnail', help='Update a DPM Route thumbnail')
+@click.pass_context
+@click.argument('route_name', type=str)
+@click.argument('thumbnail_file', type=click.File('rb'))
+@login_required
+def update_thumbnail(ctx: click.Context, route_name: str, thumbnail_file: click.File):
+    client = DeployManagerClient(ctx)
+    route = client.get_route(route_name)
+    if route is not None:
+        click.echo(f"Updating thumbnail for route '{route_name}'...")
+        try:
+            thumbnail = client.update_route_thumbnail(route_name, thumbnail_file)
+            click.echo(f"Thumbnail updated successfully for route '{route_name}'!")
+        except Exception as e:
+            click.echo(f"ERROR: Failed to update thumbnail for route '{route_name}': {e}")
+            raise
     else:
         click.echo(f"Route '{route_name}' not found!")
