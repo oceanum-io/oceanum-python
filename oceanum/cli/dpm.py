@@ -63,7 +63,7 @@ class DpmContextedClient:
         counter = 0
         while True:
             project = self.dpm.get_project(project_name)
-            updating = any([s.status in ['updating'] for s in project.stages])
+            updating = any([s.status in ['updating','degraded'] for s in project.stages])
             ready_stages = all([s.status in ['ready', 'error'] for s in project.stages])
             if updating:
                 break
