@@ -1,12 +1,12 @@
 from os import linesep
 from pathlib import Path
-
+from functools import partial
 
 import yaml
 import requests
 import click
 
-from ..renderer import Renderer
+from ..renderer import Renderer, RenderField
 from ..auth import login_required
 from ..dpm.client import DeployManagerClient
 from .dpm import list_group, describe_group, delete, dpm_group, update_group
@@ -38,12 +38,33 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
         k: v for k, v in filters.items() if v is not None
     })
 
-    fields = {
-        'Name': '$.name',
-        'Org': '$.org',
-        'Last Author': '$.last_revision.spec.member_ref',
-        'Status': '$.status',
-    }
+    def _status_color(status: str) -> str:
+        if status == 'ready':
+            return click.style(status.upper(), fg='green')
+        elif status == 'degraded':
+            return click.style(status.upper(), fg='yellow')
+        else:
+            return click.style(status.upper(), fg='red')
+        
+    def _color_stage_status(stage: dict) -> str:
+        if stage['status'] == 'healthy':
+            return click.style(stage['name'], fg='green')
+        elif stage['status'] == 'degraded':
+            return click.style(stage['name'], fg='yellow')
+        elif stage['status'] == 'error':
+            return click.style(stage['name'], fg='red')
+        elif stage['status'] == 'updating':
+            return click.style(stage['name'], fg='cyan')
+        else:
+            return click.style(stage['name'], fg='white')
+
+    fields = [
+        RenderField(label='Name', path='$.name'),
+        RenderField(label='Org.', path='$.org'),
+        RenderField(label='Rev.', path='$.last_revision.number'),
+        RenderField(label='Status', path='$.status', mod=_status_color),
+        RenderField(label='Stages', path='$.stages.[*]', mod=_color_stage_status),
+    ]
         
     if not projects:
         click.echo('No projects found!')

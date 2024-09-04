@@ -6,7 +6,8 @@
 # The input format should be a dictionary or pydantic a model, 
 # plus an indexing of headers for the table format.
 
-from typing import Type, Literal
+from os import linesep
+from typing import Type, Literal, Callable
 import json
 import pprint
 
@@ -24,6 +25,11 @@ output_format_option = click.option(
     help='Output format'
 )
 
+class RenderField(BaseModel):
+    label: str = 'Name'
+    path: str = '$.name'
+    mod: Callable = lambda x: x
+
 class Renderer:
     default_fields: dict[str, str] = {
         'Name': '$.name',
@@ -32,7 +38,7 @@ class Renderer:
     def __init__(self, 
         data:list|dict|Type[BaseModel], 
         output: Literal['table', 'json', 'yaml'] = 'table',
-        fields: dict[str, str] | None = None,
+        fields: list[RenderField] | None = None,
         ignore_fields: list[str] | None = None
     ) -> None:
         self.raw_data = data
@@ -57,24 +63,24 @@ class Renderer:
             dict_data.append(data)
         return dict_data
         
-    def render_table(self, fields:dict[str, str]|None=None, tablefmt='simple') -> str:
-        fields = fields or self.fields
+    def render_table(self, tablefmt='simple') -> str:
         table_data = []
+        headers = [f.label for f in self.fields]
         for item in self.parsed_data:
             row = []
-            for header, path in fields.items():
-                match = jsonpath.match(path, item)
-                if match:
-                    row.append(match.obj)
+            for field in self.fields:
+                matches = jsonpath.findall(field.path, item)
+                if matches:
+                    row.append(', '.join(str(field.mod(m)) for m in matches))
                 else:
                     row.append(None)
-                    print(f"WARNING: Could not find a data field for '{header}' at path '{path}'")
+                    print(f"WARNING: Could not find a data field for '{field.label}' at path '{field.path}'")
             table_data.append(row)
         if tablefmt == 'plain':
-            table_data = zip(list(fields.keys()), table_data[0])
+            table_data = zip(headers, table_data[0])
             return tabulate(table_data, tablefmt=tablefmt)
         else:
-            return tabulate(table_data, headers=list((fields.keys())), tablefmt=tablefmt)
+            return tabulate(table_data, headers=headers, tablefmt=tablefmt)
 
     def render_json(self) -> str:
         return json.dumps(self.parsed_data, indent=4)
