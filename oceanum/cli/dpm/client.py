@@ -2,7 +2,7 @@
 import os
 import yaml
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Literal
 
@@ -168,7 +168,7 @@ class DeployManagerClient:
         while True:
             project = self.get_project(project_name)
             updating = any([s.status in ['building'] for s in project.stages])
-            all_finished = all([s.status in ['ready', 'error'] for s in project.stages])
+            all_finished = all([s.status in ['healthy', 'error'] for s in project.stages])
             if updating:
                 time.sleep(self._lag)
                 continue
@@ -181,11 +181,15 @@ class DeployManagerClient:
         return project
     
     def wait_project_deployment(self, project_name: str) -> bool:
+        start = time.time()
         committed = self._wait_project_commit(project_name)
         if committed:
             self._wait_stages_start_updating(project_name)
             self._wait_builds_to_finish(project_name)
             self._wait_stages_finish_updating(project_name)
+            delta = timedelta(seconds=time.time()-start)
+            delta = str(delta).split('.')[0]
+            click.echo(f"Finished in {delta}")
         return True
     
     @classmethod
