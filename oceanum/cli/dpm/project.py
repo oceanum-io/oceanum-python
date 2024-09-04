@@ -298,7 +298,7 @@ def update_description(ctx: click.Context, project_name: str, description: str):
 @click.argument('active', type=bool)
 @click.pass_context
 @login_required
-def update_active(ctx: click.Context, project_name: str, active: str):
+def update_active(ctx: click.Context, project_name: str, active: bool):
     client = DeployManagerClient(ctx)
     project = client.get_project(project_name)
     if project is not None:
@@ -310,6 +310,8 @@ def update_active(ctx: click.Context, project_name: str, active: str):
         client.patch_project(project.name, [op])
         if active:
             click.echo(f"Project '{project_name}' activated!")
+            click.echo(f"Deployed resources will be available shortly!")
+            client.wait_project_deployment(project_name)
         else:
             click.echo(f"Project '{project_name}' deactivated, deployed resources will be removed shortly!")
     else:

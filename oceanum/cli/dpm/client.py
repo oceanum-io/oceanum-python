@@ -204,7 +204,7 @@ class DeployManagerClient:
         payload = [op.model_dump(exclude_none=True, mode='json') for op in ops]
         response = self._patch(f'projects/{project_name}', json=payload)
         project = response.json()
-        return models.ProjectSchema(**project)
+        return models.ProjectSpec(**project)
     
     def delete_project(self, project_id: str) -> requests.Response:
         return self._delete(f'projects/{project_id}')
