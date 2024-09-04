@@ -29,6 +29,7 @@ class RenderField(BaseModel):
     label: str = 'Name'
     path: str = '$.name'
     mod: Callable = lambda x: x
+    sep: str = ', '
 
 class Renderer:
     default_fields: dict[str, str] = {
@@ -71,7 +72,7 @@ class Renderer:
             for field in self.fields:
                 matches = jsonpath.findall(field.path, item)
                 if matches:
-                    row.append(', '.join(str(field.mod(m)) for m in matches))
+                    row.append(field.sep.join(str(field.mod(m)) for m in matches))
                 else:
                     row.append(None)
                     print(f"WARNING: Could not find a data field for '{field.label}' at path '{field.path}'")

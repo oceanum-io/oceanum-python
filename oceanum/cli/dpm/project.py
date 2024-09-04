@@ -16,7 +16,12 @@ from . import models
 def update_project_group():
     pass
 
-project_name_option = click.option('-p', '--project', help='Set project name', required=True, type=str)
+
+project_name_option = click.option('-p', '--project', help='Set the project name', required=True, type=str)
+project_org_option = click.option('-o', '--org', help='Set the project organization', required=False, type=str)
+project_member_option = click.option('-m', '--member', help='Set the project owner email', required=False, type=str)
+
+
 
 @list_group.command(name='projects', help='List DPM Projects')
 @click.pass_context
