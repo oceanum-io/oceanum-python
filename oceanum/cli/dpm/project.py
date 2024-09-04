@@ -43,8 +43,12 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
             return click.style(status.upper(), fg='green')
         elif status == 'degraded':
             return click.style(status.upper(), fg='yellow')
-        else:
+        elif status == 'updating':
+            return click.style(status.upper(), fg='cyan')
+        elif status == 'error':
             return click.style(status.upper(), fg='red')
+        else:
+            return click.style(status.upper(), fg='white')
         
     def _color_stage_status(stage: dict) -> str:
         if stage['status'] == 'healthy':
