@@ -1,6 +1,7 @@
 from os import linesep
 
 import click
+import requests
 
 from ..renderer import Renderer, output_format_option, RenderField
 from ..auth import login_required
@@ -34,8 +35,6 @@ def list_routes(ctx: click.Context, output: str, open: bool, services: bool, app
     if open:
         filters.update({'open_access': True})
 
-    
-
     client = DeployManagerClient(ctx)
     fields = [
         RenderField(label='Name', path='$.name'),
@@ -58,31 +57,38 @@ def list_routes(ctx: click.Context, output: str, open: bool, services: bool, app
 @login_required
 def describe_route(ctx: click.Context, route_name: str):
     client = DeployManagerClient(ctx)
-    route = client.get_route(route_name)
-    fields = [
-        RenderField(label='Name', path='$.name'),
-        RenderField(label='Project', path='$.project'),
-        RenderField(label='Service', path='$.org'),
-        RenderField(label='Stage', path='$.stage'),
-        RenderField(label='Org', path='$.org'),
-        RenderField(label='Owner', path='$.username'),
-        RenderField(label='Status', path='$.status'),
-        RenderField(label='Default URL', path='$.url'),
-        RenderField(
-            label='Custom Domains', 
-            path='$.custom_domains.*', 
-            sep=linesep, 
-            mod=lambda x: f'https://{x}/' if x else None
-        ),
-        RenderField(label='Publish App', path='$.publish_app'),
-        RenderField(label='Open Access', path='$.open_access'),
-        RenderField(label='Thumbnail URL', path='$.thumbnail'),
-    ]
-        
-    if route is not None:
-        click.echo(Renderer(data=[route], fields=fields).render(output_format='plain'))
+    try:
+        route = client.get_route(route_name)
+    except requests.exceptions.HTTPError as e:
+        click.echo(f"Route '{route_name}' doesn't exist or isn't authorized!")
+        return
     else:
-        click.echo(f"Route '{route_name}' not found!")
+        route = client.get_route(route_name)
+        fields = [
+            RenderField(label='Name', path='$.name'),
+            RenderField(label='Project', path='$.project'),
+            RenderField(label='Service', path='$.org'),
+            RenderField(label='Stage', path='$.stage'),
+            RenderField(label='Org', path='$.org'),
+            RenderField(label='Owner', path='$.username'),
+            RenderField(label='Status', path='$.status'),
+            RenderField(label='Default URL', path='$.url'),
+            RenderField(
+                label='Custom Domains', 
+                path='$.custom_domains.*', 
+                sep=linesep, 
+                mod=lambda x: f'https://{x}/' if x else None
+            ),
+            RenderField(label='Publish App', path='$.publish_app'),
+            RenderField(label='Open Access', path='$.open_access'),
+            RenderField(label='Thumbnail URL', path='$.thumbnail'),
+        ]
+            
+        if route is not None:
+            click.echo(
+                Renderer(data=[route], fields=fields).render(output_format='plain'))
+        else:
+            click.echo(f"Route '{route_name}' not found!")
 
 
 @update_route.command(name='thumbnail', help='Update a DPM Route thumbnail')
