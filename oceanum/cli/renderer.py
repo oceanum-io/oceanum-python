@@ -7,7 +7,7 @@
 # plus an indexing of headers for the table format.
 
 from os import linesep
-from typing import Type, Literal, Callable
+from typing import Type, Literal, Callable, Any
 import json
 import pprint
 
@@ -18,6 +18,8 @@ from tabulate import tabulate
 
 from pydantic import BaseModel
 
+_sty = click.style
+
 output_format_option = click.option(
     '-o','--output', 
     type=click.Choice(['table', 'json', 'yaml']), 
@@ -26,25 +28,23 @@ output_format_option = click.option(
 )
 
 class RenderField(BaseModel):
+    default: Any|None = None
     label: str = 'Name'
     path: str = '$.name'
     mod: Callable = lambda x: x
     sep: str = ', '
 
 class Renderer:
-    default_fields: dict[str, str] = {
-        'Name': '$.name',
-    }
 
     def __init__(self, 
         data:list|dict|Type[BaseModel], 
+        fields: list[RenderField],
         output: Literal['table', 'json', 'yaml'] = 'table',
-        fields: list[RenderField] | None = None,
         ignore_fields: list[str] | None = None
     ) -> None:
         self.raw_data = data
         self.parsed_data = self._init_data(data)
-        self.fields = fields or self.default_fields
+        self.fields = fields
         self.ignore_fields = ignore_fields or []
 
     def _init_data(self, data: list[dict]|list[Type[BaseModel]]|dict|Type[BaseModel]) -> list[dict]:
@@ -75,7 +75,7 @@ class Renderer:
                     row.append(field.sep.join(str(field.mod(m)) for m in matches))
                 else:
                     row.append(None)
-                    print(f"WARNING: Could not find a data field for '{field.label}' at path '{field.path}'")
+                    click.echo(f"{_sty('WARNING', fg='yellow')}: Could not find a data field for '{field.label}' at path '{field.path}'")
             table_data.append(row)
         if tablefmt == 'plain':
             table_data = zip(headers, table_data[0])

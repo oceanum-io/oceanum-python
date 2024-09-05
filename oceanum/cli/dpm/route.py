@@ -1,7 +1,8 @@
+from os import linesep
 
 import click
 
-from ..renderer import Renderer, output_format_option
+from ..renderer import Renderer, output_format_option, RenderField
 from ..auth import login_required
 from .dpm import list_group, describe_group, update_group
 from .client import DeployManagerClient
@@ -32,14 +33,28 @@ def list_routes(ctx: click.Context, output: str, open: bool, services: bool, app
     if open:
         filters.update({'open_access': True})
 
+    def format_status(status: str) -> str:
+        if status == 'online':
+            return click.style(status.upper(), fg='green')
+        elif status == 'offline':
+            return click.style(status.upper(), fg='black')
+        elif status == 'pending':
+            return click.style(status.upper(), fg='yellow')
+        elif status == 'starting':
+            return click.style(status.upper(), fg='blue')
+        elif status == 'error':
+            return click.style(status.upper(), fg='red', bold=True)
+        else:
+            return status
+
     client = DeployManagerClient(ctx)
-    fields = {
-        'Name': '$.name',
-        'Project' : '$.project',
-        'Stage': '$.stage',
-        'Status': '$.status',
-        'URL': '$.url',
-    }
+    fields = [
+        RenderField(label='Name', path='$.name'),
+        RenderField(label='Project', path='$.project'),
+        RenderField(label='Stage', path='$.stage'),
+        RenderField(label='Status', path='$.status', mod=format_status),
+        RenderField(label='URL', path='$.url'),
+    ]
     routes =  client.list_routes(**{
         k: v for k, v in filters.items() if v is not None
     })
@@ -55,23 +70,28 @@ def list_routes(ctx: click.Context, output: str, open: bool, services: bool, app
 def describe_route(ctx: click.Context, route_name: str):
     client = DeployManagerClient(ctx)
     route = client.get_route(route_name)
-    
-    fields = {
-        'Name': '$.name',
-        'Project': '$.project',
-        'Stage': '$.stage',
-        'Org': '$.org',
-        'Owner': '$.username',
-        'Status': '$.status',
-        'Default URL': '$.url',
-        'Custom Domains': '$.custom_domains',
-        'Publish App': '$.publish_app',
-        'Open Access': '$.open_access',
-        'Thumbnail': '$.thumbnail',
-    }
+    fields = [
+        RenderField(label='Name', path='$.name'),
+        RenderField(label='Project', path='$.project'),
+        RenderField(label='Service', path='$.org'),
+        RenderField(label='Stage', path='$.stage'),
+        RenderField(label='Org', path='$.org'),
+        RenderField(label='Owner', path='$.username'),
+        RenderField(label='Status', path='$.status'),
+        RenderField(label='Default URL', path='$.url'),
+        RenderField(
+            label='Custom Domains', 
+            path='$.custom_domains', 
+            sep=linesep, 
+            mod=lambda x: f'https://{linesep.join(x)}/' if x else None
+        ),
+        RenderField(label='Publish App', path='$.publish_app'),
+        RenderField(label='Open Access', path='$.open_access'),
+        RenderField(label='Thumbnail URL', path='$.thumbnail'),
+    ]
         
     if route is not None:
-        click.echo(Renderer(data=route, fields=fields).render(output_format='plain'))
+        click.echo(Renderer(data=[route], fields=fields).render(output_format='plain'))
     #     click.echo()
     #     click.echo(f"Describing route '{route_name}'...")
     #     click.echo()
