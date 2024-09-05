@@ -2,45 +2,86 @@
 import os
 import yaml
 import time
+from enum import Enum
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 import click
 import requests
-from pydantic import SecretStr, RootModel
+from pydantic import SecretStr, RootModel, Field, model_validator, ValidationError
 
 from . import models
 
+class RevealedSecretStr(RootModel):
+    root: Optional[str|SecretStr] = None
+
+    @model_validator(mode='after')
+    def validate_revealed_secret_str(self):
+        if isinstance(self.root, SecretStr):
+            self.root = self.root.get_secret_value()
+        return self            
+    
+class RevealedSecretData(models.SecretData):
+    root: Optional[dict[str, RevealedSecretStr]] = None
+
+class RevealedSecretSpec(models.SecretSpec):
+    data: Optional[RevealedSecretData] = None
+
+class RevealedSecretsBuildCredentials(models.BuildCredentials):
+    password: Optional[RevealedSecretStr] = None
+
+class RevealedSecretsBuildSpec(models.BuildSpec):
+    credentials: Optional[RevealedSecretsBuildCredentials] = None
+
+class RevealedSecretsCustomDomainSpec(models.CustomDomainSpec):
+    tls_cert: Optional[RevealedSecretStr] = Field(
+        default=None, 
+        alias='tlsCert'
+    )
+    tls_key: Optional[RevealedSecretStr] = Field(
+        default=None, 
+        alias='tlsKey'
+    )
+
+class RevealedSecretsRouteSpec(models.ServiceRouteSpec):
+    custom_domains: Optional[list[RevealedSecretsCustomDomainSpec]] = Field(
+        default=None, 
+        alias='customDomains'
+    )
+
+class RevealedSecretsServiceSpec(models.ServiceSpec):
+    routes: Optional[list[RevealedSecretsRouteSpec]] = None
+
+class RevealedSecretsImageSpec(models.ImageSpec):
+    username: Optional[RevealedSecretStr] = None
+    password: Optional[RevealedSecretStr] = None
+
+class RevealedSecretsSourceRepositorySpec(models.SourceRepositorySpec):
+    token: Optional[RevealedSecretStr] = None
+
+class RevealedSecretProjectResourcesSpec(models.ProjectResourcesSpec):
+    secrets: Optional[list[RevealedSecretSpec]] = None
+    build: Optional[RevealedSecretsBuildCredentials] = None
+    images: Optional[list[RevealedSecretsImageSpec]] = None
+    sources: Optional[list[RevealedSecretsSourceRepositorySpec]] = None
+
+class RevealedSecretsProjectSpec(models.ProjectSpec):
+    resources: Optional[RevealedSecretProjectResourcesSpec] = None
+
 def dump_with_secrets(spec: models.ProjectSpec) -> dict:
-    def _reveal_secrets(payload: dict) -> dict:
-        for k, v in payload.items():
-            if isinstance(v, SecretStr):
-                payload[k] = v.get_secret_value()
-            elif isinstance(v, RootModel):
-                if isinstance(v.root, SecretStr):
-                    payload[k] = v.root.get_secret_value()
-            elif isinstance(v, dict):
-               payload[k] = _reveal_secrets(v)
-            elif isinstance(v, list):
-                for i, item in enumerate(v):
-                    if isinstance(item, SecretStr):
-                        v[i] = item.get_secret_value()
-                    elif isinstance(item, dict):
-                       _reveal_secrets(item)
-                payload[k] = v
-            elif isinstance(v, datetime):
-                payload[k] = v.isoformat()
-        return payload
-            
     spec_dict = spec.model_dump(
         exclude_none=True,
         exclude_unset=True,
         by_alias=True,
         mode='python'
     )
-    spec_dict = _reveal_secrets(spec_dict)
-    return spec_dict
+    return RevealedSecretsProjectSpec(**spec_dict).model_dump(
+        exclude_none=True,
+        exclude_unset=True,
+        by_alias=True,
+        mode='json'
+    )
 
 
 class DeployManagerClient:
