@@ -65,14 +65,14 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
         elif stage['status'] == 'updating':
             return click.style(stage['name'], fg='cyan')
         else:
-            return click.style(stage['name'], fg='white')
+            return stage['name']
 
     fields = [
         RenderField(label='Name', path='$.name'),
         RenderField(label='Org.', path='$.org'),
         RenderField(label='Rev.', path='$.last_revision.number'),
         RenderField(label='Status', path='$.status', mod=_status_color),
-        RenderField(label='Stages', path='$.stages.[*]', mod=_color_stage_status),
+        RenderField(label='Stages', path='$.stages.*', mod=_color_stage_status),
     ]
         
     if not projects:

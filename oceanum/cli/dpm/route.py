@@ -6,6 +6,7 @@ from ..renderer import Renderer, output_format_option, RenderField
 from ..auth import login_required
 from .dpm import list_group, describe_group, update_group
 from .client import DeployManagerClient
+from .utils import format_route_status as _frs, wrn
 
 @update_group.group(name='route', help='Update DPM Routes')
 def update_route():
@@ -33,26 +34,14 @@ def list_routes(ctx: click.Context, output: str, open: bool, services: bool, app
     if open:
         filters.update({'open_access': True})
 
-    def format_status(status: str) -> str:
-        if status == 'online':
-            return click.style(status.upper(), fg='green')
-        elif status == 'offline':
-            return click.style(status.upper(), fg='black')
-        elif status == 'pending':
-            return click.style(status.upper(), fg='yellow')
-        elif status == 'starting':
-            return click.style(status.upper(), fg='blue')
-        elif status == 'error':
-            return click.style(status.upper(), fg='red', bold=True)
-        else:
-            return status
+    
 
     client = DeployManagerClient(ctx)
     fields = [
         RenderField(label='Name', path='$.name'),
         RenderField(label='Project', path='$.project'),
         RenderField(label='Stage', path='$.stage'),
-        RenderField(label='Status', path='$.status', mod=format_status),
+        RenderField(label='Status', path='$.status', mod=_frs),
         RenderField(label='URL', path='$.url'),
     ]
     routes =  client.list_routes(**{
@@ -92,24 +81,6 @@ def describe_route(ctx: click.Context, route_name: str):
         
     if route is not None:
         click.echo(Renderer(data=[route], fields=fields).render(output_format='plain'))
-    #     click.echo()
-    #     click.echo(f"Describing route '{route_name}'...")
-    #     click.echo()
-    #     output = [
-    #         ['Name', route.name],
-    #         ['Project', route.project],
-    #         ['Stage', route.stage],
-    #         ['Status', route.status],
-    #         ['URL', route.url],
-    #     ]
-    #     if route.custom_domains:
-    #         output.append(['Custom Domains', os.linesep.join(route.custom_domains)])
-    #     if route.publish_app is not None:
-    #         output.append(['Publish App', route.publish_app])
-    #     if route.open_access is not None:
-    #         output.append(['Open Access', route.open_access])
-        #route_dict = route.model_dump(mode='json', by_alias=True, exclude_none=True, exclude_unset=True)
-#        click.echo(yaml.dump(route_dict))
     else:
         click.echo(f"Route '{route_name}' not found!")
 

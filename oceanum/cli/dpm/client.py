@@ -8,10 +8,12 @@ from pathlib import Path
 from typing import Literal, Optional
 
 import click
+import humanize
 import requests
 from pydantic import SecretStr, RootModel, Field, model_validator, ValidationError
 
 from . import models
+from .utils import format_route_status as _frs, wrn
 
 class RevealedSecretStr(RootModel):
     root: Optional[str|SecretStr] = None
@@ -221,6 +223,22 @@ class DeployManagerClient:
                 counter += 1
         return project
     
+    def _check_routes(self, project_name: str) -> bool:
+        project = self.get_project(project_name)
+        if project.routes:
+            for route in project.routes:
+                if route.status == 'error':
+                    click.echo(f"{wrn('WARNING')}: Route '{route.name}' at stage '{route.stage}' failed to start!")
+                    click.echo(f"Status is {_frs(route.status)}, inspect deployment with 'oceanum dpm inspect project {project.name}'!")
+                else:
+                    click.echo(f"Route '{route.name}' is {_frs(route.status)}!")
+                    click.echo(f"Available at URLs:")
+                    click.echo(f" * {route.url}")
+                    for domain in route.custom_domains:
+                        click.echo(f" * https://{domain}/")
+                
+        return True
+    
     def wait_project_deployment(self, project_name: str) -> bool:
         start = time.time()
         committed = self._wait_project_commit(project_name)
@@ -228,9 +246,9 @@ class DeployManagerClient:
             self._wait_stages_start_updating(project_name)
             self._wait_builds_to_finish(project_name)
             self._wait_stages_finish_updating(project_name)
+            self._check_routes(project_name)
             delta = timedelta(seconds=time.time()-start)
-            delta = str(delta).split('.')[0]
-            click.echo(f"Finished in {delta}")
+            click.echo(f"Deployment finished in {humanize.naturaldelta(delta)}.")
         return True
     
     @classmethod
