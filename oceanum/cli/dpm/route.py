@@ -81,9 +81,9 @@ def describe_route(ctx: click.Context, route_name: str):
         RenderField(label='Default URL', path='$.url'),
         RenderField(
             label='Custom Domains', 
-            path='$.custom_domains', 
+            path='$.custom_domains.*', 
             sep=linesep, 
-            mod=lambda x: f'https://{linesep.join(x)}/' if x else None
+            mod=lambda x: f'https://{x}/' if x else None
         ),
         RenderField(label='Publish App', path='$.publish_app'),
         RenderField(label='Open Access', path='$.open_access'),
