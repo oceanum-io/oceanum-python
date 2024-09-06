@@ -11,6 +11,7 @@ from ..auth import login_required
 from ..dpm.client import DeployManagerClient
 from .dpm import list_group, describe_group, delete, dpm_group, update_group
 from . import models
+from .utils import spin, chk
 
 @update_group.group(name='project', help='Update DPM Project resources')
 def update_project_group():
@@ -31,7 +32,7 @@ project_member_option = click.option('-m', '--member', help='Set the project own
 @click.option('--status', help='filter by Project status', default=None, type=str)
 @login_required
 def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str|None, status: str|None):
-    click.echo('Fetching DPM projects...')
+    click.echo(f' {spin} Fetching DPM projects...')
     client = DeployManagerClient(ctx)
     filters = {
         'search': search,
@@ -158,10 +159,11 @@ def deploy_project(
     user_email = project_spec.member_ref or ctx.obj.token.email
     try: project = client.get_project(project_spec.name)
     except: project = None
+    click.echo()
     if project is not None:
-        click.echo(f"Updating existing DPM Project:")
+        click.echo(f" {spin} Updating existing DPM Project:")
     else:
-        click.echo(f"Deploying new DPM Project:")
+        click.echo(f" {spin} Deploying new DPM Project:")
     click.echo(f'  Name: {project_spec.name}')
     click.echo(f'  Org.: {user_org}')
     click.echo(f'  User: {user_email}')
@@ -171,9 +173,9 @@ def deploy_project(
     client.deploy_project(project_spec)
     project = client.get_project(project_spec.name)
     if project.last_revision is not None:
-        click.echo(f"Revision #{project.last_revision.number} created successfully!")
+        click.echo(f" {chk} Revision #{project.last_revision.number} created successfully!")
         if wait:
-            click.echo('Waiting for project to be deployed...')
+            click.echo(f' {spin} Waiting for project to be deployed...')
             client.wait_project_deployment(project.name)
 
 

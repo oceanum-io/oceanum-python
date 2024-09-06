@@ -13,7 +13,7 @@ import requests
 from pydantic import SecretStr, RootModel, Field, model_validator, ValidationError
 
 from . import models
-from .utils import format_route_status as _frs, wrn
+from .utils import format_route_status as _frs, wrn, chk, spin, err, watch, globe
 
 class RevealedSecretStr(RootModel):
     root: Optional[str|SecretStr] = None
@@ -131,19 +131,19 @@ class DeployManagerClient:
             if project.last_revision is not None:
                 if project.last_revision.status == 'created':
                     time.sleep(self._lag)
-                    click.echo(f'Waiting for Revision #{project.last_revision.number} to be committed...')
+                    click.echo(f' {spin} Waiting for Revision #{project.last_revision.number} to be committed...')
                     continue
                 elif project.last_revision.status == 'no-change':
-                    click.echo('No changes to commit, exiting...')
+                    click.echo(f' {wrn} No changes to commit, exiting...')
                     return False
                 elif project.last_revision.status == 'failed':
-                    click.echo(f"Revision #{project.last_revision.number} failed to commit, exiting...")
+                    click.echo(f" {err} Revision #{project.last_revision.number} failed to commit, exiting...")
                     return False
                 elif project.last_revision.status == 'commited':
-                    click.echo(f"Revision #{project.last_revision.number} committed successfully")
+                    click.echo(f" {chk} Revision #{project.last_revision.number} committed successfully")
                     return True
             else:
-                click.echo('No project revision found, exiting...')
+                click.echo(f' {err} No project revision found, exiting...')
                 break
         return True
     
@@ -159,7 +159,7 @@ class DeployManagerClient:
                 #click.echo(f"Project '{project.name}' finished being updated in {time.time()-start:.2f}s")
                 break
             else:
-                click.echo('Waiting for project to start updating...')
+                click.echo(f' {spin} Waiting for project to start updating...')
                 pass
                 time.sleep(self._lag)
                 counter += 1
@@ -172,7 +172,7 @@ class DeployManagerClient:
         if project.last_revision is not None \
         and project.last_revision.spec.resources \
         and project.last_revision.spec.resources.builds:                
-            click.echo('Revision expects one or more images to be built, this can take several minutes...')
+            click.echo(f' {spin} {spin} Revision expects one or more images to be built, this can take several minutes...')
             time.sleep(10)
             while True:
                 updating_builds = []
@@ -183,22 +183,22 @@ class DeployManagerClient:
                     if build.status in ['updating', 'pending']:
                         updating_builds.append(build)
                     elif build.status in ['error']:
-                        click.echo(f"Build '{build.name}' operation failed!")
+                        click.echo(f" {err} Build '{build.name}' operation failed!")
                         errors.append(build)
                         ready_builds.append(build)
                     elif build.status in ['success']:
-                        click.echo(f"Build '{build.name}' operation succeeded!")
+                        click.echo(f" {chk} Build '{build.name}' operation succeeded!")
                         ready_builds.append(build)
 
                 if errors:
-                    click.echo(f"Project '{project.name}' failed to build images! Exiting...")
+                    click.echo(f" {wrn} Project '{project.name}' failed to build images! Exiting...")
                     return False
                 elif updating_builds and not messaged:
                     click.echo('Waiting for image-builds to finish, this can take several minutes...')
                     messaged = True
                     continue
                 if len(ready_builds) == len(project.builds):
-                    click.echo('All builds are finished!')
+                    click.echo(f' {chk} All builds are finished!')
                     break
                 time.sleep(self._lag)
                 project = self.get_project(project_name)
@@ -207,7 +207,7 @@ class DeployManagerClient:
     
     def _wait_stages_finish_updating(self, project_name: str) -> models.ProjectSchema:
         counter = 0
-        click.echo('Waiting for all stages to finish updating...')
+        click.echo(f' {spin} Waiting for all stages to finish updating...')
         while True:
             project = self.get_project(project_name)
             updating = any([s.status in ['building'] for s in project.stages])
@@ -216,7 +216,7 @@ class DeployManagerClient:
                 time.sleep(self._lag)
                 continue
             elif all_finished:
-                click.echo(f"Project '{project.name}' finished being updated!")
+                click.echo(f" {chk} Project '{project.name}' finished being updated!")
                 break
             else:
                 time.sleep(self._lag)
@@ -227,15 +227,15 @@ class DeployManagerClient:
         project = self.get_project(project_name)
         if project.routes:
             for route in project.routes:
+                urls = [f"https://{d}/" for d in route.custom_domains] + [route.url]
                 if route.status == 'error':
-                    click.echo(f"{wrn('WARNING')}: Route '{route.name}' at stage '{route.stage}' failed to start!")
+                    click.echo(f" {err} Route '{route.name}' at stage '{route.stage}' failed to start!")
                     click.echo(f"Status is {_frs(route.status)}, inspect deployment with 'oceanum dpm inspect project {project.name}'!")
                 else:
-                    click.echo(f"Route '{route.name}' is {_frs(route.status)}!")
-                    click.echo(f"Available at URLs:")
-                    click.echo(f" * {route.url}")
-                    for domain in route.custom_domains:
-                        click.echo(f" * https://{domain}/")
+                    s = 's' if len(urls) > 1 else ''
+                    click.echo(f" {chk} Route '{route.name}' is {_frs(route.status)} and available at URL{s}:")
+                    for url in urls:
+                        click.echo(f" {globe} {url}")
                 
         return True
     
@@ -248,7 +248,7 @@ class DeployManagerClient:
             self._wait_stages_finish_updating(project_name)
             self._check_routes(project_name)
             delta = timedelta(seconds=time.time()-start)
-            click.echo(f"Deployment finished in {humanize.naturaldelta(delta)}.")
+            click.echo(f" {watch} Deployment finished in {humanize.naturaldelta(delta)}.")
         return True
     
     @classmethod
