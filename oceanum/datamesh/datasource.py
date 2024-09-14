@@ -342,7 +342,7 @@ class Datasource(BaseModel):
     def geometry(self):
         return self.geom
 
-    def _guess_props(self, data, crs=None):
+    def _guess_props(self, data, crs=None, append=False):
         if isinstance(data, pandas.DataFrame):
             data = data.reset_index()
         if self.dataschema.dims == {}:
@@ -354,7 +354,12 @@ class Datasource(BaseModel):
             crs = crs or data.rio.crs
         if len(self.coordinates) == 0:  # Try to guess the coordinate mapping
             coords = {}
-            for c in data.coords:
+            ds_index = (
+                data.coords if isinstance(data, xarray.Dataset) else data.index.names
+            )
+            for c in ds_index:
+                if c is None:
+                    continue
                 pref = c[:3].lower()
                 if pref in COORD_MAPPING:
                     coords[COORD_MAPPING[pref]] = c
@@ -381,7 +386,7 @@ class Datasource(BaseModel):
             else:
                 self.tstart = datetime.datetime(1970, 1, 1, tzinfo=None)
                 warnings.warn("Setting tstart to 1970-01-01T00:00:00Z")
-        if not self.tend and not self.pforecast:
+        if not self.tend and not self.pforecast and not append:
             if "t" in self.coordinates:
                 self.tend = to_datetime(data[self.coordinates["t"]].max())
             else:

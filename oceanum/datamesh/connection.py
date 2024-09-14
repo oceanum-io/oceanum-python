@@ -611,8 +611,8 @@ class Connector(object):
             ds.geom = geom
 
         # Do some property sniffing for missing properties
-        if data is not None:
-            ds._guess_props(data, crs)
+        if not append and data is not None:
+            ds._guess_props(data, crs, append)
 
         # Do some final checks and conversions
         if crs:
