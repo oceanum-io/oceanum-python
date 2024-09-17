@@ -4,7 +4,8 @@ from typing import Literal
 from pathlib import Path
 from datetime import datetime
 
-from typing import ClassVar, Self
+from typing import ClassVar
+from typing_extensions import Self
 import json
 
 from pydantic import BaseModel, Field
