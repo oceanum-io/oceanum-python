@@ -63,7 +63,6 @@ def describe_route(ctx: click.Context, route_name: str):
         click.echo(f"Route '{route_name}' doesn't exist or isn't authorized!")
         return
     else:
-        route = client.get_route(route_name)
         fields = [
             RenderField(label='Name', path='$.name'),
             RenderField(label='Project', path='$.project'),
@@ -109,3 +108,4 @@ def update_thumbnail(ctx: click.Context, route_name: str, thumbnail_file: click.
             raise
     else:
         click.echo(f"Route '{route_name}' not found!")
+        

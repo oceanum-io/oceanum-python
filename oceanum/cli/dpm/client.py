@@ -107,7 +107,6 @@ class DeployManagerClient:
             }
         url = f"{self.service.removesuffix('/')}/{endpoint}"
         response = requests.request(method, url, headers=headers, **kwargs)
-        response.raise_for_status()
         return response
  
     def _get(self, endpoint, **kwargs) -> requests.Response:
@@ -303,13 +302,15 @@ class DeployManagerClient:
         route_json = response.json()
         return models.RouteThumbnailSchema(**route_json)
     
-    def validate(self, specfile: Path) -> models.ProjectSpec:
+    def validate(self, specfile: Path) -> models.ProjectSpec | models.ErrorResponse:
         with specfile.open() as f:
             spec_dict = yaml.safe_load(f)
-        response = self._post('validate', json=spec_dict)
-        project_spec = response.json()
-        return models.ProjectSpec(**project_spec)
 
+        response = self._post('validate', json=spec_dict)
+        if response.status_code == 200:
+            return models.ProjectSpec(**spec_dict)
+        else:
+            return models.ErrorResponse(**response.json())
     
 
 

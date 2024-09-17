@@ -11,7 +11,7 @@ from ..auth import login_required
 from ..dpm.client import DeployManagerClient
 from .dpm import list_group, describe_group, delete, dpm_group, update_group
 from . import models
-from .utils import spin, chk
+from .utils import spin, chk, err, wrn
 
 @update_group.group(name='project', help='Update DPM Project resources')
 def update_project_group():
@@ -88,12 +88,18 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
 def validate_project(ctx: click.Context, specfile: click.Path):
     click.echo('Validating DPM Project Spec...')
     client = DeployManagerClient(ctx)
-    try:
-        client.validate(Path(str(specfile)))
-    except Exception as e:
-        click.echo(f'ERROR: {e}')
-        
-    click.echo('OK! Project spec is valid!')
+    response = client.validate(Path(str(specfile)))
+    if isinstance(response, models.ErrorResponse):
+        click.echo(f" {err} Validation failed!")
+        if isinstance(response.detail, dict):
+            for key, value in response.detail.items():
+                click.echo(f" {wrn} {key}: {value}")
+        elif isinstance(response.detail, list):
+            for item in response.detail:
+                click.echo(f" {wrn} {item}")
+    else:
+        click.echo(f' {chk} OK! Project spec is valid!')
+
 
 @dpm_group.command(name='deploy', help='Deploy a DPM Project Specfile')
 @click.option('--name', help='Set project name', required=False, type=str)
