@@ -86,7 +86,7 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
 @click.pass_context
 @login_required
 def validate_project(ctx: click.Context, specfile: click.Path):
-    click.echo('Validating DPM Project Spec...')
+    click.echo('Validating DPM Project Spec file...')
     client = DeployManagerClient(ctx)
     response = client.validate(Path(str(specfile)))
     if isinstance(response, models.ErrorResponse):
@@ -97,8 +97,10 @@ def validate_project(ctx: click.Context, specfile: click.Path):
         elif isinstance(response.detail, list):
             for item in response.detail:
                 click.echo(f" {wrn} {item}")
+        elif isinstance(response.detail, str):
+            click.echo(f" {wrn} {response.detail}")
     else:
-        click.echo(f' {chk} OK! Project spec is valid!')
+        click.echo(f' {chk} OK! Project Spec file is valid!')
 
 
 @dpm_group.command(name='deploy', help='Deploy a DPM Project Specfile')
