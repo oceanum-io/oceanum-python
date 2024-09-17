@@ -9,9 +9,10 @@ import requests
 import xarray
 
 from typing import Optional, Dict, Union
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 from .query import Query
+from .datasource import Datasource
 from .exceptions import DatameshConnectError, DatameshWriteError
 
 try:
@@ -119,7 +120,9 @@ class Selector(BaseModel):
     
 class DriverQuery(BaseModel):
     query: Query
+    datasource_last_modified: str
     driver_args: Dict = {}
+    driver_parameters: Optional[Dict] = {}
     chunks: Optional[Dict] = {}
     coordinates: Optional[Dict] = {}
     model_config = {
@@ -139,6 +142,7 @@ class DriverQuery(BaseModel):
     
 class ZarrProxyGetRequestParams(BaseModel):
     query: Query
+    datasource: Optional[Datasource]
     chunks: Optional[Dict[str, int]]
     downsample: Optional[Dict[str, int]]
     selector: Optional[Selector]
