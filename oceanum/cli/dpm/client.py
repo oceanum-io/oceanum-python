@@ -310,8 +310,7 @@ class DeployManagerClient:
         if response.status_code == 200:
             return models.ProjectSpec(**spec_dict)
         else:
-            return models.ErrorResponse(**response.json())
-    
-
-
-
+            try:
+                return models.ErrorResponse(**response.json())
+            except requests.exceptions.JSONDecodeError:
+                return models.ErrorResponse(detail=response.text)

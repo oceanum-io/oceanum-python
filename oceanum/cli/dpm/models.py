@@ -82,6 +82,7 @@ class UserSchema(BaseModel):
         description="The user's DPM API authentication token",
         title='Token',
     )
+    
 
 
 class ValidationErrorDetail(BaseModel):
