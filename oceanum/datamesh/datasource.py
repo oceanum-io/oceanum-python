@@ -83,6 +83,11 @@ class _GeometryAnnotation:
     @classmethod
     def __get_pydantic_core_schema__(cls, source, handler):
         def validate(geometry):
+            if isinstance(geometry, str):
+                try:
+                    geometry = shapely.from_geojson(geometry)
+                except:
+                    "Not a valid GeoJSON string"
             if isinstance(geometry, dict):
                 try:
                     geometry = shapely.geometry.shape(geometry)
@@ -95,7 +100,7 @@ class _GeometryAnnotation:
             ):
                 return geometry
             else:
-                raise BaseException("Geometry must be Point, MultiPoint or Polygon")
+                raise BaseException(f"Geometry must be Point, MultiPoint or Polygon: {geometry}")
 
         from_geometry_schema = core_schema.no_info_plain_validator_function(validate)
 
