@@ -18,9 +18,9 @@ def update_project_group():
     pass
 
 
-project_name_option = click.option('-p', '--project', help='Set the project name', required=True, type=str)
-project_org_option = click.option('-o', '--org', help='Set the project organization', required=False, type=str)
-project_member_option = click.option('-m', '--member', help='Set the project owner email', required=False, type=str)
+name_option = click.option('--name', help='Set the resource name', required=True, type=str)
+project_org_option = click.option('--org', help='Set the project organization', required=False, type=str)
+project_user_option = click.option('--user', help='Set the project owner email', required=False, type=str)
 
 
 
@@ -107,9 +107,9 @@ def validate_project(ctx: click.Context, specfile: click.Path):
 
 
 @dpm_group.command(name='deploy', help='Deploy a DPM Project Specfile')
-@click.option('--name', help='Set project name', required=False, type=str)
-@click.option('--org', help="Set project's organization namespace to be deployed to", required=False, type=str)
-@click.option('--member', help="Set project's owner email address", required=False, type=str)
+@name_option
+@project_org_option
+@project_user_option
 @click.option('--wait', help='Wait for project to be deployed', default=True)
 # Add option to allow passing secrets to the specfile, this will be used to replace placeholders
 # can be multiple, e.g. --secret secret-1:key1=value1,key2=value2 --secret secret-2:key2=value2
@@ -122,7 +122,7 @@ def deploy_project(
     specfile: click.Path, 
     name: str|None, 
     org: str|None, 
-    member: str|None,
+    user: str|None,
     wait: bool,
     secrets: list[str]
 ):
@@ -158,8 +158,8 @@ def deploy_project(
         project_spec.name = name
     if org is not None:
         project_spec.user_ref = models.UserRef(org)
-    if member:
-        project_spec.member_ref = member
+    if user:
+        project_spec.member_ref = user
 
     if secrets:
         click.echo('Parsing and merging secrets...')
@@ -168,26 +168,48 @@ def deploy_project(
 
     user_org = project_spec.user_ref or ctx.obj.token.active_org
     user_email = project_spec.member_ref or ctx.obj.token.email
-    try: project = client.get_project(project_spec.name)
-    except: project = None
+    get_params = {
+        'project_name': project_spec.name,
+        'org': user_org,
+        'user': user_email
+    }
+    try:
+        project = client.get_project(**get_params)
+    except requests.exceptions.HTTPError as e:
+        project = None
     click.echo()
     if project is not None:
         click.echo(f" {spin} Updating existing DPM Project:")
     else:
         click.echo(f" {spin} Deploying new DPM Project:")
-    click.echo(f'  Name: {project_spec.name}')
-    click.echo(f'  Org.: {user_org}')
-    click.echo(f'  User: {user_email}')
+    click.echo()
+    click.echo(f'  Project Name: {project_spec.name}')
+    click.echo(f"  Organization: {getattr(user_org, 'root', user_org)}")
+    click.echo(f'  Owner:        {user_email}')
     click.echo()
     click.echo('Safe to Ctrl+C at any time...')
     click.echo()
-    client.deploy_project(project_spec)
-    project = client.get_project(project_spec.name)
-    if project.last_revision is not None:
-        click.echo(f" {chk} Revision #{project.last_revision.number} created successfully!")
-        if wait:
-            click.echo(f' {spin} Waiting for project to be deployed...')
-            client.wait_project_deployment(project.name)
+    try:
+        deployed_spec = client.deploy_project(project_spec)
+        if isinstance(deployed_spec, models.ErrorResponse):
+            click.echo(f" {err} Deployment failed!")
+            click.echo(f" {wrn} {deployed_spec.detail}")
+            return
+        else:
+            click.echo(f" {chk} Project '{deployed_spec.name}' updated successfully!")
+    except requests.exceptions.HTTPError as e:
+        click.echo(f" {err} Deployment failed!")
+        click.echo(f" {wrn} {e}")
+    else:
+        try:
+            resp = client.get_project(**get_params)
+            if resp.last_revision is not None:
+                click.echo(f" {chk} Revision #{resp.last_revision.number} created successfully!")
+                if wait:
+                    click.echo(f' {spin} Waiting for project to be deployed...')
+                    client.wait_project_deployment(**get_params)
+        except requests.exceptions.HTTPError as e:
+            click.echo(f" {err} Request Error: {e}")
 
 
 @delete.command(name='project')
@@ -220,11 +242,21 @@ def delete_project(ctx: click.Context, project_name: str):
 @click.option('--show-spec', help='Show project spec', default=False, type=bool, is_flag=True)
 @click.option('--only-spec', help='Show only project spec', default=False, type=bool, is_flag=True)
 @click.argument('project_name', type=str)
+@project_org_option
+@project_user_option
 @click.pass_context
 @login_required
-def describe_project(ctx: click.Context, project_name: str, show_spec: bool=False, only_spec: bool=False):
+def describe_project(ctx: click.Context, project_name: str, org: str, user:str, show_spec: bool=False, only_spec: bool=False):
     client = DeployManagerClient(ctx)
-    project = client.get_project(project_name)
+    try:
+        project = client.get_project(project_name, org=org, user=user)
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            click.echo(f" {wrn} Project '{project_name}' not found!")
+            return
+        else:
+            click.echo(f" {err} Request Error: {e}")
+            return
     if project.last_revision is not None:
         if not only_spec:
             click.echo()
@@ -322,7 +354,7 @@ def describe_project(ctx: click.Context, project_name: str, show_spec: bool=Fals
 @click.pass_context
 def update_description(ctx: click.Context, project_name: str, description: str):
     client = DeployManagerClient(ctx)
-    project = client.get_project(project_name)
+    project = client.get_project(project_name, )
     if project is not None:
         project.description = description
         op = models.JSONPatchOpSchema(

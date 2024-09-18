@@ -5,12 +5,12 @@ import time
 from enum import Enum
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Type
 
 import click
 import humanize
 import requests
-from pydantic import SecretStr, RootModel, Field, model_validator, ValidationError
+from pydantic import SecretStr, RootModel, Field, model_validator, BaseModel, InstanceOf
 
 from . import models
 from .utils import format_route_status as _frs, wrn, chk, spin, err, watch, globe
@@ -107,6 +107,7 @@ class DeployManagerClient:
             }
         url = f"{self.service.removesuffix('/')}/{endpoint}"
         response = requests.request(method, url, headers=headers, **kwargs)
+        response.raise_for_status()
         return response
  
     def _get(self, endpoint, **kwargs) -> requests.Response:
@@ -124,9 +125,9 @@ class DeployManagerClient:
     def _delete(self, endpoint, **kwargs) -> requests.Response:
         return self._request('DELETE', endpoint, **kwargs)
     
-    def _wait_project_commit(self, project_name: str) -> bool:
+    def _wait_project_commit(self, **params) -> bool:
         while True:
-            project = self.get_project(project_name)
+            project = self.get_project(**params)
             if project.last_revision is not None:
                 if project.last_revision.status == 'created':
                     time.sleep(self._lag)
@@ -146,10 +147,10 @@ class DeployManagerClient:
                 break
         return True
     
-    def _wait_stages_start_updating(self, project_name: str) -> models.ProjectSchema:
+    def _wait_stages_start_updating(self, **params) -> models.ProjectSchema:
         counter = 0
         while True:
-            project = self.get_project(project_name)
+            project = self.get_project(**params)
             updating = any([s.status in ['updating','degraded'] for s in project.stages])
             ready_stages = all([s.status in ['ready', 'error'] for s in project.stages])
             if updating:
@@ -164,9 +165,9 @@ class DeployManagerClient:
                 counter += 1
         return project
     
-    def _wait_builds_to_finish(self, project_name: str) -> bool:
+    def _wait_builds_to_finish(self, **params) -> bool:
         messaged = False
-        project = self.get_project(project_name)
+        project = self.get_project(**params)
         
         if project.last_revision is not None \
         and project.last_revision.spec.resources \
@@ -177,7 +178,7 @@ class DeployManagerClient:
                 updating_builds = []
                 ready_builds = []
                 errors = []
-                project = self.get_project(project_name)
+                project = self.get_project(**params)
                 for build in project.builds:
                     if build.status in ['updating', 'pending']:
                         updating_builds.append(build)
@@ -200,15 +201,15 @@ class DeployManagerClient:
                     click.echo(f' {chk} All builds are finished!')
                     break
                 time.sleep(self._lag)
-                project = self.get_project(project_name)
+                project = self.get_project(**params)
             
         return True
     
-    def _wait_stages_finish_updating(self, project_name: str) -> models.ProjectSchema:
+    def _wait_stages_finish_updating(self, **params) -> models.ProjectSchema:
         counter = 0
         click.echo(f' {spin} Waiting for all stages to finish updating...')
         while True:
-            project = self.get_project(project_name)
+            project = self.get_project(**params)
             updating = any([s.status in ['building'] for s in project.stages])
             all_finished = all([s.status in ['healthy', 'error'] for s in project.stages])
             if updating:
@@ -222,8 +223,8 @@ class DeployManagerClient:
                 counter += 1
         return project
     
-    def _check_routes(self, project_name: str) -> bool:
-        project = self.get_project(project_name)
+    def _check_routes(self, **params) -> bool:
+        project = self.get_project(**params)
         if project.routes:
             for route in project.routes:
                 urls = [f"https://{d}/" for d in route.custom_domains] + [route.url]
@@ -238,14 +239,20 @@ class DeployManagerClient:
                 
         return True
     
-    def wait_project_deployment(self, project_name: str) -> bool:
+    def _get_errors(self, response: requests.Response) -> models.ErrorResponse:
+        try:
+            return models.ErrorResponse(**response.json())
+        except requests.exceptions.JSONDecodeError:
+            return models.ErrorResponse(detail=response.text)
+    
+    def wait_project_deployment(self, **params) -> bool:
         start = time.time()
-        committed = self._wait_project_commit(project_name)
+        committed = self._wait_project_commit(**params)
         if committed:
-            self._wait_stages_start_updating(project_name)
-            self._wait_builds_to_finish(project_name)
-            self._wait_stages_finish_updating(project_name)
-            self._check_routes(project_name)
+            self._wait_stages_start_updating(**params)
+            self._wait_builds_to_finish(**params)
+            self._wait_stages_finish_updating(**params)
+            self._check_routes(**params)
             delta = timedelta(seconds=time.time()-start)
             click.echo(f" {watch} Deployment finished in {humanize.naturaldelta(delta)}.")
         return True
@@ -256,17 +263,18 @@ class DeployManagerClient:
             spec_dict = yaml.safe_load(f)
         return models.ProjectSpec(**spec_dict)
     
-    def deploy_project(self, spec: models.ProjectSpec) -> models.ProjectSpec:
+    def deploy_project(self, spec: models.ProjectSpec) -> models.ProjectSpec | models.ErrorResponse:
         payload = dump_with_secrets(spec)
-        response = self._post('projects', json=payload)
-        project = response.json()
-        return models.ProjectSpec(**project)
-    
+        try:
+            response = self._post('projects', json=payload)
+            return models.ProjectSpec(**response.json())
+        except requests.exceptions.HTTPError as e:
+            return self._get_errors(e.response)
+            
     def patch_project(self, project_name: str, ops: list[models.JSONPatchOpSchema]) -> models.ProjectSchema:
         payload = [op.model_dump(exclude_none=True, mode='json') for op in ops]
         response = self._patch(f'projects/{project_name}', json=payload)
-        project = response.json()
-        return models.ProjectSpec(**project)
+        return models.ProjectSchema(**response.json())
     
     def delete_project(self, project_id: str) -> requests.Response:
         return self._delete(f'projects/{project_id}')
@@ -281,10 +289,9 @@ class DeployManagerClient:
         projects_json = response.json()
         return [models.ProjectSchema(**project) for project in projects_json]
     
-    def get_project(self, project_name: str) -> models.ProjectSchema:
-        response = self._get(f'projects/{project_name}')
-        project_json = response.json()
-        return models.ProjectSchema(**project_json)
+    def get_project(self, project_name: str, **filters) -> models.ProjectSchema:
+        response = self._get(f'projects/{project_name}', params=filters or None)
+        return models.ProjectSchema(**response.json())
     
     def list_routes(self, **filters) -> list[models.RouteSchema]:
         response = self._get('routes', params=filters or None)
@@ -296,11 +303,10 @@ class DeployManagerClient:
         route_json = response.json()
         return models.RouteSchema(**route_json)
     
-    def update_route_thumbnail(self, route_name: str, thumbnail: click.File) -> models.RouteSchema:
+    def update_route_thumbnail(self, route_name: str, thumbnail: click.File) -> models.RouteThumbnailSchema:
         files = {'thumbnail': thumbnail}
         response = self._post(f'routes/{route_name}/thumbnail', files=files)
-        route_json = response.json()
-        return models.RouteThumbnailSchema(**route_json)
+        return models.RouteThumbnailSchema(**response.json())
     
     def validate(self, specfile: Path) -> models.ProjectSpec | models.ErrorResponse:
         with specfile.open() as f:

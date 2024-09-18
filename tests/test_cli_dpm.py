@@ -58,7 +58,7 @@ class TestDPMCommands(TestCase):
         with patch('oceanum.cli.dpm.client.DeployManagerClient.get_project') as mock_get:
             with patch('oceanum.cli.dpm.client.DeployManagerClient.deploy_project') as mock_deploy:
                 result = self.runner.invoke(
-                    main, ['dpm','deploy', str(self.specfile),'--org','test','--wait=0','--member=test@test.com']
+                    main, ['dpm','deploy', str(self.specfile),'--org','test','--wait=0','--user=test@test.com']
                 )
                 assert result.exit_code == 0
                 assert mock_deploy.call_args[0][0].user_ref.root == 'test'
