@@ -276,8 +276,8 @@ class DeployManagerClient:
         response = self._patch(f'projects/{project_name}', json=payload)
         return models.ProjectSchema(**response.json())
     
-    def delete_project(self, project_id: str) -> requests.Response:
-        return self._delete(f'projects/{project_id}')
+    def delete_project(self, project_id: str, **filters) -> requests.Response:
+        return self._delete(f'projects/{project_id}', params=filters or None)
     
     def get_users(self) -> list[models.UserSchema]:
         response = self._get('users')

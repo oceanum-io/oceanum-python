@@ -214,12 +214,14 @@ def deploy_project(
 
 @delete.command(name='project')
 @click.argument('project_name', type=str)
+@project_org_option
+@project_user_option
 @click.pass_context
 @login_required
-def delete_project(ctx: click.Context, project_name: str):
+def delete_project(ctx: click.Context, project_name: str, org: str|None, user:str|None):
     client = DeployManagerClient(ctx)
     try:
-        project = client.get_project(project_name)
+        project = client.get_project(project_name, org=org, user=user)
     except requests.exceptions.HTTPError as e:
         click.echo(f"Project '{project_name}' not found!")
         return
@@ -233,7 +235,7 @@ def delete_project(ctx: click.Context, project_name: str):
             f"{linesep}"\
             "This will attempt to remove all deployed resources for this project! Are you sure?",
             abort=True)
-        client.delete_project(project_name)
+        client.delete_project(project_name, org=org, user=user)
         click.echo(f'Project {project_name} deleted! Deployed resources will be removed shortly...')
         
 
