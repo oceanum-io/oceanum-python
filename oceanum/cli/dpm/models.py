@@ -82,7 +82,6 @@ class UserSchema(BaseModel):
         description="The user's DPM API authentication token",
         title='Token',
     )
-    
 
 
 class ValidationErrorDetail(BaseModel):
@@ -741,7 +740,7 @@ class RetryStrategy(BaseModel):
     )
 
 
-class SecretRefEnvVar(BaseModel):
+class SecretKeyRef(BaseModel):
     name: str = Field(
         ...,
         description="The Secret's name to use as source of the Environment Variable value",
@@ -880,19 +879,17 @@ class SourceRefParams(BaseModel):
     )
 
 
-class SecretRef3(RootModel[str]):
-    root: str = Field(
-        ...,
-        description='The Secret reference name from the list of Secret resources',
-        max_length=255,
-        min_length=3,
-        pattern='^[a-z]([a-z0-9-]+[a-z0-9])?$',
-        title='Secret Reference',
-    )
-
-
-class UserSecretRef1(SecretRef3):
+class UserSecretRef11(SecretRef):
     pass
+
+
+class UserSecretRef1(RootModel[Union[UserSecretRef11, SecretKeyRef]]):
+    root: Union[UserSecretRef11, SecretKeyRef] = Field(
+        ...,
+        description="The name of a Secret containing a 'token' data key for the repository user or a SecretKeyRef with name and key.",
+        max_length=255,
+        title='User Secret Reference',
+    )
 
 
 class SourceRepositorySpec(BaseModel):
@@ -928,16 +925,16 @@ class SourceRepositorySpec(BaseModel):
         max_length=24,
         title='Default Branch',
     )
-    secret_ref: Optional[SecretRef3] = Field(
+    secret_ref: Optional[Union[SecretRef2, SecretKeyRef]] = Field(
         default=None,
         alias='secretRef',
-        description="The name of a Secret containing a 'token' data key for the source repository",
+        description="The name of a Secret containing a 'token' data key for the source repository or a SecretKeyRef with name and key.",
         title='Source Repository Secret Reference',
     )
     user_secret_ref: Optional[UserSecretRef1] = Field(
         default=None,
         alias='userSecretRef',
-        description="The name of a Secret containing a 'token' data key for the repository user",
+        description="The name of a Secret containing a 'token' data key for the repository user or a SecretKeyRef with name and key.",
         title='User Secret Reference',
     )
 
@@ -1120,16 +1117,16 @@ class TaskParameter(BaseModel):
 
 
 class ProjectFilterSchema(BaseModel):
-    search: Optional[str] = Field(
-        default=None,
-        description='Filter by name or description contains (case-insensitive)',
-        title='Search',
-    )
     org: Optional[str] = Field(
         default=None, description='Filter by org name', title='Org'
     )
     user: Optional[str] = Field(
         default=None, description='Filter by user email', title='User'
+    )
+    search: Optional[str] = Field(
+        default=None,
+        description='Filter by name or description contains (case-insensitive)',
+        title='Search',
     )
     status: Optional[str] = Field(
         default=None, description='Filter by project status', title='Status'
@@ -1217,6 +1214,15 @@ class StageSchema(BaseModel):
     error_message: str = Field(default='', title='Error Message')
     status: str = Field(default='created', max_length=20, title='Status')
     updated_at: AwareDatetime = Field(..., title='Updated At')
+
+
+class GetProjectFilterSchema(BaseModel):
+    org: Optional[str] = Field(
+        default=None, description='Filter by org name', title='Org'
+    )
+    user: Optional[str] = Field(
+        default=None, description='Filter by user email', title='User'
+    )
 
 
 class Op(Enum):
@@ -1353,13 +1359,13 @@ class EnvVarValue(BaseModel):
         description='Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".',
         title='Environment Variable Value',
     )
-    secret_ref: Optional[SecretRefEnvVar] = Field(
+    secret_ref: Optional[SecretKeyRef] = Field(
         default=None,
         alias='secretRef',
         description='The secret reference to mount in the container',
         title='Secret Reference',
     )
-    user_secret_ref: Optional[SecretRefEnvVar] = Field(
+    user_secret_ref: Optional[SecretKeyRef] = Field(
         default=None,
         alias='userSecretRef',
         description="The User's Secret reference to mount in the container",

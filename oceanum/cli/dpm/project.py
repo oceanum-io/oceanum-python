@@ -22,8 +22,6 @@ name_option = click.option('--name', help='Set the resource name', required=True
 project_org_option = click.option('--org', help='Set the project organization', required=False, type=str)
 project_user_option = click.option('--user', help='Set the project owner email', required=False, type=str)
 
-
-
 @list_group.command(name='projects', help='List DPM Projects')
 @click.pass_context
 @click.option('--search', help='Search by project name or description', default=None, type=str)
@@ -77,7 +75,7 @@ def list_projects(ctx: click.Context, search: str|None, org: str|None, user: str
     ]
         
     if not projects:
-        click.echo('No projects found!')
+        click.echo(f' {wrn} No projects found!')
     else:
         click.echo(Renderer(data=projects, fields=fields).render(output_format='table'))
 
@@ -166,22 +164,19 @@ def deploy_project(
         parsed_secrets = _parse_secrets(secrets)
         project_spec = _merge_secrets(project_spec, parsed_secrets)
 
-    user_org = project_spec.user_ref or ctx.obj.token.active_org
+    user_org = getattr(project_spec.user_ref, 'root') or ctx.obj.token.active_org
     user_email = project_spec.member_ref or ctx.obj.token.email
     get_params = {
         'project_name': project_spec.name,
         'org': user_org,
         'user': user_email
     }
-    try:
-        project = client.get_project(**get_params)
-    except requests.exceptions.HTTPError as e:
-        project = None
+    project = client.get_project(**get_params)
     click.echo()
     if project is not None:
         click.echo(f" {spin} Updating existing DPM Project:")
     else:
-        click.echo(f" {spin} Deploying new DPM Project:")
+        click.echo(f" {spin} Deploying NEW DPM Project:")
     click.echo()
     click.echo(f'  Project Name: {project_spec.name}')
     click.echo(f"  Organization: {getattr(user_org, 'root', user_org)}")
@@ -190,27 +185,26 @@ def deploy_project(
     click.echo('Safe to Ctrl+C at any time...')
     click.echo()
     try:
-        deployed_spec = client.deploy_project(project_spec)
-        if isinstance(deployed_spec, models.ErrorResponse):
+        project = client.deploy_project(project_spec)
+        if isinstance(project, models.ErrorResponse):
             click.echo(f" {err} Deployment failed!")
-            click.echo(f" {wrn} {deployed_spec.detail}")
+            click.echo(f" {wrn} {project.detail}")
             return
         else:
-            click.echo(f" {chk} Project '{deployed_spec.name}' updated successfully!")
+            click.echo(f" {chk} Project '{project.name}' updated successfully!")
     except requests.exceptions.HTTPError as e:
         click.echo(f" {err} Deployment failed!")
         click.echo(f" {wrn} {e}")
     else:
-        try:
-            resp = client.get_project(**get_params)
-            if resp.last_revision is not None:
-                click.echo(f" {chk} Revision #{resp.last_revision.number} created successfully!")
-                if wait:
-                    click.echo(f' {spin} Waiting for project to be deployed...')
-                    client.wait_project_deployment(**get_params)
-        except requests.exceptions.HTTPError as e:
-            click.echo(f" {err} Request Error: {e}")
-
+        resp = client.get_project(**get_params)
+        if resp is not None and resp.last_revision is not None:
+            click.echo(f" {chk} Revision #{resp.last_revision.number} created successfully!")
+            if wait:
+                click.echo(f' {spin} Waiting for project to be deployed...')
+                client.wait_project_deployment(**get_params)
+        else:
+            click.echo(f" {err} Could not retrieve project details!")
+            click.echo(f" {wrn} Please check the project status in the DPM console!")
 
 @delete.command(name='project')
 @click.argument('project_name', type=str)
@@ -220,12 +214,8 @@ def deploy_project(
 @login_required
 def delete_project(ctx: click.Context, project_name: str, org: str|None, user:str|None):
     client = DeployManagerClient(ctx)
-    try:
-        project = client.get_project(project_name, org=org, user=user)
-    except requests.exceptions.HTTPError as e:
-        click.echo(f"Project '{project_name}' not found!")
-        return
-    else:
+    project = client.get_project(project_name, org=org, user=user)
+    if project is not None:
         click.confirm(
             f"Deleting project:{linesep}"\
             f"{linesep}"\
@@ -237,8 +227,6 @@ def delete_project(ctx: click.Context, project_name: str, org: str|None, user:st
             abort=True)
         client.delete_project(project_name, org=org, user=user)
         click.echo(f'Project {project_name} deleted! Deployed resources will be removed shortly...')
-        
-
 
 @describe_group.command(name='project', help='Describe a DPM Project')
 @click.option('--show-spec', help='Show project spec', default=False, type=bool, is_flag=True)
@@ -250,34 +238,30 @@ def delete_project(ctx: click.Context, project_name: str, org: str|None, user:st
 @login_required
 def describe_project(ctx: click.Context, project_name: str, org: str, user:str, show_spec: bool=False, only_spec: bool=False):
     client = DeployManagerClient(ctx)
-    try:
-        project = client.get_project(project_name, org=org, user=user)
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:
-            click.echo(f" {wrn} Project '{project_name}' not found!")
-            return
-        else:
-            click.echo(f" {err} Request Error: {e}")
-            return
-    if project.last_revision is not None:
+    project = client.get_project(project_name, org=org, user=user)
+    routes = project.routes if project is not None else None
+    last_revision = project.last_revision if project is not None else None
+    project_spec = last_revision.spec if last_revision is not None else None
+    click.echo()
+    if project and last_revision and project_spec:
         if not only_spec:
             click.echo()
-            click.echo(f"Describing project '{project_name}'...")
+            click.echo(f"Describing project...")
             click.echo()
             output = [
                 ['Name', project.name],
                 ['Org', project.org],
-                ['User', project.last_revision.spec.member_ref],
+                ['User', project_spec.member_ref],
                 ['Status', project.status],
                 ['Created', project.created_at],
             ]
-            if project.last_revision is not None:
+            if last_revision is not None:
                 output.append(
                     ['Last Revision', [
-                        ['Number', project.last_revision.number],
-                        ['Created', project.last_revision.created_at],
-                        ['User', project.last_revision.spec.member_ref],
-                        ['Status', project.last_revision.status],
+                        ['Number', last_revision.number],
+                        ['Created', last_revision.created_at],
+                        ['User', project_spec.member_ref],
+                        ['Status', last_revision.status],
                     ]]
                 )
             if project.stages:
@@ -288,7 +272,6 @@ def describe_project(ctx: click.Context, project_name: str, org: str, user:str, 
                         ['Status', stage.status],
                         ['Message', stage.error_message],
                         ['Updated', stage.updated_at],
-                        
                     ])
                 output.append(['Stages', stages])
             if project.builds:
@@ -340,10 +323,13 @@ def describe_project(ctx: click.Context, project_name: str, org: str, user:str, 
                 click.echo()
                 click.echo('Project Spec:')
                 click.echo('---')
+                
             # clear stage status, this will be details above
-            for stage in project.last_revision.spec.resources.stages:
-                stage.status = None
-            click.echo(yaml.dump(project.last_revision.spec.model_dump(
+            if project_spec.resources:
+                for stage in project_spec.resources.stages:
+                    stage.status = None
+
+            click.echo(yaml.dump(project_spec.model_dump(
                 exclude_none=True, exclude_unset=True, by_alias=True, mode='json'
             )))
     else:
@@ -352,11 +338,13 @@ def describe_project(ctx: click.Context, project_name: str, org: str, user:str, 
 
 @update_project_group.command(name='description', help='Update project description')
 @click.argument('project_name', type=str)
+@project_org_option
+@project_user_option
 @click.argument('description', type=str)
 @click.pass_context
-def update_description(ctx: click.Context, project_name: str, description: str):
+def update_description(ctx: click.Context, project_name: str, description: str, org: str, user:str):
     client = DeployManagerClient(ctx)
-    project = client.get_project(project_name, )
+    project = client.get_project(project_name, org=org, user=user)
     if project is not None:
         project.description = description
         op = models.JSONPatchOpSchema(
@@ -366,9 +354,6 @@ def update_description(ctx: click.Context, project_name: str, description: str):
         )
         client.patch_project(project.name, [op])
         click.echo(f"Project '{project_name}' description updated!")
-    else:
-        click.echo(f"Project '{project_name}' not found!")
-
 
 @update_project_group.command(name='active', help='Update project status')
 @click.argument('project_name', type=str)
@@ -388,8 +373,6 @@ def update_active(ctx: click.Context, project_name: str, active: bool):
         if active:
             click.echo(f"Project '{project_name}' activated!")
             click.echo(f"Deployed resources will be available shortly!")
-            client.wait_project_deployment(project_name)
+            client.wait_project_deployment(project_name=project_name)
         else:
-            click.echo(f"Project '{project_name}' deactivated, deployed resources will be removed shortly!")
-    else:
-        click.echo(f"Project '{project_name}' not found!")
+            click.echo(f"Project '{project_name}' deactivated, deployed resources will be removed shortly!")        

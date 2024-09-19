@@ -128,7 +128,7 @@ class DeployManagerClient:
     def _wait_project_commit(self, **params) -> bool:
         while True:
             project = self.get_project(**params)
-            if project.last_revision is not None:
+            if project and project.last_revision is not None:
                 if project.last_revision.status == 'created':
                     time.sleep(self._lag)
                     click.echo(f' {spin} Waiting for Revision #{project.last_revision.number} to be committed...')
@@ -147,39 +147,46 @@ class DeployManagerClient:
                 break
         return True
     
-    def _wait_stages_start_updating(self, **params) -> models.ProjectSchema:
+    def _wait_stages_start_updating(self, **params):
         counter = 0
         while True:
             project = self.get_project(**params)
-            updating = any([s.status in ['updating','degraded'] for s in project.stages])
-            ready_stages = all([s.status in ['ready', 'error'] for s in project.stages])
-            if updating:
-                break
-            elif counter > 5 and ready_stages:
-                #click.echo(f"Project '{project.name}' finished being updated in {time.time()-start:.2f}s")
-                break
+            if project:
+                updating = any([s.status in ['updating','degraded'] for s in project.stages])
+                ready_stages = all([s.status in ['ready', 'error'] for s in project.stages])
+                if updating:
+                    break
+                elif counter > 5 and ready_stages:
+                    #click.echo(f"Project '{project.name}' finished being updated in {time.time()-start:.2f}s")
+                    break
+                else:
+                    click.echo(f' {spin} Waiting for project to start updating...')
+                    pass
+                    time.sleep(self._lag)
+                    counter += 1
+                return project
             else:
-                click.echo(f' {spin} Waiting for project to start updating...')
-                pass
-                time.sleep(self._lag)
-                counter += 1
-        return project
+                click.echo(f' {err} Failed to get project details!')
+                break
     
-    def _wait_builds_to_finish(self, **params) -> bool:
+    def _wait_builds_to_finish(self, **params):
         messaged = False
         project = self.get_project(**params)
-        
-        if project.last_revision is not None \
-        and project.last_revision.spec.resources \
-        and project.last_revision.spec.resources.builds:                
+        last_revision = project.last_revision if project else None
+        project_spec = last_revision.spec if last_revision else None
+        resources = project_spec.resources if project_spec else None
+        spec_builds = resources.builds if resources else None
+        if project_spec is not None and resources and spec_builds:                
             click.echo(f' {spin} {spin} Revision expects one or more images to be built, this can take several minutes...')
-            time.sleep(10)
+            time.sleep(self._lag*3)
             while True:
                 updating_builds = []
                 ready_builds = []
                 errors = []
                 project = self.get_project(**params)
-                for build in project.builds:
+                builds = project.builds if project else []
+                project_name = project.name if project else 'unknown'
+                for build in builds:
                     if build.status in ['updating', 'pending']:
                         updating_builds.append(build)
                     elif build.status in ['error']:
@@ -191,53 +198,52 @@ class DeployManagerClient:
                         ready_builds.append(build)
 
                 if errors:
-                    click.echo(f" {wrn} Project '{project.name}' failed to build images! Exiting...")
+                    click.echo(f" {wrn} Project '{project_name}' failed to build images! Exiting...")
                     return False
                 elif updating_builds and not messaged:
                     click.echo('Waiting for image-builds to finish, this can take several minutes...')
                     messaged = True
                     continue
-                if len(ready_builds) == len(project.builds):
+                if len(ready_builds) == len(builds):
                     click.echo(f' {chk} All builds are finished!')
                     break
                 time.sleep(self._lag)
-                project = self.get_project(**params)
-            
-        return True
+            return True
     
-    def _wait_stages_finish_updating(self, **params) -> models.ProjectSchema:
+    def _wait_stages_finish_updating(self, **params):
         counter = 0
         click.echo(f' {spin} Waiting for all stages to finish updating...')
         while True:
             project = self.get_project(**params)
-            updating = any([s.status in ['building'] for s in project.stages])
-            all_finished = all([s.status in ['healthy', 'error'] for s in project.stages])
+            project_name = project.name if project else 'unknown'
+            stages = project.stages if project else []
+            updating = any([s.status in ['building'] for s in stages])
+            all_finished = all([s.status in ['healthy', 'error'] for s in stages])
             if updating:
                 time.sleep(self._lag)
                 continue
             elif all_finished:
-                click.echo(f" {chk} Project '{project.name}' finished being updated!")
+                click.echo(f" {chk} Project '{project_name}' finished being updated!")
                 break
             else:
                 time.sleep(self._lag)
                 counter += 1
-        return project
     
-    def _check_routes(self, **params) -> bool:
+    def _check_routes(self, **params):
         project = self.get_project(**params)
-        if project.routes:
-            for route in project.routes:
-                urls = [f"https://{d}/" for d in route.custom_domains] + [route.url]
-                if route.status == 'error':
-                    click.echo(f" {err} Route '{route.name}' at stage '{route.stage}' failed to start!")
-                    click.echo(f"Status is {_frs(route.status)}, inspect deployment with 'oceanum dpm inspect project {project.name}'!")
-                else:
-                    s = 's' if len(urls) > 1 else ''
-                    click.echo(f" {chk} Route '{route.name}' is {_frs(route.status)} and available at URL{s}:")
-                    for url in urls:
-                        click.echo(f" {globe} {url}")
+        project_name = project.name if project else 'unknown'
+        routes = project.routes if project else []
+        for route in routes:
+            urls = [f"https://{d}/" for d in route.custom_domains] + [route.url]
+            if route.status == 'error':
+                click.echo(f" {err} Route '{route.name}' at stage '{route.stage}' failed to start!")
+                click.echo(f"Status is {_frs(route.status)}, inspect deployment with 'oceanum dpm inspect project {project_name}'!")
+            else:
+                s = 's' if len(urls) > 1 else ''
+                click.echo(f" {chk} Route '{route.name}' is {_frs(route.status)} and available at URL{s}:")
+                for url in urls:
+                    click.echo(f" {globe} {url}")
                 
-        return True
     
     def _get_errors(self, response: requests.Response) -> models.ErrorResponse:
         try:
@@ -263,11 +269,11 @@ class DeployManagerClient:
             spec_dict = yaml.safe_load(f)
         return models.ProjectSpec(**spec_dict)
     
-    def deploy_project(self, spec: models.ProjectSpec) -> models.ProjectSpec | models.ErrorResponse:
+    def deploy_project(self, spec: models.ProjectSpec) -> models.ProjectSchema | models.ErrorResponse:
         payload = dump_with_secrets(spec)
         try:
             response = self._post('projects', json=payload)
-            return models.ProjectSpec(**response.json())
+            return models.ProjectSchema(**response.json())
         except requests.exceptions.HTTPError as e:
             return self._get_errors(e.response)
             
@@ -289,9 +295,20 @@ class DeployManagerClient:
         projects_json = response.json()
         return [models.ProjectSchema(**project) for project in projects_json]
     
-    def get_project(self, project_name: str, **filters) -> models.ProjectSchema:
-        response = self._get(f'projects/{project_name}', params=filters or None)
-        return models.ProjectSchema(**response.json())
+    def get_project(self, project_name: str, show_error=True, **filters) -> models.ProjectSchema|None:
+        """
+        Try to get a project by name and org/user filters,
+        when the project is not found, print the error message and return None
+        """
+        try:
+            response = self._get(f'projects/{project_name}', params=filters or None)
+            return models.ProjectSchema(**response.json())
+        except requests.exceptions.HTTPError as e:
+            if show_error:
+                message = e.response.json().get('detail', None)
+                click.echo(f" {err} Project '{project_name}' not found!")
+                click.echo(f" {wrn} {message}")
+            return None
     
     def list_routes(self, **filters) -> list[models.RouteSchema]:
         response = self._get('routes', params=filters or None)
