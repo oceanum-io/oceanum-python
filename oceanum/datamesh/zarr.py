@@ -142,11 +142,11 @@ class DriverQuery(BaseModel):
     
 class ZarrProxyGetRequestParams(BaseModel):
     query: Query
-    datasource: Optional[Datasource]
-    chunks: Optional[Dict[str, int]]
-    downsample: Optional[Dict[str, int]]
-    selector: Optional[Selector]
-    nearest_chunk_selector: Optional[Selector]
+    datasource: Optional[Datasource] = None
+    chunks: Optional[Dict[str, int]] = {}
+    downsample: Optional[Dict[str, int]] = {}
+    selector: Optional[Selector] = {}
+    nearest_chunk_selector: Optional[Selector] = {}
     filtered: Optional[str]
 
 #    class Config:
@@ -194,11 +194,14 @@ class ZarrClient(MutableMapping):
         self.gateway = connection._gateway + "/zarr"
         self.retries = retries
 
-    def _get(self, path):
+    def _get(self, path, retrieve_data=True):
         retries = 0
         while retries < self.retries:
             try:
-                resp = requests.get(path, headers=self.headers)
+                if retrieve_data:
+                    resp = requests.get(path, headers=self.headers)
+                else:
+                    resp = requests.head(path, headers=self.headers)
             except requests.RequestException:
                 time.sleep(0.1 * 2**retries)
                 retries += 1
@@ -210,6 +213,13 @@ class ZarrClient(MutableMapping):
         if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
+
+    def __contains__(self, item):
+        resp = self._get(f"{self.gateway}/{self.datasource}/{item}",
+                         retrieve_data=False)
+        if resp.status_code != 200:
+            return False
+        return True
 
     def __setitem__(self, item, value):
         if self.method == "put":
