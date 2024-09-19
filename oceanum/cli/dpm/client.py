@@ -293,7 +293,16 @@ class DeployManagerClient:
     def list_projects(self, **filters) -> list[models.ProjectSchema]:
         response = self._get('projects', params=filters or None)
         projects_json = response.json()
-        return [models.ProjectSchema(**project) for project in projects_json]
+        projects = []
+        for project in projects_json:
+            try:
+                models.ProjectSchema(**project)
+                projects.append(project)
+            except Exception as e:
+                click.echo(f"Error: {e}")
+                click.echo(f"Project: {project}")
+
+        return projects
     
     def get_project(self, project_name: str, show_error=True, **filters) -> models.ProjectSchema|None:
         """
