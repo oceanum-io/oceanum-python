@@ -17,8 +17,8 @@ from .utils import spin, chk, err, wrn
 def update_project_group():
     pass
 
-
-name_option = click.option('--name', help='Set the resource name', required=True, type=str)
+name_arguement = click.argument('name', type=str)
+name_option = click.option('--name', help='Set the resource name', required=False, type=str)
 project_org_option = click.option('--org', help='Set the project organization', required=False, type=str)
 project_user_option = click.option('--user', help='Set the project owner email', required=False, type=str)
 
