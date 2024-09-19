@@ -2,7 +2,8 @@ from unittest.mock import patch
 
 from click.testing import CliRunner
 
-from oceanum.cli import main, auth, dpm, datamesh, storage, models
+from oceanum.cli import main, auth, dpm, datamesh, models
+from oceanum.cli.storage import storage
 
 def test_auth_help():
     result = CliRunner().invoke(auth.auth, ['--help'])

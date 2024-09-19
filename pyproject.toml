@@ -82,10 +82,14 @@ oceanum = "oceanum.__main__:main"
 [project.entry-points."fsspec.specs"]
 "oceanum" = "oceanum.storage:FileSystem"
 
+[project.entry-points."oceanum.cli.run"]
+run = "oceanum.cli.run.main"
+
 [tool.setuptools.dynamic]
 version = {attr = "oceanum.__version__"}
 
 [tool.setuptools.packages.find]
+include = ["oceanum.cli.oceanum"]
 exclude = ["tests", "docs"]
 
 [tool.distutils.bdist_wheel]

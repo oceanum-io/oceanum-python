@@ -2,9 +2,10 @@ import sys
 
 import click
 
+from .cli.storage import storage
+
 # When adding a new module, must be imported here
 from .cli import main, auth, datamesh, storage
-from .cli.dpm import dpm, project, user, route
 
 try:
     main.main()

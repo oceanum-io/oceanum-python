@@ -3,7 +3,7 @@
 import click
 import os
 
-from .models import ContextObject, TokenResponse, Auth0Config
+from ..common.models import ContextObject, TokenResponse, Auth0Config
 
 @click.group()
 @click.pass_context

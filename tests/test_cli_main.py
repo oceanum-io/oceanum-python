@@ -1,7 +1,8 @@
 
 from click.testing import CliRunner
 
-from oceanum.cli import main, auth, dpm, datamesh, storage
+from oceanum.cli import main, auth, dpm, datamesh
+from oceanum.cli.storage import storage
 
 
 def test_main_help():

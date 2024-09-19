@@ -6,8 +6,8 @@ import requests
 
 from functools import update_wrapper
 
-from .main import main
-from .models import DeviceCodeResponse, TokenResponse, Auth0Config
+from ..main import main
+from ..common.models import DeviceCodeResponse, TokenResponse, Auth0Config
 
 
 class Auth0Client:
