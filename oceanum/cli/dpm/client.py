@@ -337,12 +337,11 @@ class DeployManagerClient:
     def validate(self, specfile: Path) -> models.ProjectSpec | models.ErrorResponse:
         with specfile.open() as f:
             spec_dict = yaml.safe_load(f)
-
-        response = self._post('validate', json=spec_dict)
-        if response.status_code == 200:
+        try:
+            response = self._post('validate', json=spec_dict)
             return models.ProjectSpec(**spec_dict)
-        else:
+        except requests.exceptions.HTTPError as e:
             try:
-                return models.ErrorResponse(**response.json())
+                return models.ErrorResponse(**e.response.json())
             except requests.exceptions.JSONDecodeError:
                 return models.ErrorResponse(detail=response.text)
