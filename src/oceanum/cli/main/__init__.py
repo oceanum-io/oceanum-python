@@ -25,3 +25,4 @@ def main(ctx: click.Context):
         auth0=auth0_config
     )
     click.help_option('-h', '--help')
+

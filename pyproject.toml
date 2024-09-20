@@ -82,14 +82,34 @@ oceanum = "oceanum.__main__:main"
 [project.entry-points."fsspec.specs"]
 "oceanum" = "oceanum.storage:FileSystem"
 
-[project.entry-points."oceanum.cli.run"]
-run = "oceanum.cli.run.main"
+[project.entry-points."oceanum.cli.main"]
+"main" = "oceanum.cli.main"
+
+[project.entry-points."oceanum.cli.auth"]
+"auth" = "oceanum.cli.auth"
+
+[project.entry-points."oceanum.cli.run.main"]
+"run" = "oceanum.cli.run.main"
+
+[project.entry-points."oceanum.cli.datamesh.main"]
+"datamesh" = "oceanum.cli.datamesh.main"
+
+[project.entry-points."oceanum.cli.storage.main"]
+"storage" = "oceanum.cli.storage.main"
 
 [tool.setuptools.dynamic]
 version = {attr = "oceanum.__version__"}
 
 [tool.setuptools.packages.find]
-include = ["oceanum.cli.oceanum"]
+where = ["src/"]
+include = [
+  "oceanum",
+  "oceanum.cli.main",
+  "oceanum.cli.common",
+  "oceanum.cli.auth",
+  "oceanum.cli.datamesh",
+  "oceanum.cli.storage",
+]
 exclude = ["tests", "docs"]
 
 [tool.distutils.bdist_wheel]

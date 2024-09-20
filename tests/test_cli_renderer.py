@@ -2,7 +2,7 @@ from unittest import TestCase
 import json
 import yaml
 
-from oceanum.cli.common.renderer import *
+from oceanum.cli.common.renderer import Renderer, RenderField
 
 class RendererTests(TestCase):
     
@@ -12,11 +12,11 @@ class RendererTests(TestCase):
             'status': 'hidden',
             'notshown': 'notshown'
         }
-        fields = {
-            'Name': '$.name'
-        }
-        renderer = Renderer(data, output='table')
-        table_output =  renderer.render_table(fields=fields)
+        fields = [
+            RenderField(label='Name', path='$.name'),
+        ]
+        renderer = Renderer(data, fields, output='table')
+        table_output =  renderer.render_table()
         assert 'Name' in table_output
         assert 'SlimShady' in table_output
         assert 'notshown' not in table_output

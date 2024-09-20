@@ -12,7 +12,7 @@ from ..auth import login_required
 # =====================================================================================
 @main.group()
 def storage():
-    """Oceanum storage commands"""
+    """Oceanum Storage commands"""
     click.help_option('-h', '--help')
 
 @storage.command()
@@ -39,7 +39,7 @@ def ls(
     )
     if long:
         sizes = 0
-        for item in contents.values():
+        for item in contents.values(): # type: ignore
             line, size = item_to_long(item, human_readable=human_readable)
             sizes += size
             click.echo(line)
