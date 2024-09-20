@@ -90,6 +90,9 @@ oceanum = "oceanum.__main__:main"
 
 [project.entry-points."oceanum.cli.run.main"]
 "run" = "oceanum.cli.run.main"
+"project" = "oceanum.cli.run.project"
+"route" = "oceanum.cli.run.route"
+"user" = "oceanum.cli.run.user"
 
 [project.entry-points."oceanum.cli.datamesh.main"]
 "datamesh" = "oceanum.cli.datamesh.main"
@@ -104,6 +107,8 @@ version = {attr = "oceanum.__version__"}
 where = ["src/"]
 include = [
   "oceanum",
+  "oceanum.datamesh",
+  "oceanum.storage",
   "oceanum.cli.main",
   "oceanum.cli.common",
   "oceanum.cli.auth",

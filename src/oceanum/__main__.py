@@ -9,11 +9,10 @@ from importlib.metadata import entry_points
 from oceanum.cli.main import main
 from oceanum.cli import auth, datamesh, storage
 
-run_eps = entry_points(group='oceanum.cli.run.main')
 try:
-    run_eps['run'].load()
-except ModuleNotFoundError:
-    run = None
-    click.echo('Oceanum Run module not found, please install oceanum-run-cli package')
+    for run_ep in entry_points(group='oceanum.cli.run.main'):
+        run_ep.load()
+except ModuleNotFoundError as e:
+    click.echo(f'Oceanum Run module {e} not found! Please install oceanum-run-cli package')
 
 
