@@ -83,7 +83,6 @@ oceanum = "oceanum.__main__:main"
 "oceanum" = "oceanum.storage:FileSystem"
 
 [project.entry-points."oceanum.cli"]
-"main" = "oceanum.cli.main"
 "auth" = "oceanum.cli.auth"
 "run_main" = "oceanum.cli.run.main"
 "run_project" = "oceanum.cli.run.project"
