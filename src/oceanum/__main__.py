@@ -7,10 +7,10 @@ import click
 from importlib.metadata import entry_points
 
 from oceanum.cli.main import main
-from oceanum.cli import auth, datamesh, storage
+#from oceanum.cli import auth, datamesh, storage
 
 try:
-    for run_ep in entry_points(group='oceanum.cli.run.main'):
+    for run_ep in entry_points(group='oceanum.cli'):
         run_ep.load()
 except ModuleNotFoundError as e:
     click.echo(f'Oceanum Run module {e} not found! Please install oceanum-run-cli package')

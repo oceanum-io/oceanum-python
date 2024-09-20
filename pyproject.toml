@@ -82,23 +82,15 @@ oceanum = "oceanum.__main__:main"
 [project.entry-points."fsspec.specs"]
 "oceanum" = "oceanum.storage:FileSystem"
 
-[project.entry-points."oceanum.cli.main"]
+[project.entry-points."oceanum.cli"]
 "main" = "oceanum.cli.main"
-
-[project.entry-points."oceanum.cli.auth"]
 "auth" = "oceanum.cli.auth"
-
-[project.entry-points."oceanum.cli.run.main"]
-"run" = "oceanum.cli.run.main"
-"project" = "oceanum.cli.run.project"
-"route" = "oceanum.cli.run.route"
-"user" = "oceanum.cli.run.user"
-
-[project.entry-points."oceanum.cli.datamesh.main"]
-"datamesh" = "oceanum.cli.datamesh.main"
-
-[project.entry-points."oceanum.cli.storage.main"]
-"storage" = "oceanum.cli.storage.main"
+"run_main" = "oceanum.cli.run.main"
+"run_project" = "oceanum.cli.run.project"
+"run_route" = "oceanum.cli.run.route"
+"run_user" = "oceanum.cli.run.user"
+"datamesh" = "oceanum.cli.datamesh"
+"storage" = "oceanum.cli.storage"
 
 [tool.setuptools.dynamic]
 version = {attr = "oceanum.__version__"}
