@@ -7,6 +7,7 @@ from collections.abc import MutableMapping
 import numpy
 import requests
 import xarray
+import fsspec
 
 from typing import Optional, Dict, Union
 from pydantic import BaseModel, validator, Field
@@ -160,12 +161,12 @@ def json_serial(obj):
     raise TypeError("Type %s not serializable" % type(obj))
 
 
-def _zarr_proxy(self, datasource_id, parameters={}):
+def _zarr_proxy(connection, datasource_id, parameters={}):
     try:
         mapper = fsspec.get_mapper(
-            f"{self._gateway}/zarr/{datasource_id}",
+            f"{connection._gateway}/zarr/{datasource_id}",
             headers={
-                **self._auth_headers,
+                **connection._auth_headers,
                 "X-PARAMETERS": json.dumps(parameters, default=json_serial),
             },
         )
@@ -191,7 +192,9 @@ class ZarrClient(MutableMapping):
             self.headers["cache-control"] = "no-transform"
         if parameters:
             self.headers["X-PARAMETERS"] = json.dumps(parameters)
-        self.gateway = connection._gateway + "/zarr"
+        #self.gateway = connection._gateway + "/zarr/query"
+        self.query_proxy = connection._gateway + "/zarr/query"
+        self.zarr_proxy = connection._gateway + "/zarr"
         self.retries = retries
 
     def _get(self, path, retrieve_data=True):
@@ -209,13 +212,13 @@ class ZarrClient(MutableMapping):
                 return resp
 
     def __getitem__(self, item):
-        resp = self._get(f"{self.gateway}/{self.datasource}/{item}")
+        resp = self._get(f"{self.query_proxy}/{self.datasource}/{item}")
         if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
 
     def __contains__(self, item):
-        resp = self._get(f"{self.gateway}/{self.datasource}/{item}",
+        resp = self._get(f"{self.query_proxy}/{self.datasource}/{item}",
                          retrieve_data=False)
         if resp.status_code != 200:
             return False
@@ -224,24 +227,24 @@ class ZarrClient(MutableMapping):
     def __setitem__(self, item, value):
         if self.method == "put":
             requests.put(
-                f"{self.gateway}/{self.datasource}/{item}",
+                f"{self.zarr_proxy}/{self.datasource}/{item}",
                 data=value,
                 headers=self.headers,
             )
         else:
             requests.post(
-                f"{self.gateway}/{self.datasource}/{item}",
+                f"{self.zarr_proxy}/{self.datasource}/{item}",
                 data=value,
                 headers=self.headers,
             )
 
     def __delitem__(self, item):
         requests.delete(
-            f"{self.gateway}/{self.datasource}/{item}", headers=self.headers
+            f"{self.zarr_proxy}/{self.datasource}/{item}", headers=self.headers
         )
 
     def __iter__(self):
-        resp = self._get(f"{self.gateway}/{self.datasource}")
+        resp = self._get(f"{self.query_proxy}/{self.datasource}")
         if not resp:
             return
         ex = re.compile(r"""<(a|A)\s+(?:[^>]*?\s+)?(href|HREF)=["'](?P<url>[^"']+)""")
@@ -266,6 +269,7 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
     else:
         ds = connection.get_datasource(datasource_id)
     store = ZarrClient(connection, datasource_id, nocache=True)
+    #store = _zarr_proxy(connection, datasource_id, parameters={})
     if append and ds._exists:
         if append not in ds.dataschema.coords:
             raise DatameshWriteError(f"Append coordinate {append} not in existing zarr")
