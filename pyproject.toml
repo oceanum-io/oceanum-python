@@ -23,10 +23,9 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.8"
 dependencies = [
@@ -44,14 +43,10 @@ dependencies = [
   "pandas",
   "platformdirs",
   "pyarrow",
-  "pydantic[email]",
-  "python-jsonpath",
-  "requests",
   "shapely",
   "tabulate",
   "xarray",
   "zarr",
-  "humanize"
 ]
 dynamic = ["version"]
 
@@ -84,12 +79,17 @@ oceanum = "oceanum.__main__:main"
 
 [project.entry-points."oceanum.cli"]
 "auth" = "oceanum.cli.auth"
-"run_main" = "oceanum.cli.run.main"
-"run_project" = "oceanum.cli.run.project"
-"run_route" = "oceanum.cli.run.route"
-"run_user" = "oceanum.cli.run.user"
 "datamesh" = "oceanum.cli.datamesh"
 "storage" = "oceanum.cli.storage"
+
+[project.entry-points."oceanum.cli.run"]
+"main" = "oceanum.cli.run.main"
+"project" = "oceanum.cli.run.project"
+"pipeline" = "oceanum.cli.run.pipeline"
+"task" = "oceanum.cli.run.task"
+"stage" = "oceanum.cli.run.stage"
+"log" = "oceanum.cli.run.log"
+"route" = "oceanum.cli.run.route"
 
 [tool.setuptools.dynamic]
 version = {attr = "oceanum.__version__"}
