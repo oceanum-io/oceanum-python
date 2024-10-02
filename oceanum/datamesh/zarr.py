@@ -149,7 +149,7 @@ class ZarrProxyGetRequestParams(BaseModel):
     selector: Optional[Selector] = {}
     nearest_chunk_selector: Optional[Selector] = {}
     filtered: Optional[str]
-    session_id: Optional[str]
+    #session_id: Optional[str]
     
 #    class Config:
 #        arbitrary_types_allowed = True
