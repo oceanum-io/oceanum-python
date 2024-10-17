@@ -37,35 +37,24 @@ class Session(BaseModel):
         except Exception as e:
             raise e
     
-    def close(self, connection: Connector):
-        res = requests.delete(f"{connection._gateway}/session/{self.session_id}",
+    def close(self):
+        res = requests.delete(f"{self._connection._gateway}/session/{self.session_id}",
                               headers={"X-DATAMESH-SESSIONID": self.session_id})
         if res.status_code != 204:
             raise DatameshConnectError("Failed to close session with error: " + res.text)
-        return res
     
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
         self.close(self._connection)
-    
-    
-
-
-class File(object):
-    def __init__(self, file_name, method):
-        self.file_obj = open(file_name, method)
-    def __enter__(self):
-        return self.file_obj
-    def __exit__(self, type, value, traceback):
-        self.file_obj.close()
 
 class ZarrProxyClient(MutableMapping):
     def __init__(
         self,
         connection,
         datasource,
+        session,
         parameters={},
         method="post",
         retries=8,
@@ -73,9 +62,11 @@ class ZarrProxyClient(MutableMapping):
         request_type="zarr_proxy"
     ):
         self.datasource = datasource
+        self.session = session
         self.method = method
         self.request_type = request_type
         self.headers = {**connection._auth_headers}
+        self.headers["X-DATAMESH-SESSIONID"] = session.session_id
         if nocache:
             self.headers["cache-control"] = "no-transform"
         if parameters:
@@ -198,10 +189,13 @@ class DatameshAccessor:
 
     def to_zarr(self, path, **kwargs):
         """Write this dataset to a Zarr store."""
+        with Session.acquire(self._connector) as session:
+            
 
-
-        client = ZarrClient(path)
-        client.write(self._obj, **kwargs)
+            client = ZarrProxyClient(self._connector, self._obj.name, request_type="zarr_proxy")
+            client._request_session()
+            client[path] = self._obj.to_zarr()
+            client._close_session()
 
     #@property
     #def center(self):
