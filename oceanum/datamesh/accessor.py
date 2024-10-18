@@ -37,8 +37,9 @@ class Session(BaseModel):
         except Exception as e:
             raise e
     
-    def close(self):
+    def close(self, finalise_write: bool = False):
         res = requests.delete(f"{self._connection._gateway}/session/{self.session_id}",
+                              params={"finalise_write": finalise_write},
                               headers={"X-DATAMESH-SESSIONID": self.session_id})
         if res.status_code != 204:
             raise DatameshConnectError("Failed to close session with error: " + res.text)
@@ -46,8 +47,10 @@ class Session(BaseModel):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
-        self.close(self._connection)
+    def __exit__(self, exc_type, exc_value, traceback):
+        #import time
+        #time.sleep(20)
+        self.close(finalise_write=exc_type is None)
 
 class ZarrProxyClient(MutableMapping):
     def __init__(
@@ -117,12 +120,14 @@ class ZarrProxyClient(MutableMapping):
                 return resp
 
     def __getitem__(self, item):
+        print(f"getitem {item}")
         resp = self._get(f"{self._proxy}/{self.datasource}/{item}")
         if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
 
     def __contains__(self, item):
+        print(f"contains {item}")
         resp = self._get(f"{self._proxy}/{self.datasource}/{item}",
                          retrieve_data=False)
         if resp.status_code != 200:
@@ -130,27 +135,30 @@ class ZarrProxyClient(MutableMapping):
         return True
 
     def __setitem__(self, item, value):
+        print(f"setitem {item}")
         if self.request_type == "query_proxy":
             raise DatameshConnectError("Cannot write to query proxy")
         if self.method == "put":
             requests.put(
-                f"{self.zarr_proxy}/{self.datasource}/{item}",
+                f"{self._proxy}/{self.datasource}/{item}",
                 data=value,
                 headers=self.headers,
             )
         else:
             requests.post(
-                f"{self.zarr_proxy}/{self.datasource}/{item}",
+                f"{self._proxy}/{self.datasource}/{item}",
                 data=value,
                 headers=self.headers,
             )
 
     def __delitem__(self, item):
+        print(f"delitem {item}")
         requests.delete(
-            f"{self.zarr_proxy}/{self.datasource}/{item}", headers=self.headers
+            f"{self._proxy}/{self.datasource}/{item}", headers=self.headers
         )
 
     def __iter__(self):
+        print("iter")
         resp = self._get(f"{self._proxy}/{self.datasource}")
         if not resp:
             return
