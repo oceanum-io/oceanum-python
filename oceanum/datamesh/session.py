@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 import requests
-from .connection import Connector, DatameshConnectError
+from .exceptions import DatameshConnectError
 
 
 class Session(BaseModel):
@@ -15,7 +15,7 @@ class Session(BaseModel):
 
     @classmethod
     def acquire(cls,
-                connection: Connector):
+                connection):
         try:
             res = requests.get(f"{connection._gateway}/session",
                             headers=connection._auth_headers)

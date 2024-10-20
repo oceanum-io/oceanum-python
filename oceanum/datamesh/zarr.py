@@ -15,6 +15,7 @@ from pydantic import BaseModel, validator, Field
 from .query import Query
 from .datasource import Datasource
 from .exceptions import DatameshConnectError, DatameshWriteError
+from .session import Session
 
 try:
     import xarray_video as xv
@@ -181,21 +182,30 @@ class ZarrClient(MutableMapping):
         self,
         connection,
         datasource,
+        session,
         parameters={},
         method="post",
         retries=8,
         nocache=False,
+        api="query",
+        reference_id=None
     ):
         self.datasource = datasource
+        self.session = session
         self.method = method
+        self.api = api
         self.headers = {**connection._auth_headers}
+        self.headers["X-DATAMESH-SESSIONID"] = session.session_id
         if nocache:
             self.headers["cache-control"] = "no-transform"
         if parameters:
             self.headers["X-PARAMETERS"] = json.dumps(parameters)
-        #self.gateway = connection._gateway + "/zarr/query"
-        self.query_proxy = connection._gateway + "/zarr/query"
-        self.zarr_proxy = connection._gateway + "/zarr"
+        if api == "zarr":
+            self._proxy = connection._gateway + "/zarr"
+        elif api == "query":
+            self._proxy = connection._gateway + "/zarr/query"
+        else:
+            raise DatameshConnectError(f"Unknown api: {api}")
         self.retries = retries
 
     def _get(self, path, retrieve_data=True):
@@ -213,39 +223,43 @@ class ZarrClient(MutableMapping):
                 return resp
 
     def __getitem__(self, item):
-        resp = self._get(f"{self.query_proxy}/{self.datasource}/{item}")
+        resp = self._get(f"{self._proxy}/{self.datasource}/{item}")
         if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
 
     def __contains__(self, item):
-        resp = self._get(f"{self.query_proxy}/{self.datasource}/{item}",
+        resp = self._get(f"{self._proxy}/{self.datasource}/{item}",
                          retrieve_data=False)
         if resp.status_code != 200:
             return False
         return True
 
     def __setitem__(self, item, value):
+        if self.api == "query":
+            raise DatameshConnectError("Query api does not support write operations")
         if self.method == "put":
             requests.put(
-                f"{self.zarr_proxy}/{self.datasource}/{item}",
+                f"{self._proxy}/{self.datasource}/{item}",
                 data=value,
                 headers=self.headers,
             )
         else:
             requests.post(
-                f"{self.zarr_proxy}/{self.datasource}/{item}",
+                f"{self._proxy}/{self.datasource}/{item}",
                 data=value,
                 headers=self.headers,
             )
 
     def __delitem__(self, item):
+        if self.api == "query":
+            raise DatameshConnectError("Query api does not support delete operations")
         requests.delete(
-            f"{self.zarr_proxy}/{self.datasource}/{item}", headers=self.headers
+            f"{self._proxy}/{self.datasource}/{item}", headers=self.headers
         )
 
     def __iter__(self):
-        resp = self._get(f"{self.query_proxy}/{self.datasource}")
+        resp = self._get(f"{self._proxy}/{self.datasource}")
         if not resp:
             return
         ex = re.compile(r"""<(a|A)\s+(?:[^>]*?\s+)?(href|HREF)=["'](?P<url>[^"']+)""")
@@ -256,6 +270,8 @@ class ZarrClient(MutableMapping):
     def __len__(self):
         return 0
 
+    def clear(self):
+        self.__delitem__("")
 
 def _to_zarr(data, store, **kwargs):
     if _VIDEO_SUPPORT:
@@ -265,63 +281,64 @@ def _to_zarr(data, store, **kwargs):
 
 
 def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
-    if overwrite is True:
-        append = None
-    else:
-        ds = connection.get_datasource(datasource_id)
-    store = ZarrClient(connection, datasource_id, nocache=True)
-    #store = _zarr_proxy(connection, datasource_id, parameters={})
-    if append and ds._exists:
-        if append not in ds.dataschema.coords:
-            raise DatameshWriteError(f"Append coordinate {append} not in existing zarr")
-        with xarray.open_zarr(store) as dexist:
-            cexist = dexist[append]
-            if len(cexist.dims) > 1:
-                raise DatameshWriteError(
-                    f"Append coordinate {append} has more than one dimension"
-                )
-            append_dim = cexist.dims[0]
-            (replace_range,) = numpy.nonzero(
-                ((cexist >= data[append][0]) & (cexist <= data[append][-1])).values
-            )  # Get range in new data which overlaps - this just replaces everything >= first value in the new data
-            if len(replace_range):
-                # Fail if the replacement range is larger than incomign data
-                if len(replace_range) > len(data[append]):
+    with Session.acquire(connection) as session:
+        store = ZarrClient(connection, datasource_id, session, api="zarr", nocache=True)
+        if overwrite is True:
+            store.clear()
+            append = None
+        else:
+            ds = connection.get_datasource(datasource_id)
+        if append and ds._exists:
+            if append not in ds.dataschema.coords:
+                raise DatameshWriteError(f"Append coordinate {append} not in existing zarr")
+            with xarray.open_zarr(store) as dexist:
+                cexist = dexist[append]
+                if len(cexist.dims) > 1:
                     raise DatameshWriteError(
-                        f"Cannot append to zarr with a region that would be smaller than the original"
+                        f"Append coordinate {append} has more than one dimension"
                     )
+                append_dim = cexist.dims[0]
+                (replace_range,) = numpy.nonzero(
+                    ((cexist >= data[append][0]) & (cexist <= data[append][-1])).values
+                )  # Get range in new data which overlaps - this just replaces everything >= first value in the new data
+                if len(replace_range):
+                    # Fail if the replacement range is larger than incomign data
+                    if len(replace_range) > len(data[append]):
+                        raise DatameshWriteError(
+                            f"Cannot append to zarr with a region that would be smaller than the original"
+                        )
 
-                drop_coords = [c for c in data.coords if c != append]
-                replace_section = data.isel(
-                    **{append_dim: slice(0, len(replace_range))}
-                ).drop(drop_coords)
-                replace_slice = slice(replace_range[0], replace_range[-1] + 1)
-                # Fail if we are replacing an internal section and ends of coordinates do not match
-                if replace_range[-1] + 1 < len(cexist) and not numpy.array_equal(
-                    replace_section[append], cexist[replace_slice]
-                ):
-                    raise DatameshWriteError(
-                        f"Data inconsistency on coordinate {append} replacing a inner section of an existing zarr array"
+                    drop_coords = [c for c in data.coords if c != append]
+                    replace_section = data.isel(
+                        **{append_dim: slice(0, len(replace_range))}
+                    ).drop(drop_coords)
+                    replace_slice = slice(replace_range[0], replace_range[-1] + 1)
+                    # Fail if we are replacing an internal section and ends of coordinates do not match
+                    if replace_range[-1] + 1 < len(cexist) and not numpy.array_equal(
+                        replace_section[append], cexist[replace_slice]
+                    ):
+                        raise DatameshWriteError(
+                            f"Data inconsistency on coordinate {append} replacing a inner section of an existing zarr array"
+                        )
+                    _to_zarr(
+                        replace_section,
+                        store,
+                        mode="a",
+                        region={append_dim: replace_slice},
                     )
-                _to_zarr(
-                    replace_section,
-                    store,
-                    mode="a",
-                    region={append_dim: replace_slice},
-                )
-            if len(data[append]) > len(replace_range):
-                append_chunk = data.isel(
-                    **{append_dim: slice(len(replace_range), None)}
-                )
-                _to_zarr(
-                    append_chunk,
-                    store,
-                    mode="a",
-                    append_dim=append_dim,
-                    consolidated=True,
-                )
-    else:
-        _to_zarr(data, store, mode="w", consolidated=True)
-        ds = connection.get_datasource(datasource_id)
-        ds.dataschema = data.to_dict(data=False)
-    return ds
+                if len(data[append]) > len(replace_range):
+                    append_chunk = data.isel(
+                        **{append_dim: slice(len(replace_range), None)}
+                    )
+                    _to_zarr(
+                        append_chunk,
+                        store,
+                        mode="a",
+                        append_dim=append_dim,
+                        consolidated=True,
+                    )
+        else:
+            _to_zarr(data, store, mode="w", consolidated=True)
+            ds = connection.get_datasource(datasource_id)
+            ds.dataschema = data.to_dict(data=False)
+        return ds
