@@ -7,6 +7,7 @@ import requests
 from functools import update_wrapper
 
 from ..main import main
+from ..common.symbols import spin, err
 from ..common.models import DeviceCodeResponse, TokenResponse, Auth0Config
 
 
@@ -77,10 +78,19 @@ def login_required(func):
         if not ctx.obj.token or not ctx.obj.token.refresh_token:
             raise Exception('You need to login first! Run `oceanum auth login`.')
         elif ctx.obj.token.is_expired and ctx.obj.token.refresh_token:
-            click.echo('Refreshing access token...')
-            token = Auth0Client(ctx=ctx).refresh_token(ctx.obj.token)
-            token.save()
-            ctx.obj.token = token
+            click.echo(f' {spin} Refreshing access token...')
+            try:
+                token = Auth0Client(ctx=ctx).refresh_token(ctx.obj.token)
+            except requests.HTTPError as e:
+                if e.response.status_code == 403:
+                    click.echo(f' {err} Failed to refresh token! Please log-in and try again...')
+                    ctx.obj.token.delete()
+                    return ctx.invoke(login)
+                else:
+                    raise e
+            else:
+                token.save()
+                ctx.obj.token = token
         return ctx.invoke(func, *args, **kwargs)
     return update_wrapper(refresh_wrapper, func)
 
