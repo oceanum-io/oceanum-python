@@ -5,7 +5,7 @@ from .exceptions import DatameshConnectError
 import atexit
 
 class Session(BaseModel):
-    session_id: str
+    id: str
     user: str
     creation_time: datetime
     end_time: datetime
@@ -34,15 +34,19 @@ class Session(BaseModel):
             return session
         except Exception as e:
             raise e
+
+    def add_to_headers(self, headers: dict):
+        headers["X-DATAMESH-SESSIONID"] = self.id
+        return headers
     
     def close(self, finalise_write: bool = False):
         try:
             atexit.unregister(self.close)
         except:
             pass
-        res = requests.delete(f"{self._connection._gateway}/session/{self.session_id}",
+        res = requests.delete(f"{self._connection._gateway}/session/{self.id}",
                               params={"finalise_write": finalise_write},
-                              headers={"X-DATAMESH-SESSIONID": self.session_id})
+                              headers={"X-DATAMESH-SESSIONID": self.id})
         if res.status_code != 204:
             if finalise_write:
                 raise DatameshConnectError("Failed to finalise write with error: " + res.text)
