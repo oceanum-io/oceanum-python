@@ -14,8 +14,7 @@ class Session(BaseModel):
 
     @classmethod
     def acquire(cls,
-                connection,
-                auto_close: bool = False):
+                connection):
         """
         Acquire a session from the connection.
 
@@ -23,9 +22,6 @@ class Session(BaseModel):
         ----------
         connection : Connection
             Connection object to acquire session from.
-        auto_close : bool, optional
-            Automatically close the session when the program exits, by default False
-            Not necessary if using the session as a context manager (with statement).
         """
         try:
             res = requests.get(f"{connection._gateway}/session",
@@ -34,8 +30,7 @@ class Session(BaseModel):
                 raise DatameshConnectError("Failed to create session with error: " + res.text)
             session = cls(**res.json())
             session._connection = connection
-            if auto_close:
-                atexit.register(session.close)
+            atexit.register(session.close)
             return session
         except Exception as e:
             raise e
@@ -57,9 +52,4 @@ class Session(BaseModel):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        # Check if close is registered to be called at exit
-        #try:
-        #    atexit.unregister(self.close)
-        #except:
-        #    pass
         self.close(finalise_write=exc_type is None)
