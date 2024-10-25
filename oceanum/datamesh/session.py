@@ -35,7 +35,7 @@ class Session(BaseModel):
         except Exception as e:
             raise e
 
-    def add_to_headers(self, headers: dict):
+    def add_header(self, headers: dict):
         headers["X-DATAMESH-SESSIONID"] = self.id
         return headers
     

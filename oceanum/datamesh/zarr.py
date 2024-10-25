@@ -195,7 +195,7 @@ class ZarrClient(MutableMapping):
         self.method = method
         self.api = api
         self.headers = {**connection._auth_headers}
-        self.headers = session.add_to_headers(self.headers)
+        self.headers = session.add_header(self.headers)
         if nocache:
             self.headers["cache-control"] = "no-transform"
         if parameters:
