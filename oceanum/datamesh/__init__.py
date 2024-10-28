@@ -3,4 +3,4 @@ from .datasource import Datasource
 from .catalog import Catalog
 from .query import Query
 from .zarr import Slice, Selector, ZarrProxyGetRequestParams, DriverQuery
-from .accessor import DatameshAccessor
+from .session import Session

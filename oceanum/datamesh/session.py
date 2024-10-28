@@ -3,6 +3,7 @@ from datetime import datetime
 import requests
 from .exceptions import DatameshConnectError
 import atexit
+import os
 
 class Session(BaseModel):
     id: str
@@ -34,6 +35,23 @@ class Session(BaseModel):
             return session
         except Exception as e:
             raise e
+        
+    @classmethod
+    def from_proxy(cls):
+        try:
+            res = requests.get(f"{os.environ['DATAMESH_ZARR_PROXY']}/session",
+                               headers={"X-DATAMESH-TOKEN": os.environ['DATAMESH_TOKEN'],
+                                        "USER": os.environ['DATAMESH_USER']})
+            if res.status_code != 200:
+                raise DatameshConnectError("Failed to create session with error: " + res.text)
+            session = cls(**res.json())
+            session._connection = object()
+            session._connection._gateway = os.environ['DATAMESH_ZARR_PROXY']
+            atexit.register(session.close)
+            return session
+        except Exception as e:
+            raise e
+
 
     def add_header(self, headers: dict):
         headers["X-DATAMESH-SESSIONID"] = self.id
