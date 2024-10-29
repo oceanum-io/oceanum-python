@@ -38,6 +38,11 @@ class Session(BaseModel):
         
     @classmethod
     def from_proxy(cls):
+        """
+        Convenience constructor to acquire a session directly from the proxy.
+        Uses environment variables only and used for internal purposes.
+        """
+
         try:
             res = requests.get(f"{os.environ['DATAMESH_ZARR_PROXY']}/session",
                                headers={"X-DATAMESH-TOKEN": os.environ['DATAMESH_TOKEN'],
@@ -45,7 +50,7 @@ class Session(BaseModel):
             if res.status_code != 200:
                 raise DatameshConnectError("Failed to create session with error: " + res.text)
             session = cls(**res.json())
-            session._connection = object()
+            session._connection = lambda: None
             session._connection._gateway = os.environ['DATAMESH_ZARR_PROXY']
             atexit.register(session.close)
             return session
