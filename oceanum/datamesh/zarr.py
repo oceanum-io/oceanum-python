@@ -259,7 +259,8 @@ class ZarrClient(MutableMapping):
         )
 
     def __iter__(self):
-        resp = self._get(f"{self._proxy}/{self.datasource}")
+        resp = self._get(f"{self._proxy}/{self.datasource}",
+                         headers=self.headers)
         if not resp:
             return
         ex = re.compile(r"""<(a|A)\s+(?:[^>]*?\s+)?(href|HREF)=["'](?P<url>[^"']+)""")

@@ -46,7 +46,8 @@ class Session(BaseModel):
         try:
             res = requests.get(f"{os.environ['DATAMESH_ZARR_PROXY']}/session",
                                headers={"X-DATAMESH-TOKEN": os.environ['DATAMESH_TOKEN'],
-                                        "USER": os.environ['DATAMESH_USER']})
+                                        "USER": os.environ['DATAMESH_USER'],
+                                        'Cache-Control': 'no-cache'})
             if res.status_code != 200:
                 raise DatameshConnectError("Failed to create session with error: " + res.text)
             session = cls(**res.json())
@@ -57,9 +58,12 @@ class Session(BaseModel):
         except Exception as e:
             raise e
 
+    @property
+    def header(self):
+        return {"X-DATAMESH-SESSIONID": self.id}
 
     def add_header(self, headers: dict):
-        headers["X-DATAMESH-SESSIONID"] = self.id
+        headers.update(self.header)
         return headers
     
     def close(self, finalise_write: bool = False):
@@ -69,7 +73,7 @@ class Session(BaseModel):
             pass
         res = requests.delete(f"{self._connection._gateway}/session/{self.id}",
                               params={"finalise_write": finalise_write},
-                              headers={"X-DATAMESH-SESSIONID": self.id})
+                              headers=self.header)
         if res.status_code != 204:
             if finalise_write:
                 raise DatameshConnectError("Failed to finalise write with error: " + res.text)
@@ -79,4 +83,6 @@ class Session(BaseModel):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        # When using context manager, close the session
+        # and finalise the write if no exception was raised
         self.close(finalise_write=exc_type is None)
