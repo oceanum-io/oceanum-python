@@ -46,7 +46,7 @@ dependencies = [
   "xarray",
   "rioxarray",
   "zarr",
-  "dask[dataframe]",
+  "dask[dataframe,distributed]",
   "msgpack",
   "cftime"
 ]

@@ -5,6 +5,7 @@ import pandas
 import geopandas
 import pyproj
 import xarray
+import rioxarray
 import asyncio
 import shapely
 import warnings

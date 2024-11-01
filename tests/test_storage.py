@@ -77,3 +77,26 @@ def test_open(fs, dummy_files):
         "oceanum://" + os.path.join(REMOTE_PATH, "test", "file1.txt"), "r"
     ) as f:
         assert f.read() == "hello"
+
+
+def test_copy(fs, dummy_files):
+    fs.mkdirs(REMOTE_PATH, exist_ok=True)
+    fs.put(os.path.join(dummy_files.name, "test"), REMOTE_PATH, recursive=True)
+
+    fs.copy(
+        os.path.join(REMOTE_PATH, "test", "file1.txt"),
+        os.path.join(REMOTE_PATH, "test", "file_copy.txt"),
+    )
+
+    with fsspec.open(
+        "oceanum://" + os.path.join(REMOTE_PATH, "test", "file_copy.txt"), "r"
+    ) as f:
+        assert f.read() == "hello"
+
+
+def test_copy_fails(fs):
+    with pytest.raises(FileNotFoundError):
+        fs.copy(
+            os.path.join(REMOTE_PATH, "test", "file_not_there.txt"),
+            os.path.join(REMOTE_PATH, "test", "file_copy.txt"),
+        )
