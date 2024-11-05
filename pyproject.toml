@@ -50,7 +50,9 @@ dependencies = [
   "zarr",
   "dask[dataframe,distributed]",
   "msgpack",
-  "cftime"
+  "cftime",
+  "python-jsonpath",
+  "requests,
 ]
 dynamic = ["version"]
 
