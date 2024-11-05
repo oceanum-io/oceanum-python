@@ -31,6 +31,19 @@ import time
 time.tzname
 
 
-def format_dt(dt:datetime, fmt:str=r'%x %X %Z') -> str:
-    """Localize datetime to the machine timezone and return a string with language localized date format."""
+def format_dt(dt:datetime|str, fmt:str=r'%x %X %Z') -> str:
+    """
+    Localize datetime to the machine timezone and return a string with language localized date format.
+
+    Args:
+        dt (datetime|str): Datetime object or ISO format string.
+        fmt (str): Output datetime.strftime pattern.
+
+    Returns:
+        str: Localized datetime string.
+    
+    """
+    if isinstance(dt, str):
+        dt = datetime.fromisoformat(dt)
+    
     return dt.astimezone().strftime(fmt)

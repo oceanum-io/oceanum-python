@@ -27,30 +27,30 @@ List Datasources
 Deploy-manager commands
 -----------------------
 
-.. command-output:: oceanum dpm --help
+.. command-output:: oceanum PRAX --help
 
 Project commands
 ================
 
 Validate project specification
 
-.. command-output:: oceanum dpm validate --help
+.. command-output:: oceanum PRAX validate --help
 
 Create or update a project specification
 
-.. command-output:: oceanum dpm deploy --help
+.. command-output:: oceanum PRAX deploy --help
 
 Descbribe project status and resources
 
-.. command-output:: oceanum dpm describe project --help
+.. command-output:: oceanum PRAX describe project --help
 
 List project specifications
 
-.. command-output:: oceanum dpm list project --help
+.. command-output:: oceanum PRAX list project --help
 
 Delete project
 
-.. command-output:: oceanum dpm delete project --help
+.. command-output:: oceanum PRAX delete project --help
 
 
 Route commands
@@ -58,7 +58,7 @@ Route commands
 
 List services and apps routes
 
-.. command-output:: oceanum dpm list routes --help
+.. command-output:: oceanum PRAX list routes --help
 
 Upload route thumbnail
 

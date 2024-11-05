@@ -82,14 +82,15 @@ oceanum = "oceanum.__main__:main"
 "datamesh" = "oceanum.cli.datamesh"
 "storage" = "oceanum.cli.storage"
 
-[project.entry-points."oceanum.cli.run"]
-"main" = "oceanum.cli.run.main"
-"project" = "oceanum.cli.run.project"
-"pipeline" = "oceanum.cli.run.pipeline"
-"task" = "oceanum.cli.run.task"
-"stage" = "oceanum.cli.run.stage"
-"log" = "oceanum.cli.run.log"
-"route" = "oceanum.cli.run.route"
+[project.entry-points."oceanum.cli.prax"]
+"main" = "oceanum.cli.prax.main"
+"project" = "oceanum.cli.prax.project"
+"build" = "oceanum.cli.prax.build"
+"pipeline" = "oceanum.cli.prax.pipeline"
+"task" = "oceanum.cli.prax.task"
+"stage" = "oceanum.cli.prax.stage"
+"log" = "oceanum.cli.prax.log"
+"route" = "oceanum.cli.prax.route"
 
 [tool.setuptools.dynamic]
 version = {attr = "oceanum.__version__"}
