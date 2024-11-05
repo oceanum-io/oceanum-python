@@ -13,7 +13,9 @@ import xarray
 import geopandas
 import pandas
 import shapely
+import pyproj
 import dask
+import dask.dataframe
 import warnings
 import tempfile
 from urllib.parse import urlparse
@@ -67,6 +69,7 @@ class Connector(object):
         token=None,
         service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
         gateway=os.environ.get("DATAMESH_GATEWAY", None),
+        user=None,
     ):
         """Datamesh connector constructor
 
@@ -74,6 +77,7 @@ class Connector(object):
             token (string): Your datamesh access token. Defaults to os.environ.get("DATAMESH_TOKEN", None).
             service (string, optional): URL of datamesh service. Defaults to os.environ.get("DATAMESH_SERVICE", "https://datamesh.oceanum.io").
             gateway (string, optional): URL of gateway service. Defaults to os.environ.get("DATAMESH_GATEWAY", "https://gateway.<datamesh_service_domain>").
+            user (string, optional): Organisation user name for the datamesh connection. Defaults to None.
 
         Raises:
             ValueError: Missing or invalid arguments
@@ -82,13 +86,13 @@ class Connector(object):
         url = urlparse(service)
         self._proto = url.scheme
         self._host = url.netloc
-        self._init_auth_headers(self._token)
+        self._init_auth_headers(self._token, user)
         self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
 
-    def _init_auth_headers(self, token: str| None):
+    def _init_auth_headers(self, token: str| None, user: str| None = None):
         if token is not None:
             if token.startswith("Bearer "):
                 self._auth_headers = {"Authorization": token}
@@ -97,6 +101,8 @@ class Connector(object):
                     "Authorization": "Token " + token,
                     "X-DATAMESH-TOKEN": token,
                 }
+                if user:
+                    self._auth_headers["X-DATAMESH-USER"] = user
         else:
             raise ValueError(
                 "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
@@ -320,9 +326,13 @@ class Connector(object):
             query["limit"] = limit
         if search:
             query["search"] = search
+        if isinstance(timefilter, list):
+            timefilter = TimeFilter(times=timefilter)
         if timefilter:
-            times = TimeFilter(times=timefilter).times
-            query["in_trange"] = f"{times[0]}Z,{times[1]}Z"
+            times = timefilter.times
+            query["in_trange"] = (
+                f"{times[0] or datetime.datetime(1,1,1)}Z,{times[1] or datetime.datetime(2500,1,1)}Z"
+            )
         if geofilter:
             if isinstance(geofilter, GeoFilter):
                 if geofilter.type == GeoFilterType.feature:
@@ -338,18 +348,18 @@ class Connector(object):
         return cat
 
     @asyncwrapper
-    def get_catalog_async(self, filter={}):
+    def get_catalog_async(self, search=None, timefilter=None, geofilter=None):
         """Get datamesh catalog asynchronously
 
         Args:
-            filter (dict, optional): Set of filters to apply. Defaults to {}.
-            loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
-            executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
+            search (string, optional): Search string for filtering datasources
+            timefilter (Union[:obj:`oceanum.datamesh.query.TimeFilter`, list], Optional): Time filter as valid Query TimeFilter or list of [start,end]
+            geofilter (Union[:obj:`oceanum.datamesh.query.GeoFilter`, dict, shapely.geometry], Optional): Spatial filter as valid Query Geofilter or geojson geometry as dict or shapely Geometry
 
         Returns:
             Coroutine<:obj:`oceanum.datamesh.Catalog`>: A datamesh catalog instance
         """
-        return self.get_catalog(filter)
+        return self.get_catalog(search, timefilter, geofilter)
 
     def get_datasource(self, datasource_id):
         """Get a Datasource instance from the datamesh. This does not load the actual data.
@@ -458,9 +468,7 @@ class Connector(object):
         return self._query(query, use_dask, cache_timeout)
 
     @asyncwrapper
-    async def query_async(
-        self, query, *, use_dask=False, cache_timeout=0, **query_keys
-    ):
+    def query_async(self, query, *, use_dask=False, cache_timeout=0, **query_keys):
         """Make a datamesh query asynchronously
 
         Args:
@@ -486,11 +494,11 @@ class Connector(object):
         datasource_id,
         data,
         geometry=None,  # Deprecating this option so property is consistent with the rest of the code
-        coordinates=None,
         geom=None,
         append=None,
         overwrite=False,
         index=None,
+        crs=None,
         **properties,
     ):
         """Write a datasource to datamesh from the work environment
@@ -498,10 +506,11 @@ class Connector(object):
         Args:
             datasource_id (string): Unique datasource id
             data (Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`, None]):  The data to be written to datamesh. If data is None, just update metadata properties.
-            geometry (:obj:`oceanum.datasource.Geometry`, optional): GeoJSON geometry of the datasource
+            geom (:obj:`oceanum.datasource.Geometry`, optional): GeoJSON geometry of the datasource in WGS84 if crs=None else in the specified crs. If not provided the geometry will be infered from the data if possible. default=None
             coordinates (Dict[:obj:`oceanum.datasource.Coordinates`,str], optional): Coordinate mapping for xarray datasets. default=None
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
+            crs (Union[string,int], optional): Coordinate reference system for the datasource if not WGS84. The geom argument is also assumed to be in this CRS. default=None
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource`
 
         Returns:
@@ -511,10 +520,47 @@ class Connector(object):
             raise DatameshWriteError(
                 "Datasource ID must only contain lowercase letters, numbers, dashes and underscores"
             )
+
+        # Create the initial datasource object and check properties
+        try:
+            geom = geom or geometry or None
+            if crs:
+                crs = pyproj.CRS(crs)
+                if geom:
+                    geom = shapely.ops.transform(
+                        pyproj.Transformer.from_crs(
+                            crs, 4326, always_xy=True
+                        ).transform,
+                        shapely.geometry.shape(geom),
+                    )
+            name = properties.pop("name", None)
+            driver = properties.pop("driver", "_null")
+            _ds = Datasource(
+                id=datasource_id,
+                name=name or re.sub("[_-]", " ", datasource_id.capitalize()),
+                geom=geom,
+                driver=driver,
+                **properties,
+            )
+        except Exception as e:
+            raise DatameshWriteError(
+                f"Cannot create datasource: {str(e)}. Check that the properties are valid"
+            )
+
+        # Try to get an existing datasoure with the same id
         try:
             ds = self.get_datasource(datasource_id)
         except DatameshConnectError as e:
             overwrite = True
+            ds = _ds
+
+        if ds._exists and overwrite:
+            try:
+                self._delete(datasource_id)
+            except Exception as e:
+                raise DatameshWriteError(f"Cannot delete existing datasource")
+
+        # Write data to datasource
         if data is not None:
             try:
                 if isinstance(data, xarray.Dataset):
@@ -542,7 +588,7 @@ class Connector(object):
                         append = True
                         overwrite = False
                     ds.driver_args["index"] = data.index.name
-                else:
+                elif isinstance(data, pandas.DataFrame):
                     with tempFile("w+b") as f:
                         data.to_parquet(f, compression="gzip", index="True")
                         f.seek(0)
@@ -553,30 +599,41 @@ class Connector(object):
                             append,
                             overwrite,
                         )
+                else:
+                    raise DatameshWriteError(
+                        "Data must be a pandas.DataFrame, geopandas.GeoDataFrame or xarray.Dataset"
+                    )
                 ds._exists = True
             except Exception as e:
                 raise DatameshWriteError(e)
         elif overwrite:
-            ds = Datasource(id=datasource_id, geom=geometry, **properties)
-        try:
-            for key in properties:
-                if key not in ["driver", "schema"]:
-                    setattr(ds, key, properties[key])
-            if coordinates:
-                ds.coordinates = coordinates
-            if geom or geometry:
-                ds.geom = geom or geometry
-            if data is not None:
-                ds._guess_props(data)
-            if not ds.geom:
-                warnings.warn(
-                    "Geometry not set for datasource, will have a default geometry of Point(0,0)"
-                )
-        except:
-            raise DatameshWriteError(
-                "Cannot set properties for datasource, check that the properties are valid"
+            ds = _ds
+
+        # Update the datasource properties
+        for key in properties:
+            if key not in ["driver", "schema", "crs"]:
+                setattr(ds, key, properties[key])
+        if name:
+            ds.name = name
+        if geom:
+            ds.geom = geom
+
+        # Do some property sniffing for missing properties
+        if not append and data is not None:
+            ds._guess_props(data, crs, append)
+
+        # Do some final checks and conversions
+        if crs:
+            ds._set_crs(crs)
+        badcoords = ds._check_coordinates()
+        if badcoords:
+            raise DatameshWriteError(f"Coordinates {badcoords} not found in data")
+        if not ds.geom:
+            warnings.warn(
+                "Geometry not set for datasource, will have a default geometry of Point(0,0)"
             )
 
+        # Write the metadata
         try:
             self._metadata_write(ds)
         except Exception as e:

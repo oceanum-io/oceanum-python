@@ -11,7 +11,7 @@ from pydantic import (
     BeforeValidator,
     WithJsonSchema,
 )
-from typing import Optional, Dict, Union, List
+from typing import Optional, Dict, Union, List, Any
 from typing_extensions import Annotated
 from enum import Enum
 from geojson_pydantic import (
@@ -38,20 +38,25 @@ class QueryError(Exception):
 
 
 def parse_time(v):
+    if v is None:
+        return None
     if not (
         isinstance(v, str)
         or isinstance(v, datetime.datetime)
         or isinstance(v, datetime.date)
         or isinstance(v, pd.Timestamp)
+        or isinstance(v, np.datetime64)
     ):
-        raise TypeError("datetime or time string required")
+        raise ValueError("datetime or time string required")
     try:
+        if isinstance(v, np.datetime64):
+            v = str(v)
         time = pd.Timestamp(v)
         if not time.tz:
             time = time.tz_localize("UTC")
         return pd.to_datetime(time.tz_convert(None))
     except Exception as e:
-        raise TypeError(f"Timestamp format not valid: {e}")
+        raise ValueError(f"Timestamp format not valid: {e}")
 
 
 Timestamp = Annotated[
@@ -66,7 +71,37 @@ Timestamp = Annotated[
 ]
 
 
-class GeoFilterType(Enum):
+def parse_timedelta(v):
+    if v is None:
+        return None
+    if not (
+        isinstance(v, str)
+        or isinstance(v, datetime.timedelta)
+        or isinstance(v, pd.Timedelta)
+        or isinstance(v, np.timedelta64)
+    ):
+        raise ValueError("timedelta or time period string required")
+    try:
+        if isinstance(v, np.timedelta64):
+            v = str(v)
+        dt = pd.Timedelta(v)
+        return dt.to_pytimedelta()
+    except Exception as e:
+        raise ValueError(f"Timedelta format not valid: {e}")
+
+
+Timedelta = Annotated[
+    datetime.timedelta,
+    Field(
+        default=None,
+        title="Timedelta",
+        description="Timedelta as python timedelta, numpy timedelta64 or pandas Timedelta",
+    ),
+    BeforeValidator(parse_timedelta),
+    WithJsonSchema({"type": "string", "format": "time-period"}),
+]
+
+class GeoFilterType(str, Enum):
     feature = "feature"
     # radius = "radius"
     bbox = "bbox"
@@ -75,6 +110,17 @@ class GeoFilterType(Enum):
 class GeoFilterInterp(str, Enum):
     """
     Interpolation method for geofilter. Can be one of:
+    - 'nearest': Nearest neighbor
+    - 'linear': Linear interpolation
+    """
+
+    nearest = "nearest"
+    linear = "linear"
+
+
+class LevelFilterInterp(str, Enum):
+    """
+    Interpolation method for levelfilter. Can be one of:
     - 'nearest': Nearest neighbor
     - 'linear': Linear interpolation
     """
@@ -95,8 +141,20 @@ class TimeFilterType(str, Enum):
     trajectory = "trajectory"
 
 
+class LevelFilterType(str, Enum):
+    """Level filter type
+    range: Select levels within a range - levels parameter must have 2 values
+    series: Select levels in a series - levels parameter must have 1 or more value(s)
+    """
+
+    range = "range"
+    series = "series"
+
+
 class ResampleType(str, Enum):
     mean = "mean"
+    nearest = "nearest"
+    slinear = "linear"
 
 
 class FilterGeometry(BaseModel):
@@ -121,7 +179,7 @@ class GeoFilter(BaseModel):
         """,
         # - 'radius': Select within radius of point
     )
-    geom: Union[List, Feature] = Field(
+    geom: Union[List[float], Feature] = Field(
         title="Selection geometry",
         description="""
             - For type='feature', geojson feature as dict or shapely Geometry.
@@ -138,6 +196,10 @@ class GeoFilter(BaseModel):
         title="Maximum spatial resolution of data",
         default=0.0,
         description="Maximum resolution of the data for downsampling in CRS units. Only works for feature datasources.",
+    )
+    alltouched: Optional[bool] = Field(
+        title="Include all touched grid pixels",
+        default=None
     )
 
     @field_validator("geom", mode="before")
@@ -161,6 +223,33 @@ class GeoFilter(BaseModel):
         return v
 
 
+class LevelFilter(BaseModel):
+    """LevelFilter class
+    Describes a vertical subset or interpolation
+    """
+
+    type: LevelFilterType = Field(
+        title="Levelfilter type",
+        default=LevelFilterType.range,
+        description="""
+        Type of the levelfilter. Can be one of:
+            - 'range': Select levels within a range, levels are a list of [levelstart, levelend]
+            - 'series': Select levels in a series, levels are a list of levels
+        """,
+    )
+    levels: List[Union[float, None]] = Field(
+        title="Selection levels",
+        description="""
+            - For type='range', [levelstart, levelend].
+        """,
+    )
+    interp: Optional[LevelFilterInterp] = Field(
+        title="Interpolation method",
+        default=LevelFilterInterp.linear,
+        description="Interpolation method to use for series type level filters",
+    )
+
+
 class TimeFilter(BaseModel):
     """TimeFilter class
     Describes a temporal subset or interpolation
@@ -176,7 +265,7 @@ class TimeFilter(BaseModel):
             - 'trajectory': Select times along a trajectory, times are a list of times corresponding to subfeatures in a feature filter
         """,
     )
-    times: List[Union[Timestamp, None]] = Field(
+    times: List[Union[Timestamp, Timedelta, None]] = Field(
         title="Selection times",
         description="""
             - For type='range', [timestart, tend].
@@ -191,7 +280,7 @@ class TimeFilter(BaseModel):
     )
     resample: Optional[ResampleType] = Field(
         title="Temporal resampling method",
-        default=ResampleType.mean,
+        default=ResampleType.slinear,
         description="Resampling method applied when reducing tempral resolution. Only valid with range type",
     )
 
@@ -223,6 +312,15 @@ class Aggregate(BaseModel):
     )
 
 
+class Function(BaseModel):
+    id: str = Field(title="Function id")
+    args: Dict[str, Any] = Field(title="function arguments")
+    vselect: Optional[List[str]] = Field(
+        title="Apply function to variables", default=None
+    )
+    replace: Optional[bool] = Field(title="Replace input dataset", default=False)
+
+
 # Geofilter selection process
 # a features select can either be a Feature/FeatureCollection or the geometry of another datasource
 # grid    ∩  bbox -> subgrid (optional resolution)
@@ -236,8 +334,9 @@ class Aggregate(BaseModel):
 
 class CoordSelector(BaseModel):
     coord: str = Field(title="Coordinate name")
-    values: List[Union[str, int, float]] = Field(title="Coordinate value")
-
+    values: List[str | int | float] = Field(
+        title="List of coordinate values to select by"
+    )
 
 class Query(BaseModel):
     """
@@ -273,6 +372,9 @@ class Query(BaseModel):
     geofilter: Optional[GeoFilter] = Field(
         title="Spatial filter or interpolator", default=None
     )
+    levelfilter: Optional[LevelFilter] = Field(
+        title="Vertical filter or interpolator", default=None
+    )
     coordfilter: Optional[List[CoordSelector]] = Field(
         title="List of additional coordinate filters", default=None
     )
@@ -286,6 +388,16 @@ class Query(BaseModel):
         default=None,
         description="Optional aggregation operators to apply to query after filtering",
     )
+    functions: Optional[List[Function]] = Field(title="Functions", default=[])
+    limit: Optional[int] = Field(title="Limit size of response", default=None)
+    id: Optional[str] = Field(title="Unique ID of this query", default=None)
+
+
+class Workspace(BaseModel):
+    data: List[Query] = Field(title="Datamesh queries")
+    id: Optional[str] = Field(title="Unique ID of this package", default=None)
+    name: Optional[str] = Field(title="Package name", default="OceanQL package")
+    description: Optional[str] = Field(title="Package description", default="")
 
 
 class Container(str, Enum):
@@ -303,3 +415,4 @@ class Stage(BaseModel):
     coordmap: dict = Field(title="coordinates map")
     coordkeys: dict = Field(title="coordinates keys")
     container: Container = Field(title="Data container type")
+    sig: str = Field(title="Signature hash")

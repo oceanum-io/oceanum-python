@@ -351,6 +351,15 @@ class FileSystem(AsyncFileSystem):
         async with session.put(self._base_url + path.strip("/") + "/_") as r:
             self._raise_not_found_for_status(r, path)
 
+    async def _cp_file(self, path1, path2, **kwargs):
+        logger.debug(f"{path1} -> {path2}")
+        session = await self.set_session()
+        async with session.post(
+            self._base_url + path2.lstrip("/"), headers={"x-copy-source": path1}
+        ) as r:
+            self._raise_not_found_for_status(r, path1)
+            return r.status == 201
+
     def ukey(self, path):
         """Unique identifier"""
         return tokenize(path)

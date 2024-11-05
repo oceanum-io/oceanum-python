@@ -46,7 +46,11 @@ dependencies = [
   "shapely",
   "tabulate",
   "xarray",
+  "rioxarray",
   "zarr",
+  "dask[dataframe,distributed]",
+  "msgpack",
+  "cftime"
 ]
 dynamic = ["version"]
 
@@ -55,8 +59,11 @@ test = [
   "pytest",
   "pytest-env",
 ]
-extra = [
+video = [
     "xarray_video",
+]
+eidos= [
+    "oceanum.eidos",
 ]
 docs = [
   "autodoc-pydantic",
@@ -115,6 +122,5 @@ universal = true
 [tool.pytest.ini_options]
 required_plugins = "pytest-env"
 env = [
-  "DATAMESH_TOKEN = aa54ff999abf474c0c1584fb6e97134249c3e437",
   "STORAGE_SERVICE = https://storage.oceanum.io",
 ]

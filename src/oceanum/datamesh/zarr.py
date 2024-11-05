@@ -1,12 +1,14 @@
-import requests
+import datetime
+import json
 import re
 import time
-import datetime
-import xarray
-import numpy
 from collections.abc import MutableMapping
 
-from .exceptions import DatameshWriteError, DatameshConnectError
+import numpy
+import requests
+import xarray
+
+from .exceptions import DatameshConnectError, DatameshWriteError
 
 try:
     import xarray_video as xv
