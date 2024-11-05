@@ -52,7 +52,7 @@ dependencies = [
   "msgpack",
   "cftime",
   "python-jsonpath",
-  "requests,
+  "requests",
 ]
 dynamic = ["version"]
 
