@@ -82,26 +82,31 @@ class Connector(object):
         Raises:
             ValueError: Missing or invalid arguments
         """
-        if token is None:
-            token = os.environ.get("DATAMESH_TOKEN", None)
-            if token is None:
-                raise ValueError(
-                    "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
-                )
-        self._token = token
+        self._token = token or os.environ.get("DATAMESH_TOKEN")
         url = urlparse(service)
         self._proto = url.scheme
         self._host = url.netloc
-        self._auth_headers = {
-            "Authorization": "Token " + self._token,
-            "X-DATAMESH-TOKEN": self._token,
-        }
-        if user:
-            self._auth_headers["X-DATAMESH-USER"] = user
+        self._init_auth_headers(self._token, user)
         self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
+
+    def _init_auth_headers(self, token: str| None, user: str| None = None):
+        if token is not None:
+            if token.startswith("Bearer "):
+                self._auth_headers = {"Authorization": token}
+            else:
+                self._auth_headers = {
+                    "Authorization": "Token " + token,
+                    "X-DATAMESH-TOKEN": token,
+                }
+                if user:
+                    self._auth_headers["X-DATAMESH-USER"] = user
+        else:
+            raise ValueError(
+                "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
+            )
 
     @property
     def host(self):
@@ -304,18 +309,21 @@ class Connector(object):
                         localcache.unlock(query)
                 return ds
 
-    def get_catalog(self, search=None, timefilter=None, geofilter=None):
+    def get_catalog(self, search=None, timefilter=None, geofilter=None, limit=None):
         """Get datamesh catalog
 
         Args:
             search (string, optional): Search string for filtering datasources
             timefilter (Union[:obj:`oceanum.datamesh.query.TimeFilter`, list], Optional): Time filter as valid Query TimeFilter or list of [start,end]
             geofilter (Union[:obj:`oceanum.datamesh.query.GeoFilter`, dict, shapely.geometry], Optional): Spatial filter as valid Query Geofilter or geojson geometry as dict or shapely Geometry
+            limit (int, optional): Limit the number of datasources returned. Defaults to None.
 
         Returns:
             :obj:`oceanum.datamesh.Catalog`: A datamesh catalog instance
         """
         query = {}
+        if limit:
+            query["limit"] = limit
         if search:
             query["search"] = search
         if isinstance(timefilter, list):

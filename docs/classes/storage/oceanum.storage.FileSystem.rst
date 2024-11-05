@@ -22,6 +22,8 @@
       ~FileSystem.root_marker
       ~FileSystem.sep
       ~FileSystem.transaction
+      ~FileSystem.storage_args
+      ~FileSystem.storage_options
    
    
 
@@ -49,6 +51,7 @@
    .. automethod:: exists
    .. automethod:: expand_path
    .. automethod:: find
+   .. automethod:: from_dict
    .. automethod:: from_json
    .. automethod:: get
    .. automethod:: get_file
@@ -89,6 +92,7 @@
    .. automethod:: start_transaction
    .. automethod:: stat
    .. automethod:: tail
+   .. automethod:: to_dict
    .. automethod:: to_json
    .. automethod:: touch
    .. automethod:: ukey

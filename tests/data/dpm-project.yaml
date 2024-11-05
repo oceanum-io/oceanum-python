@@ -1,0 +1,26 @@
+name: test-project
+description: Test project
+resources:
+  secrets:
+    - name: test-secret
+      data:
+        token: '...'
+  services:
+    - name: test-service
+      image: python:3.12-slim
+      env:
+        - name: SECRET_KEY
+          secretRef:
+            name: test-secret
+            key: token
+      command: python -m http.server 8000
+      servicePort: 8000
+      healthCheck:
+        port: 8000
+        path: /
+  stages:
+    - name: test-stage
+      resources:
+        services:
+        - test-service
+

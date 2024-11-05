@@ -30,6 +30,8 @@
    .. automethod:: load_datasource_async
    .. automethod:: query
    .. automethod:: query_async
+   .. automethod:: update_metadata
+   .. automethod:: update_metadata_async
    .. automethod:: write_datasource
    .. automethod:: write_datasource_async
    
