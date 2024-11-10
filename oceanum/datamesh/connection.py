@@ -30,6 +30,7 @@ from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
+from ..__init__ import __version__
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
@@ -104,6 +105,8 @@ class Connector(object):
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
 
+        self._check_info()
+
     @property
     def host(self):
         """Datamesh host
@@ -117,6 +120,17 @@ class Connector(object):
     def _status(self):
         resp = requests.get(f"{self._proto}://{self._host}", headers=self._auth_headers)
         return resp.status_code == 200
+
+    def _check_info(self):
+        """
+        Check if there are any infos available that need to be displayed.
+        Typically will ask to update the client if the version is outdated.
+        """
+        resp = requests.get(f"{self._gateway}/info/oceanum_python/{__version__}",
+                            headers=self._auth_headers)
+        r = resp.json()
+        if "message" in r:
+            print(r["message"])
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:
