@@ -126,11 +126,14 @@ class Connector(object):
         Check if there are any infos available that need to be displayed.
         Typically will ask to update the client if the version is outdated.
         """
-        resp = requests.get(f"{self._gateway}/info/oceanum_python/{__version__}",
+        try:
+            resp = requests.get(f"{self._gateway}/info/oceanum_python/{__version__}",
                             headers=self._auth_headers)
-        r = resp.json()
-        if "message" in r:
-            print(r["message"])
+            r = resp.json()
+            if "message" in r:
+                print(r["message"])
+        except:
+            print("Failed to connect info endpoint. Ignoring...")
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:
@@ -512,6 +515,7 @@ class Connector(object):
         append=None,
         overwrite=False,
         index=None,
+        crs=None,
         **properties,
     ):
         """Write a datasource to datamesh from the work environment
