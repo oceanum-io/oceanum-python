@@ -101,6 +101,7 @@ Timedelta = Annotated[
     WithJsonSchema({"type": "string", "format": "time-period"}),
 ]
 
+
 class GeoFilterType(str, Enum):
     feature = "feature"
     # radius = "radius"
@@ -149,6 +150,7 @@ class LevelFilterType(str, Enum):
 
     range = "range"
     series = "series"
+    trajectory = "trajectory"
 
 
 class ResampleType(str, Enum):
@@ -198,8 +200,7 @@ class GeoFilter(BaseModel):
         description="Maximum resolution of the data for downsampling in CRS units. Only works for feature datasources.",
     )
     alltouched: Optional[bool] = Field(
-        title="Include all touched grid pixels",
-        default=None
+        title="Include all touched grid pixels", default=None
     )
 
     @field_validator("geom", mode="before")
@@ -337,6 +338,7 @@ class CoordSelector(BaseModel):
     values: List[str | int | float] = Field(
         title="List of coordinate values to select by"
     )
+
 
 class Query(BaseModel):
     """
