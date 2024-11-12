@@ -25,8 +25,10 @@ class Session(BaseModel):
             Connection object to acquire session from.
         """
         try:
+            headers = connection._auth_headers.copy()
+            headers["Cache-Control"] = "no-store"
             res = requests.get(f"{connection._gateway}/session",
-                            headers=connection._auth_headers)
+                               headers=headers)
             if res.status_code != 200:
                 raise DatameshConnectError("Failed to create session with error: " + res.text)
             session = cls(**res.json())
