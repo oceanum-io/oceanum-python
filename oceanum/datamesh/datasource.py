@@ -5,6 +5,7 @@ import pandas
 import geopandas
 import pyproj
 import xarray
+import rioxarray
 import asyncio
 import shapely
 import warnings
@@ -94,6 +95,8 @@ class _GeometryAnnotation:
                     geometry = shapely.geometry.shape(geometry)
                 except:
                     "Not a valid GeoJSON dictionary"
+            if not geometry.within(shapely.geometry.box(-180, -90, 360, 90)):
+                raise ValueError("Geometry must be in WGS84 coordinates")
             if (
                 isinstance(geometry, shapely.geometry.Point)
                 or isinstance(geometry, shapely.geometry.MultiPoint)
@@ -165,8 +168,10 @@ class Coordinates(Enum):
 COORD_MAPPING = {
     "lon": Coordinates.Easting,
     "x": Coordinates.Easting,
+    "eas": Coordinates.Easting,
     "lat": Coordinates.Northing,
     "y": Coordinates.Northing,
+    "nor": Coordinates.Northing,
     "dep": Coordinates.Vertical,
     "lev": Coordinates.Vertical,
     "z": Coordinates.Vertical,
@@ -403,6 +408,11 @@ class Datasource(BaseModel):
             ):
                 badcoords.append(self.coordinates[c])
         return badcoords if len(badcoords) > 0 else None
+
+    def _set_crs(self, crs):
+        if crs.to_epsg() != "4326":
+            self.dataschema.attrs["crs"] = crs.to_epsg()
+            return crs
 
 
 def _datasource_driver(data):
