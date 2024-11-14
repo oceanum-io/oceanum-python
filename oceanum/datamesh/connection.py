@@ -510,7 +510,6 @@ class Connector(object):
         datasource_id,
         data,
         geometry=None,  # Deprecating this option so property is consistent with the rest of the code
-        coordinates=None,
         geom=None,
         append=None,
         overwrite=False,
