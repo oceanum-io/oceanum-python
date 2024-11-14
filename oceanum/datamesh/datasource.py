@@ -373,10 +373,10 @@ class Datasource(BaseModel):
             if "x" in self.coordinates and "y" in self.coordinates:
                 warnings.warn("Setting geometry as a bbox from x and y coordinates")
                 self.geom = shapely.geometry.box(
-                    min(data[self.coordinates["x"]]),
-                    min(data[self.coordinates["y"]]),
-                    max(data[self.coordinates["x"]]),
-                    max(data[self.coordinates["y"]]),
+                    float(data[self.coordinates["x"]].min()),
+                    float(data[self.coordinates["y"]].min()),
+                    float(data[self.coordinates["x"]].max()),
+                    float(data[self.coordinates["y"]].max()),
                 )
                 if crs:
                     self.geom = shapely.ops.transform(
