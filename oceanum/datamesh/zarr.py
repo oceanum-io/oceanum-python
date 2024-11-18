@@ -149,7 +149,7 @@ class ZarrProxyGetRequestParams(BaseModel):
     downsample: Optional[Dict[str, int]] = {}
     selector: Optional[Selector] = {}
     nearest_chunk_selector: Optional[Selector] = {}
-    filtered: Optional[str]
+    filtered: Optional[bool] = False
     #session_id: Optional[str]
     
 #    class Config:
@@ -197,7 +197,7 @@ class ZarrClient(MutableMapping):
         self.headers = {**connection._auth_headers}
         self.headers = session.add_header(self.headers)
         if nocache:
-            self.headers["cache-control"] = "no-transform"
+            self.headers["cache-control"] = "no-transform,no-cache"
         if parameters:
             self.headers["X-PARAMETERS"] = json.dumps(parameters)
         if api == "zarr":
