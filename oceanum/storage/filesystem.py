@@ -2,7 +2,7 @@ import asyncio
 import io
 import os
 import logging
-import re
+import json
 import weakref
 import random
 from copy import copy
@@ -151,7 +151,22 @@ class FileSystem(AsyncFileSystem):
                     raise FileNotFoundError(path)
                 else:
                     return await self._ls(path + "/", detail=detail, **kwargs)
-            listing = await r.json()
+            # handles the case where response is paginated
+            raw_listing = await r.text()
+            if '][' in raw_listing:
+                all_parts = raw_listing.split('][')
+                listing = []
+                for p,part in enumerate(all_parts):
+                    if p == 0:
+                        part += ']'
+                    elif p == len(all_parts)-1:
+                        part = '[' + part
+                    else:
+                        part = '[' + part + ']'
+                    listing.extend(json.loads(part))
+            else:
+                listing = json.loads(raw_listing)
+
             if not listing:
                 raise FileNotFoundError(path)
         if detail:
