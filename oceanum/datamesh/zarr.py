@@ -239,17 +239,19 @@ class ZarrClient(MutableMapping):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support write operations")
         if self.method == "put":
-            requests.put(
+            res = requests.put(
                 f"{self._proxy}/{self.datasource}/{item}",
                 data=value,
                 headers=self.headers,
             )
         else:
-            requests.post(
+            res = requests.post(
                 f"{self._proxy}/{self.datasource}/{item}",
                 data=value,
                 headers=self.headers,
             )
+        if res.status_code >= 300:
+            raise DatameshWriteError(f"Failed to write {item}: {res.status_code} - {res.text}")
 
     def __delitem__(self, item):
         if self.api == "query":
