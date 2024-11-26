@@ -136,3 +136,6 @@ tmp.mkv
 
 #pypi config
 pypi.conf
+
+# Entrypoints
+src/oceanum/cli/prax
