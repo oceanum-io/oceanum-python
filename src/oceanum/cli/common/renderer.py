@@ -39,12 +39,14 @@ class Renderer:
     def __init__(self, 
         data:list|dict|Type[BaseModel], 
         fields: list[RenderField],
+        indent: int = 0,
         output: Literal['table', 'json', 'yaml'] = 'table',
         ignore_fields: list[str] | None = None
     ) -> None:
         self.raw_data = data
         self.parsed_data = self._init_data(data)
         self.fields = fields
+        self.indent = indent
         self.ignore_fields = ignore_fields or []
 
     def _init_data(self, data: list[dict]|list[Type[BaseModel]]|dict|Type[BaseModel]) -> list[dict]:
@@ -64,9 +66,10 @@ class Renderer:
             dict_data.append(data)
         return dict_data
         
-    def render_table(self, tablefmt='simple') -> str:
+    def render_table(self, tablefmt='simple', **dump_kwargs) -> str:
         table_data = []
         headers = [f.label for f in self.fields]
+        indent = self.indent if isinstance(self.indent,int) else 0
         for item in self.parsed_data:
             row = []
             for field in self.fields:
@@ -79,24 +82,24 @@ class Renderer:
             table_data.append(row)
         if tablefmt == 'plain':
             table_data = zip(headers, table_data[0])
-            return tabulate(table_data, tablefmt=tablefmt)
+            return tabulate(table_data, tablefmt=tablefmt, **dump_kwargs)
         else:
             return tabulate(table_data, headers=headers, tablefmt=tablefmt)
 
-    def render_json(self) -> str:
-        return json.dumps(self.parsed_data, indent=4)
+    def render_json(self, **dump_kwargs) -> str:
+        return json.dumps(self.parsed_data, **dump_kwargs)
 
-    def render_yaml(self) -> str:
-        return yaml.dump(self.parsed_data, indent=4)
+    def render_yaml(self, **dump_kwargs) -> str:
+        return yaml.dump(self.parsed_data, **dump_kwargs)
     
-    def render(self, output_format:str='plain') -> str:
-        if output_format == 'plain':
-            return self.render_table(tablefmt='plain')
-        elif output_format == 'table':
-            return self.render_table()
+    def render(self, output_format:str='plain', **dump_kwargs) -> str:
+        output = ''
+        if output_format == 'table':
+            output = self.render_table(**dump_kwargs)
         elif output_format == 'json':
-            return self.render_json()
+            output = self.render_json(**dump_kwargs)
         elif output_format == 'yaml':
-            return self.render_yaml()
+            output = self.render_yaml(**dump_kwargs)
         else:
             raise ValueError(f"Invalid format: {output_format}")
+        return linesep.join([' '*self.indent+l for l in output.split(linesep)])
