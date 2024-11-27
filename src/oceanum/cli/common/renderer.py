@@ -32,6 +32,7 @@ class RenderField(BaseModel):
     label: str = 'Name'
     path: str = '$.name'
     mod: Callable = lambda x: x
+    lmod: Callable = lambda x: x
     sep: str = ', '
 
 class Renderer:
@@ -75,7 +76,7 @@ class Renderer:
             for field in self.fields:
                 matches = jsonpath.findall(field.path, item)
                 if matches:
-                    row.append(field.sep.join(str(field.mod(m)) for m in matches))
+                    row.append(field.sep.join(str(field.mod(m)) for m in field.lmod(matches)))
                 else:
                     row.append(None)
                     click.echo(f"{_sty('WARNING', fg='yellow')}: Could not find a data field for '{field.label}' at path '{field.path}'")
