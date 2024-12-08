@@ -130,20 +130,43 @@ class FileSystem(AsyncFileSystem):
                 weakref.finalize(self, self.close_session, self.loop, self._session)
         return self._session
 
-    async def _ls(self, path="", detail=True, **kwargs):
+    async def _ls(self,
+        path="",
+        detail=True,
+        file_prefix=None,
+        match_glob=None,
+        limit=None,
+        **kwargs
+    ):
         logger.debug(path)
         session = await self.set_session()
         spath = path.lstrip("/")
-        async with session.get(self._base_url + spath, **kwargs) as r:
+        params = {}
+
+        if limit:
+            params["limit"] = limit
+        if file_prefix:
+            params["file_prefix"] = file_prefix
+        if match_glob:
+            params["match_glob"] = match_glob
+
+        async with session.get(self._base_url + spath, params=params or None) as r:
             try:
                 self._raise_not_found_for_status(r, path)
             except (
                 FileNotFoundError
             ):  # The storage endpoint enforces trailing slash for directories, so test for that
-                if path[-1] == "/":
+                if path.endswith("/"):
                     raise FileNotFoundError(path)
                 else:
-                    return await self._ls(path + "/", detail=detail, **kwargs)
+                    return await self._ls(
+                        path + "/",
+                        detail=detail,
+                        file_prefix=file_prefix,
+                        match_glob=match_glob,
+                        limit=limit,
+                        **kwargs
+                    )
             listing = await r.json()
             if not listing:
                 raise FileNotFoundError(path)
