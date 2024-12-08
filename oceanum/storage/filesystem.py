@@ -136,7 +136,6 @@ class FileSystem(AsyncFileSystem):
         file_prefix=None,
         match_glob=None,
         limit=None,
-        **kwargs
     ):
         logger.debug(path)
         session = await self.set_session()
@@ -165,7 +164,6 @@ class FileSystem(AsyncFileSystem):
                         file_prefix=file_prefix,
                         match_glob=match_glob,
                         limit=limit,
-                        **kwargs
                     )
             listing = await r.json()
             if not listing:
