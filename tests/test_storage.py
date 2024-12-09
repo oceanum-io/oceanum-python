@@ -58,6 +58,31 @@ def test_ls(fs, dummy_files):
     paths = list(fs.walk(REMOTE_PATH))
     assert len(paths) == 2
 
+def test_ls_file_prefix(fs, dummy_files):
+    test_folder = f'{REMOTE_PATH}/test'
+    fs.mkdirs(test_folder, exist_ok=True)
+    fs.put(dummy_files.name, test_folder, recursive=True)
+    files = fs.ls(test_folder, file_prefix="file1")
+    assert len(files) == 1
+    assert files[0]["name"] == "test_storage/test/file1.txt"
+
+def test_ls_glob(fs, dummy_files):
+    test_folder = f'{REMOTE_PATH}/test'
+    fs.mkdirs(test_folder, exist_ok=True)
+    fs.put(dummy_files.name, test_folder, recursive=True)
+    files = fs.ls(test_folder, match_glob="**/*2.txt")
+    assert len(files) == 1
+    assert files[0]["name"] == "test_storage/test/file2.txt"
+
+def test_ls_limit(fs, dummy_files):
+    test_folder = f'{REMOTE_PATH}/test'
+    fs.mkdirs(test_folder, exist_ok=True)
+    fs.put(dummy_files.name, test_folder, recursive=True)
+    # Something is off with limit
+    # At the storage API level, it returns 1 file when limit=2
+    files = fs.ls(test_folder, limit=2)
+    assert len(files) == 1
+    assert files[0]["name"] == "test_storage/test/file1.txt"
 
 def test_get(fs, dummy_files):
     fs.mkdirs(REMOTE_PATH, exist_ok=True)

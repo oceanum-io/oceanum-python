@@ -148,13 +148,12 @@ class FileSystem(AsyncFileSystem):
             params["file_prefix"] = file_prefix
         if match_glob:
             params["match_glob"] = match_glob
-
+        
         async with session.get(self._base_url + spath, params=params or None) as r:
             try:
                 self._raise_not_found_for_status(r, path)
-            except (
-                FileNotFoundError
-            ):  # The storage endpoint enforces trailing slash for directories, so test for that
+            except FileNotFoundError:
+                # The storage endpoint enforces trailing slash for directories, so test for that
                 if path.endswith("/"):
                     raise FileNotFoundError(path)
                 else:
