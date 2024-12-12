@@ -54,17 +54,19 @@ class Auth0Client:
         response = self._request('POST', 'oauth/token', data=data)
         return TokenResponse(domain=self.ctx.obj.domain, **response.json())
     
-    def wait_for_confirmation(self, device_code: DeviceCodeResponse) -> TokenResponse:
+    def wait_for_confirmation(self, device_code: DeviceCodeResponse) -> TokenResponse|None:
         t0 = time.time()
+        token = None
         while time.time() - t0 < device_code.expires_in:
             try:
                 time.sleep(device_code.interval)
                 token = self.get_token(device_code.device_code)
             except requests.HTTPError as e:
+                print(f'Error fetching auth token: {e}')
                 continue
             else:
+                token.save()
                 break
-        token.save()
         return token
 
 
