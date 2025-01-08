@@ -98,7 +98,9 @@ class Connector(object):
         }
         if user:
             self._auth_headers["X-DATAMESH-USER"] = user
-        self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
+        self._gateway = (
+            gateway or f"{self._proto}://{self._host}"
+        )  # V1 gateway is on same domain as metadata service
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")

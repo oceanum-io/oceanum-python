@@ -237,6 +237,7 @@ class LevelFilter(BaseModel):
         Type of the levelfilter. Can be one of:
             - 'range': Select levels within a range, levels are a list of [levelstart, levelend]
             - 'series': Select levels in a series, levels are a list of levels
+            - 'trajectory': Select levels along a trajectory, levels are a list of levels corresponding to subfeatures in a feature filter
         """,
     )
     levels: List[Union[float, None]] = Field(
