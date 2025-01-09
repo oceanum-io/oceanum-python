@@ -1,9 +1,10 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
-from .exceptions import DatameshConnectError
+from .exceptions import DatameshConnectError, DatameshSessionError
 import atexit
 import os
+
 
 class Session(BaseModel):
     id: str
@@ -24,6 +25,20 @@ class Session(BaseModel):
         connection : Connection
             Connection object to acquire session from.
         """
+
+        # Back-compatibility with beta version (returning dummy session object)
+        if not connection._is_v1:
+            session =\
+                cls(id="dummy_session",
+                    user="dummy_user",
+                    creation_time=datetime.now(),
+                    end_time=datetime.now()+timedelta(hours=1),
+                    write=False,
+                    verified=False)
+            session._connection = connection
+            atexit.register(session.close)
+            return session
+        # v1
         try:
             headers = connection._auth_headers.copy()
             headers["Cache-Control"] = "no-store"
@@ -36,7 +51,7 @@ class Session(BaseModel):
             atexit.register(session.close)
             return session
         except Exception as e:
-            raise e
+            raise DatameshSessionError(f"Error when acquiring datamesh session {e}")
         
     @classmethod
     def from_proxy(cls):
@@ -58,7 +73,7 @@ class Session(BaseModel):
             atexit.register(session.close)
             return session
         except Exception as e:
-            raise e
+            raise DatameshSessionError(f"Error when acquiring datamesh session from proxy {e}")
 
     @property
     def header(self):
@@ -69,6 +84,10 @@ class Session(BaseModel):
         return headers
     
     def close(self, finalise_write: bool = False):
+        # Back-compatibility with beta version (ignoring)
+        if not self._connection._is_v1:
+            return
+        # datamesh v1
         try:
             atexit.unregister(self.close)
         except:
