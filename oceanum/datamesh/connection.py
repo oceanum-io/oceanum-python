@@ -129,11 +129,20 @@ class Connector(object):
         try:
             resp = requests.get(f"{self._gateway}/info/oceanum_python/{__version__}",
                             headers=self._auth_headers)
-            r = resp.json()
-            if "message" in r:
-                print(r["message"])
-        except:
-            print("Failed to connect info endpoint. Ignoring...")
+            if resp.status_code == 404:
+                print("Using datamesh API version beta")
+                self._is_v1 = False
+            elif resp.status_code == 200:
+                r = resp.json()
+                if "message" in r:
+                    print(r["message"])
+                print("Using datamesh API version 1")
+                self._is_v1 = True
+            else:
+                raise DatameshConnectError("Failed to reach datamesh")
+        except Exception as e:
+            raise DatameshConnectError(f"Failed to reach datamesh {e}")
+            self._is_v1 = False
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:
