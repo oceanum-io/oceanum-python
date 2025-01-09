@@ -193,7 +193,8 @@ class ZarrClient(MutableMapping):
         self.datasource = datasource
         self.session = session
         self.method = method
-        self.api = api
+        self._is_v1 = connection._is_v1
+        self.api = api if connection._is_v1 else "zarr"
         self.headers = {**connection._auth_headers}
         self.headers = session.add_header(self.headers)
         if nocache:
@@ -212,7 +213,7 @@ class ZarrClient(MutableMapping):
         retries = 0
         while retries < self.retries:
             try:
-                if retrieve_data:
+                if retrieve_data or not self._is_v1:
                     resp = requests.get(path, headers=self.headers)
                 else:
                     resp = requests.head(path, headers=self.headers)
@@ -229,6 +230,8 @@ class ZarrClient(MutableMapping):
         return resp.content
 
     def __contains__(self, item):
+        #if not self._is_v1:
+        #    raise NotImplementedError
         resp = self._get(f"{self._proxy}/{self.datasource}/{item}",
                          retrieve_data=False)
         if resp.status_code != 200:
@@ -257,7 +260,8 @@ class ZarrClient(MutableMapping):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support delete operations")
         requests.delete(
-            f"{self._proxy}/{self.datasource}/{item}", headers=self.headers
+            f"{self._proxy}/{self.datasource}/{item}",
+            headers=self.headers
         )
 
     def __iter__(self):
