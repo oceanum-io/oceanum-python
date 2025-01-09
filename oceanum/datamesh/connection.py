@@ -140,6 +140,10 @@ class Connector(object):
                 self._is_v1 = True
             else:
                 raise DatameshConnectError("Failed to reach datamesh")
+        except requests.exceptions.ConnectionError:
+            print(f"Failed to reach datamesh gateway at address: {self._gateway}.")
+            print("It is likely that only the metadata server will work")
+            self._is_v1 = False
         except Exception as e:
             raise DatameshConnectError(f"Failed to reach datamesh {e}")
             self._is_v1 = False
