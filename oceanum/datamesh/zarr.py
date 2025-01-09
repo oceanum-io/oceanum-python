@@ -201,12 +201,12 @@ class ZarrClient(MutableMapping):
             self.headers["cache-control"] = "no-transform,no-cache"
         if parameters:
             self.headers["X-PARAMETERS"] = json.dumps(parameters)
-        if api == "zarr":
+        if self.api == "zarr":
             self._proxy = connection._gateway + "/zarr"
-        elif api == "query":
+        elif self.api == "query":
             self._proxy = connection._gateway + "/zarr/query"
         else:
-            raise DatameshConnectError(f"Unknown api: {api}")
+            raise DatameshConnectError(f"Unknown api: {self.api}")
         self.retries = retries
 
     def _get(self, path, retrieve_data=True):
