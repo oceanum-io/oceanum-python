@@ -95,6 +95,7 @@
    .. automethod:: to_dict
    .. automethod:: to_json
    .. automethod:: touch
+   .. automethod:: tree
    .. automethod:: ukey
    .. automethod:: unstrip_protocol
    .. automethod:: upload

@@ -99,6 +99,8 @@ oceanum = "oceanum.__main__:main"
 "stage" = "oceanum.cli.prax.stage"
 "log" = "oceanum.cli.prax.log"
 "route" = "oceanum.cli.prax.route"
+"user" = "oceanum.cli.prax.user"
+"client" = "oceanum.cli.prax.client"
 
 [tool.setuptools.dynamic]
 version = {attr = "oceanum.__version__"}

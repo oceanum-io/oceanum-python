@@ -20,37 +20,54 @@ Datamesh commands
 
 .. command-output:: oceanum datamesh --help
 
-List Datasources
+Datasources commands
+=========================
+
+List datasources
 
 .. command-output:: oceanum datamesh list datasources --help
 
-Deploy-manager commands
+PRAX commands
 -----------------------
 
-.. command-output:: oceanum PRAX --help
+.. command-output:: oceanum prax --help
 
-Project commands
-================
+Project specification file commands
+===================================
 
-Validate project specification
+Validate project specification file
 
-.. command-output:: oceanum PRAX validate --help
+.. command-output:: oceanum prax validate --help
 
-Create or update a project specification
+Create or update a project specification file
 
-.. command-output:: oceanum PRAX deploy --help
+.. command-output:: oceanum prax deploy --help
 
-Descbribe project status and resources
-
-.. command-output:: oceanum PRAX describe project --help
+Project management commands
+===========================
 
 List project specifications
 
-.. command-output:: oceanum PRAX list project --help
+.. command-output:: oceanum prax list projects --help
+
+
+Describe project
+
+.. command-output:: oceanum prax describe project --help
+
+Update project
+
+.. command-output:: oceanum prax update project --help
+
+
+Manage project permissions
+
+.. command-output:: oceanum prax allow project --help
+
 
 Delete project
 
-.. command-output:: oceanum PRAX delete project --help
+.. command-output:: oceanum prax delete project --help
 
 
 Route commands
@@ -58,11 +75,44 @@ Route commands
 
 List services and apps routes
 
-.. command-output:: oceanum PRAX list routes --help
+.. command-output:: oceanum prax list routes --help
 
-Upload route thumbnail
+Describe a service or an app route
 
-....
+.. command-output:: oceanum prax describe route --help
+
+Update service or apps route thumbnail
+
+.. command-output:: oceanum prax update route thumbnail --help
+
+Manage service or app access permissions
+
+.. command-output:: oceanum prax allow route --help
+
+
+Pipeline commands
+=================
+
+List pipelines
+
+.. command-output:: oceanum prax list pipelines --help
+
+Describe pipeline
+
+.. command-output:: oceanum prax describe pipeline --help
+
+Submit pipeline run
+
+.. command-output:: oceanum prax submit pipeline --help
+
+Terminate Pipeline run
+
+.. command-output:: oceanum prax terminate pipeline --help
+
+Retry pipeline run
+
+.. command-output:: oceanum prax retry pipeline --help
+
 
 Storage commands
 ----------------
