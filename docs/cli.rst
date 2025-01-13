@@ -113,6 +113,68 @@ Retry pipeline run
 
 .. command-output:: oceanum prax retry pipeline --help
 
+Task commands
+=============
+
+List tasks
+
+.. command-output:: oceanum prax list tasks --help
+
+Describe task
+
+.. command-output:: oceanum prax describe task --help
+
+Submit task run
+
+.. command-output:: oceanum prax submit task --help
+
+Terminate task run
+
+.. command-output:: oceanum prax terminate task --help
+
+Retry task run
+
+.. command-output:: oceanum prax retry task --help
+
+Build commands
+==============
+
+List builds
+
+.. command-output:: oceanum prax list builds --help
+
+Describe build
+
+.. command-output:: oceanum prax describe build --help
+
+Submit build run
+
+.. command-output:: oceanum prax submit build --help
+
+Terminate build run
+
+.. command-output:: oceanum prax terminate build --help
+
+Retry build run
+
+.. command-output:: oceanum prax retry build --help
+
+User commands
+=============
+
+List users
+
+.. command-output:: oceanum prax list users --help
+
+
+Describe user
+
+.. command-output:: oceanum prax describe user --help
+
+Update user
+
+.. command-output:: oceanum prax update user --help
+
 
 Storage commands
 ----------------
