@@ -74,6 +74,9 @@ docs = [
   "sphinx",
   "sphinxcontrib-programoutput",
 ]
+prax = [
+  "oceanum-prax",
+]
 
 [project.urls]
 "Homepage" = "https://oceanum.io/"

@@ -44,6 +44,6 @@ def format_dt(dt:datetime|str, fmt:str=r'%x %X %Z') -> str:
     
     """
     if isinstance(dt, str):
-        dt = datetime.fromisoformat(dt)
+        dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
     
     return dt.astimezone().strftime(fmt)
