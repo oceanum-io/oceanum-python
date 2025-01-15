@@ -141,9 +141,23 @@ class Connector(object):
             else:
                 raise DatameshConnectError("Failed to reach datamesh")
         except requests.exceptions.ConnectionError:
-            print(f"Failed to reach datamesh gateway at address: {self._gateway}.")
-            print("It is likely that only the metadata server will work")
-            self._is_v1 = False
+            try:
+                _gateway = f"{self._proto}://{self._host}"
+                resp = requests.get(f"{_gateway}/info/oceanum_python/{__version__}",
+                            headers=self._auth_headers)
+                if resp.status_code == 200:
+                    r = resp.json()
+                    if "message" in r:
+                        print(r["message"])
+                    print("Using datamesh API version 1")
+                    self._gateway = _gateway
+                    self._is_v1 = True
+                else:
+                    raise DatameshConnectError("Failed to reach datamesh gateway")
+            except requests.exceptions.ConnectionError:
+                print(f"Failed to reach datamesh gateway at address: {self._gateway}.")
+                print("It is likely that only the metadata server will work")
+                self._is_v1 = False
         except Exception as e:
             raise DatameshConnectError(f"Failed to reach datamesh {e}")
             self._is_v1 = False
