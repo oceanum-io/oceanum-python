@@ -70,7 +70,7 @@ class Session(BaseModel):
             session = cls(**res.json())
             session._connection = lambda: None
             session._connection._gateway = os.environ['DATAMESH_ZARR_PROXY']
-            session._is_v1 = True
+            session._connection._is_v1 = True
             atexit.register(session.close)
             return session
         except Exception as e:
