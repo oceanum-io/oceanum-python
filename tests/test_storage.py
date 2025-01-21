@@ -59,7 +59,7 @@ def test_ls(fs, dummy_files):
     # just make sure that the expected folder contains
     # the expected file. Shows ls gives us those files
     found = False
-    for p in _fs.walk(REMOTE_PATH):
+    for p in fs.walk(REMOTE_PATH):
         if p[0] == 'test_storage/test':
             found = ("file1.txt" in p[-1]) and ("file2.txt" in p[-1])
             break
