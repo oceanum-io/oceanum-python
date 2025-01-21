@@ -124,6 +124,8 @@ class LevelFilterInterp(str, Enum):
     Interpolation method for levelfilter. Can be one of:
     - 'nearest': Nearest neighbor
     - 'linear': Linear interpolation
+
+    Linear interpolation does not extrapolate outside the bounds of the level coordinate.
     """
 
     nearest = "nearest"
@@ -395,6 +397,22 @@ class Query(BaseModel):
     functions: Optional[List[Function]] = Field(title="Functions", default=[])
     limit: Optional[int] = Field(title="Limit size of response", default=None)
     id: Optional[str] = Field(title="Unique ID of this query", default=None)
+
+    def __bool__(self):
+        for k,v in self.__dict__.items():
+            if not k in ["datasource", "description", "id", "limit", "crs", "aggregate"] and v:
+                return True
+        return False
+
+    def __hash__(self):
+        return hash(self.model_dump_json(warnings=False))
+
+
+class Workspace(BaseModel):
+    data: List[Query] = Field(title="Datamesh queries")
+    id: Optional[str] = Field(title="Unique ID of this package", default=None)
+    name: Optional[str] = Field(title="Package name", default="OceanQL package")
+    description: Optional[str] = Field(title="Package description", default="")
 
 
 class Workspace(BaseModel):
