@@ -100,12 +100,12 @@ class Connector(object):
         }
         if user:
             self._auth_headers["X-DATAMESH-USER"] = user
-        self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
+        self._gateway = gateway
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
-        if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
-            warnings.warn("Gateway and service domain do not match")
 
         self._check_info()
+        if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
+            warnings.warn("Gateway and service domain do not match")
 
     @property
     def host(self):
@@ -125,42 +125,28 @@ class Connector(object):
         """
         Check if there are any infos available that need to be displayed.
         Typically will ask to update the client if the version is outdated.
+        Also will try to guess gateway address if not provided.
         """
+
+        _gateway = self._gateway or f"{self._proto}://{self._host}"
         try:
-            resp = requests.get(f"{self._gateway}/info/oceanum_python/{__version__}",
+            resp = requests.get(f"{_gateway}/info/oceanum_python/{__version__}",
                             headers=self._auth_headers)
-            if resp.status_code == 404:
-                print("Using datamesh API version beta")
-                self._is_v1 = False
-            elif resp.status_code == 200:
+            if resp.status_code == 200:
                 r = resp.json()
                 if "message" in r:
                     print(r["message"])
                 print("Using datamesh API version 1")
+                self._gateway = _gateway
                 self._is_v1 = True
-            else:
-                raise DatameshConnectError("Failed to reach datamesh")
-        except requests.exceptions.ConnectionError:
-            try:
-                _gateway = f"{self._proto}://{self._host}"
-                resp = requests.get(f"{_gateway}/info/oceanum_python/{__version__}",
-                            headers=self._auth_headers)
-                if resp.status_code == 200:
-                    r = resp.json()
-                    if "message" in r:
-                        print(r["message"])
-                    print("Using datamesh API version 1")
-                    self._gateway = _gateway
-                    self._is_v1 = True
-                else:
-                    raise DatameshConnectError("Failed to reach datamesh gateway")
-            except requests.exceptions.ConnectionError:
-                print(f"Failed to reach datamesh gateway at address: {self._gateway}.")
-                print("It is likely that only the metadata server will work")
-                self._is_v1 = False
-        except Exception as e:
-            raise DatameshConnectError(f"Failed to reach datamesh {e}")
+                return
+            raise DatameshConnectError(f"Failed to reach datamesh: {resp.status_code}-{resp.text}")
+        except:
+            _gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
+            self._gateway = _gateway
             self._is_v1 = False
+            print("Using datamesh API version beta")
+        return
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:
