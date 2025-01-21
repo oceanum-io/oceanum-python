@@ -9,11 +9,6 @@ import requests
 import xarray
 import fsspec
 
-from typing import Optional, Dict, Union
-from pydantic import BaseModel, validator, Field
-
-from .query import Query
-from .datasource import Datasource
 from .exceptions import DatameshConnectError, DatameshWriteError
 from .session import Session
 
@@ -24,137 +19,7 @@ try:
 except:
     _VIDEO_SUPPORT = False
 
-class SliceClaude(BaseModel):
-    start: Optional[int] = None
-    stop: Optional[int] = None
-    step: Optional[int] = 1
-
-    @validator('start', 'stop', 'step', pre=True)
-    def validate_slice_components(cls, v):
-        if v is None:
-            return v
-        if not isinstance(v, int):
-            raise ValueError(f"Slice components must be integers or None, got {type(v)}")
-        return v
-
-    @classmethod
-    def validate(cls, v: Union[slice, str, tuple]) -> 'SliceModel':
-        if isinstance(v, slice):
-            return cls(start=v.start, stop=v.stop, step=v.step)
-        elif isinstance(v, str):
-            parts = v.split(':')
-            if len(parts) > 3:
-                raise ValueError("Invalid slice string format")
-            slice_dict = {}
-            for i, part in enumerate(parts):
-                if part:
-                    slice_dict[['start', 'stop', 'step'][i]] = int(part)
-            return cls(**slice_dict)
-        elif isinstance(v, tuple):
-            if len(v) > 3:
-                raise ValueError("Slice tuple must have at most 3 elements")
-            return cls(**dict(zip(['start', 'stop', 'step'], v)))
-        else:
-            raise ValueError(f"Expected slice, string, or tuple, got {type(v)}")
-
-    def to_slice(self) -> slice:
-        return slice(self.start, self.stop, self.step)
-
-class Slice2(BaseModel):
-    start: Optional[int] = None
-    stop: Optional[int] = None
-    step: Optional[int] = 1
-
-    def to_python(self) -> slice:
-        return slice(self.start, self.stop, self.step)
     
-    @classmethod
-    def validate(cls, v: slice):
-        return cls(start=v.start, stop=v.stop, step=v.step)
-    
-    @classmethod
-    def from_python(cls, v: slice):
-        return cls(start=v.start, stop=v.stop, step=v.step)
-
-class Selector2(Dict):
-    def __init__(self, v):
-        super().__init__({k:Slice.from_python(v) if isinstance(v, slice) else v for k,v in v.items()})
-
-#        super().__init__({k:Slice.from_python(v) for k,v in v.items()})
-
-    @classmethod
-    def from_python(cls, v: dict|None):
-        if v is None:
-            return None
-        return cls({k:Slice.from_python(v) for k,v in v.items()})
-
-
-    def to_python(self) -> dict:
-        if self == {}:
-            return None
-        return {k: v.to_python() for k,v in self.items()}
-
-class Slice(BaseModel):
-    start: Optional[int] = None
-    stop: Optional[int] = None
-    step: Optional[int] = 1
-
-    @classmethod
-    def from_python(cls, v: slice):
-        return cls(start=v.start, stop=v.stop, step=v.step)
-
-    def to_python(self):
-        return slice(self.start, self.stop, self.step)
-
-class Selector(BaseModel):
-    selector: Optional[Dict[str, Slice]] = None
-
-    @classmethod
-    def from_python(cls, v: dict|None):
-        if v is None:
-            return None
-        return cls(selector={k:Slice.from_python(v) for k,v in v.items()})
-
-    def to_python(self) -> dict:
-        if self.selector is None:
-            return None
-        return {k: v.to_python() for k,v in self.selector.items()}
-    
-class DriverQuery(BaseModel):
-    query: Query
-    datasource_last_modified: str
-    driver_args: Dict = {}
-    driver_parameters: Optional[Dict] = {}
-    chunks: Optional[Dict] = {}
-    coordinates: Optional[Dict] = {}
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "query": Query(datasource="test_datasource"),
-                    "driver_args": {"urlpath": "/data/tide/nz_2km"},
-                    "chunks": {},
-                    "coords": {},
-                }
-            ]
-        }
-    }
-
-
-    
-class ZarrProxyGetRequestParams(BaseModel):
-    query: Query
-    datasource: Optional[Datasource] = None
-    chunks: Optional[Dict[str, int]] = {}
-    downsample: Optional[Dict[str, int]] = {}
-    selector: Optional[Selector] = {}
-    nearest_chunk_selector: Optional[Selector] = {}
-    filtered: Optional[bool] = False
-    #session_id: Optional[str]
-    
-#    class Config:
-#        arbitrary_types_allowed = True
-
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
 
