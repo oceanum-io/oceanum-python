@@ -55,9 +55,15 @@ def test_ls(fs, dummy_files):
     assert len(files) == 1
     assert files[0]["type"] == "directory"
 
-    paths = list(fs.walk(REMOTE_PATH))
-    assert len(paths) == 2
-
+    # As the bucket tends to contain many things
+    # just make sure that the expected folder contains
+    # the expected file. Shows ls gives us those files
+    found = False
+    for p in fs.walk(REMOTE_PATH):
+        if p[0] == 'test_storage/test':
+            found = ("file1.txt" in p[-1]) and ("file2.txt" in p[-1])
+            break
+    assert found
 
 def test_get(fs, dummy_files):
     fs.mkdirs(REMOTE_PATH, exist_ok=True)
@@ -77,3 +83,26 @@ def test_open(fs, dummy_files):
         "oceanum://" + os.path.join(REMOTE_PATH, "test", "file1.txt"), "r"
     ) as f:
         assert f.read() == "hello"
+
+
+def test_copy(fs, dummy_files):
+    fs.mkdirs(REMOTE_PATH, exist_ok=True)
+    fs.put(os.path.join(dummy_files.name, "test"), REMOTE_PATH, recursive=True)
+
+    fs.copy(
+        os.path.join(REMOTE_PATH, "test", "file1.txt"),
+        os.path.join(REMOTE_PATH, "test", "file_copy.txt"),
+    )
+
+    with fsspec.open(
+        "oceanum://" + os.path.join(REMOTE_PATH, "test", "file_copy.txt"), "r"
+    ) as f:
+        assert f.read() == "hello"
+
+
+def test_copy_fails(fs):
+    with pytest.raises(FileNotFoundError):
+        fs.copy(
+            os.path.join(REMOTE_PATH, "test", "file_not_there.txt"),
+            os.path.join(REMOTE_PATH, "test", "file_copy.txt"),
+        )
