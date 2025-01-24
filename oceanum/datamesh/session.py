@@ -32,7 +32,7 @@ class Session(BaseModel):
                 cls(id="dummy_session",
                     user="dummy_user",
                     creation_time=datetime.now(),
-                    end_time=datetime.now()+timedelta(hours=1),
+                    end_time=datetime.now()+timedelta(hours=connection._session_params.get("duration", 1)),
                     write=False,
                     verified=False)
             session._connection = connection
@@ -43,6 +43,7 @@ class Session(BaseModel):
             headers = connection._auth_headers.copy()
             headers["Cache-Control"] = "no-store"
             res = requests.get(f"{connection._gateway}/session/",
+                               params=connection._session_params,
                                headers=headers)
             if res.status_code != 200:
                 raise DatameshConnectError("Failed to create session with error: " + res.text)
@@ -62,6 +63,7 @@ class Session(BaseModel):
 
         try:
             res = requests.get(f"{os.environ['DATAMESH_ZARR_PROXY']}/session/",
+                               params=connection._session_params,
                                headers={"X-DATAMESH-TOKEN": os.environ['DATAMESH_TOKEN'],
                                         "USER": os.environ['DATAMESH_USER'],
                                         'Cache-Control': 'no-cache'})

@@ -23,6 +23,7 @@ import asyncio
 from functools import wraps, partial
 from contextlib import contextmanager
 import pyproj
+import numbers
 
 from .datasource import Datasource
 from .catalog import Catalog
@@ -73,6 +74,7 @@ class Connector(object):
         service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
         gateway=os.environ.get("DATAMESH_GATEWAY", None),
         user=None,
+        session_duration=None
     ):
         """Datamesh connector constructor
 
@@ -81,6 +83,7 @@ class Connector(object):
             service (string, optional): URL of datamesh service. Defaults to os.environ.get("DATAMESH_SERVICE", "https://datamesh.oceanum.io").
             gateway (string, optional): URL of gateway service. Defaults to os.environ.get("DATAMESH_GATEWAY", "https://gateway.<datamesh_service_domain>").
             user (string, optional): Organisation user name for the datamesh connection. Defaults to None.
+            session_duration (float, optional): The desired length of time for acquired datamesh sessions in hours. Will be 1 hour by default.
 
         Raises:
             ValueError: Missing or invalid arguments
@@ -101,6 +104,10 @@ class Connector(object):
         }
         if user:
             self._auth_headers["X-DATAMESH-USER"] = user
+        if session_duration and not isinstance(session_duration, numbers.Number):
+            raise ValueError(f"Session duration must be a valid numbers: {session_duration}")
+        self._session_params =\
+            {"duration": float(session_duration)} if session_duration else {}
         self._gateway = gateway
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
 
