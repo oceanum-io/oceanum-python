@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime, timedelta
 import requests
 from .exceptions import DatameshConnectError, DatameshSessionError
@@ -55,7 +56,8 @@ class Session(BaseModel):
             raise DatameshSessionError(f"Error when acquiring datamesh session {e}")
         
     @classmethod
-    def from_proxy(cls):
+    def from_proxy(cls,
+                   session_duration: Optional[float]=None):
         """
         Convenience constructor to acquire a session directly from the proxy.
         Uses environment variables only and used for internal purposes.
@@ -63,7 +65,7 @@ class Session(BaseModel):
 
         try:
             res = requests.get(f"{os.environ['DATAMESH_ZARR_PROXY']}/session/",
-                               params=connection._session_params,
+                               params={'duration': session_duration or 1},
                                headers={"X-DATAMESH-TOKEN": os.environ['DATAMESH_TOKEN'],
                                         "USER": os.environ['DATAMESH_USER'],
                                         'Cache-Control': 'no-cache'})
