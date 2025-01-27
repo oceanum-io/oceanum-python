@@ -398,11 +398,11 @@ class Query(BaseModel):
     limit: Optional[int] = Field(title="Limit size of response", default=None)
     id: Optional[str] = Field(title="Unique ID of this query", default=None)
 
-    #def __bool__(self):
-    #    for k,v in self.__dict__.items():
-    #        if not k in ["datasource", "description", "id", "limit", "crs", "aggregate"] and v:
-    #            return True
-    #    return False
+    def __bool__(self):
+        for k,v in self.__dict__.items():
+            if not k in ["datasource", "description", "id"] and v:
+                return True
+        return False
 
     def __hash__(self):
         return hash(self.model_dump_json(warnings=False))
