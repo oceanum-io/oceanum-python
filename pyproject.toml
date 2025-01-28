@@ -48,7 +48,7 @@ dependencies = [
   "tabulate",
   "xarray",
   "rioxarray",
-  "zarr",
+  "zarr<3",
   "dask[dataframe,distributed]",
   "msgpack",
   "cftime",
