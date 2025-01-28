@@ -74,22 +74,32 @@ class ZarrClient(MutableMapping):
             raise DatameshConnectError(f"Unknown api: {self.api}")
         self.retries = retries
 
-    def _get(self, path, retrieve_data=True):
+    def _retried_request(self, path, method="GET", data=None, timeout=10):
+        # Head not supported in v0
+        if not self._is_v1 and method == "HEAD":
+            method = "GET"
         retries = 0
         while retries < self.retries:
             try:
-                if retrieve_data or not self._is_v1:
-                    resp = requests.get(path, headers=self.headers)
-                else:
-                    resp = requests.head(path, headers=self.headers)
-            except requests.RequestException:
+                resp = requests.request(method,
+                                        url=path,
+                                        data=data,
+                                        headers=self.headers,
+                                        timeout=timeout)
+                # Bad Gateway results in waiting for 10 seconds
+                # and retrying
+                if resp.status_code == 502:
+                    time.sleep(10)
+                    raise requests.RequestException
+            except (requests.RequestException, requests.ReadTimeout):
                 time.sleep(0.1 * 2**retries)
                 retries += 1
             else:
                 return resp
 
     def __getitem__(self, item):
-        resp = self._get(f"{self._proxy}/{self.datasource}/{item}")
+        resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}")
+        print("GETITEM", f"{self._proxy}/{self.datasource}/{item}")
         if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
@@ -97,8 +107,8 @@ class ZarrClient(MutableMapping):
     def __contains__(self, item):
         #if not self._is_v1:
         #    raise NotImplementedError
-        resp = self._get(f"{self._proxy}/{self.datasource}/{item}",
-                         retrieve_data=False)
+        resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
+                                     method="HEAD")
         if resp.status_code != 200:
             return False
         return True
@@ -106,31 +116,20 @@ class ZarrClient(MutableMapping):
     def __setitem__(self, item, value):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support write operations")
-        if self.method == "put":
-            res = requests.put(
-                f"{self._proxy}/{self.datasource}/{item}",
-                data=value,
-                headers=self.headers,
-            )
-        else:
-            res = requests.post(
-                f"{self._proxy}/{self.datasource}/{item}",
-                data=value,
-                headers=self.headers,
-            )
+        res = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
+                                    method=self.method,
+                                    data=value)
         if res.status_code >= 300:
             raise DatameshWriteError(f"Failed to write {item}: {res.status_code} - {res.text}")
 
     def __delitem__(self, item):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support delete operations")
-        requests.delete(
-            f"{self._proxy}/{self.datasource}/{item}",
-            headers=self.headers
-        )
+        self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
+                              method="DELETE")
 
     def __iter__(self):
-        resp = self._get(f"{self._proxy}/{self.datasource}/")
+        resp = self._retried_request(f"{self._proxy}/{self.datasource}/")
         if not resp:
             return
         ex = re.compile(r"""<(a|A)\s+(?:[^>]*?\s+)?(href|HREF)=["'](?P<url>[^"']+)""")
