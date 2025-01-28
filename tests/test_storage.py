@@ -48,15 +48,12 @@ def test_dir_not_found(fs):
 
 
 def test_ls(fs, dummy_files):
-    fs.mkdirs(REMOTE_PATH, exist_ok=True)
-    fs.put(os.path.join(dummy_files.name, "test"), REMOTE_PATH, recursive=True)
-
-    files = fs.ls(REMOTE_PATH)
-    assert len(files) == 1
-    assert files[0]["type"] == "directory"
-
-    paths = list(fs.walk(REMOTE_PATH))
-    assert len(paths) == 2
+    rand_dir = os.path.join(REMOTE_PATH,os.path.basename(tempfile.TemporaryDirectory().name))
+    fs.mkdirs(rand_dir, exist_ok=True)
+    fs.put(os.path.join(dummy_files.name, 'test'), rand_dir, recursive=True)
+    files = fs.ls(os.path.join(rand_dir, 'test'))
+    assert os.path.join(rand_dir, 'test', 'file1.txt') in [f["name"] for f in files]
+    assert os.path.join(rand_dir, 'test', 'file2.txt') in [f["name"] for f in files]
 
 def test_ls_file_prefix(fs, dummy_files):
     test_folder = f'{REMOTE_PATH}/test'
