@@ -51,6 +51,7 @@ class ZarrClient(MutableMapping):
         parameters={},
         method="post",
         retries=8,
+        timeout=10,
         nocache=False,
         api="query",
         reference_id=None
@@ -73,8 +74,9 @@ class ZarrClient(MutableMapping):
         else:
             raise DatameshConnectError(f"Unknown api: {self.api}")
         self.retries = retries
+        self.timeout = timeout
 
-    def _retried_request(self, path, method="GET", data=None, timeout=10):
+    def _retried_request(self, path, method="GET", data=None):
         # Head not supported in v0
         if not self._is_v1 and method == "HEAD":
             method = "GET"
@@ -85,13 +87,16 @@ class ZarrClient(MutableMapping):
                                         url=path,
                                         data=data,
                                         headers=self.headers,
-                                        timeout=timeout)
+                                        timeout=self.timeout)
                 # Bad Gateway results in waiting for 10 seconds
                 # and retrying
                 if resp.status_code == 502:
                     time.sleep(10)
                     raise requests.RequestException
-            except (requests.RequestException, requests.ReadTimeout):
+            except (requests.RequestException,
+                    requests.ReadTimeout,
+                    requests.ConnectionError,
+                    requests.ConnectTimeout):
                 time.sleep(0.1 * 2**retries)
                 retries += 1
             else:
