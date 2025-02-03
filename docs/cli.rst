@@ -27,12 +27,33 @@ List datasources
 
 .. command-output:: oceanum datamesh list datasources --help
 
-PRAX commands
------------------------
+Oceanum PRAX commands
+---------------------
+
+Oceanum PRAX is a platform for automated continuous-delivery of data-pipelines and Web applications to Oceanum's Cloud infrastructure. 
+
+.. note::
+    Oceanum PRAX is a beta feature and it's available by invitation only. 
+    
+    Please contact us for more information at support@oceanum.io .
+
+Install Oceanum PRAX
+====================
+
+To enable Oceanum PRAX commands, you need to install the Oceanum PRAX plugin.
+
+This library provides a set of commands to manage PRAX projects, its Apps, pipelines, tasks and image building.
+
+.. code-block:: bash
+
+    pip install oceanum-prax
+
+Main Command
+============
 
 .. command-output:: oceanum prax --help
 
-Project specification file commands
+Project Spec file commands
 ===================================
 
 Validate project specification file
@@ -159,21 +180,23 @@ Retry build run
 
 .. command-output:: oceanum prax retry build --help
 
-User commands
-=============
+..
+    User commands
+    =============
+.. 
+    List users
 
-List users
+    .. command-output:: oceanum prax list users --help
 
-.. command-output:: oceanum prax list users --help
+..
+    Describe user
 
+    .. command-output:: oceanum prax describe user --help
 
-Describe user
+..
+    Update user
 
-.. command-output:: oceanum prax describe user --help
-
-Update user
-
-.. command-output:: oceanum prax update user --help
+    .. command-output:: oceanum prax update user --help
 
 
 Storage commands
