@@ -8,3 +8,7 @@ class DatameshQueryError(Exception):
 
 class DatameshWriteError(Exception):
     oceanum_exc = True
+
+
+class DatameshSessionError(Exception):
+    oceanum_exc = True

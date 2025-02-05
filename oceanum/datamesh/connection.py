@@ -22,6 +22,8 @@ from urllib.parse import urlparse
 import asyncio
 from functools import wraps, partial
 from contextlib import contextmanager
+import pyproj
+import numbers
 
 from .datasource import Datasource
 from .catalog import Catalog
@@ -29,6 +31,8 @@ from .query import Query, Stage, Container, TimeFilter, GeoFilter, GeoFilterType
 from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
+from .session import Session
+from ..__init__ import __version__
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
@@ -70,6 +74,7 @@ class Connector(object):
         service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
         gateway=os.environ.get("DATAMESH_GATEWAY", None),
         user=None,
+        session_duration=None
     ):
         """Datamesh connector constructor
 
@@ -78,6 +83,7 @@ class Connector(object):
             service (string, optional): URL of datamesh service. Defaults to os.environ.get("DATAMESH_SERVICE", "https://datamesh.oceanum.io").
             gateway (string, optional): URL of gateway service. Defaults to os.environ.get("DATAMESH_GATEWAY", "https://gateway.<datamesh_service_domain>").
             user (string, optional): Organisation user name for the datamesh connection. Defaults to None.
+            session_duration (float, optional): The desired length of time for acquired datamesh sessions in hours. Will be 1 hour by default.
 
         Raises:
             ValueError: Missing or invalid arguments
@@ -98,8 +104,14 @@ class Connector(object):
         }
         if user:
             self._auth_headers["X-DATAMESH-USER"] = user
-        self._gateway = gateway or f"{self._proto}://gateway.{self._host}"
+        if session_duration and not isinstance(session_duration, numbers.Number):
+            raise ValueError(f"Session duration must be a valid numbers: {session_duration}")
+        self._session_params =\
+            {"duration": float(session_duration)} if session_duration else {}
+        self._gateway = gateway
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
+
+        self._check_info()
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
 
@@ -116,6 +128,33 @@ class Connector(object):
     def _status(self):
         resp = requests.get(f"{self._proto}://{self._host}", headers=self._auth_headers)
         return resp.status_code == 200
+
+    def _check_info(self):
+        """
+        Check if there are any infos available that need to be displayed.
+        Typically will ask to update the client if the version is outdated.
+        Also will try to guess gateway address if not provided.
+        """
+
+        _gateway = self._gateway or f"{self._proto}://{self._host}"
+        try:
+            resp = requests.get(f"{_gateway}/info/oceanum_python/{__version__}",
+                            headers=self._auth_headers)
+            if resp.status_code == 200:
+                r = resp.json()
+                if "message" in r:
+                    print(r["message"])
+                print("Using datamesh API version 1")
+                self._gateway = _gateway
+                self._is_v1 = True
+                return
+            raise DatameshConnectError(f"Failed to reach datamesh: {resp.status_code}-{resp.text}")
+        except:
+            _gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
+            self._gateway = _gateway
+            self._is_v1 = False
+            print("Using datamesh API version beta")
+        return
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:
@@ -204,14 +243,14 @@ class Connector(object):
         self._validate_response(resp)
         return Datasource(**resp.json())
 
-    def _stage_request(self, query, cache=False):
+    def _stage_request(self, query, session, cache=False):
         qhash = hashlib.sha224(
             query.model_dump_json(warnings=False).encode()
         ).hexdigest()
 
         resp = requests.post(
             f"{self._gateway}/oceanql/stage/",
-            headers=self._auth_headers,
+            headers=session.add_header(self._auth_headers),
             data=query.model_dump_json(warnings=False),
         )
         if resp.status_code >= 400:
@@ -233,7 +272,8 @@ class Connector(object):
             cached = localcache.get(query)
             if cached is not None:
                 return cached
-        stage = self._stage_request(query)
+        session = Session.acquire(self)
+        stage = self._stage_request(query, session)
         if stage is None:
             warnings.warn("No data found for query")
             return None
@@ -250,59 +290,62 @@ class Connector(object):
             )
             use_dask = True
         if use_dask and (stage.container == Container.Dataset):
-            mapper = ZarrClient(self, stage.qhash)
+            mapper = ZarrClient(self, stage.qhash, session=session, api="query")
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
         else:
-            if cache_timeout:
-                localcache.lock(query)
-            transfer_format = (
-                "application/x-netcdf4"
-                if stage.container == Container.Dataset
-                else "application/parquet"
-            )
-            headers = {"Accept": transfer_format, **self._auth_headers}
-            resp = requests.post(
-                f"{self._gateway}/oceanql/",
-                headers=headers,
-                data=query.model_dump_json(warnings=False),
-            )
-            if resp.status_code >= 500:
+            try:
                 if cache_timeout:
-                    localcache.unlock(query)
-                if retry < 5:
-                    time.sleep(retry)
-                    return self._query(query, use_dask, cache_timeout, retry + 1)
-                else:
-                    raise DatameshConnectError("Datamesh server error: " + resp.text)
-            if resp.status_code >= 400:
-                try:
-                    msg = resp.json()["detail"]
-                except:
-                    raise DatameshConnectError("Datamesh server error: " + resp.text)
-                if cache_timeout:
-                    localcache.unlock(query)
-                raise DatameshQueryError(msg)
-            else:
-                with tempFile("wb") as f:
-                    f.write(resp.content)
-                    f.seek(0)
-                    if stage.container == Container.Dataset:
-                        ds = xarray.load_dataset(
-                            f.name, decode_coords="all", mask_and_scale=True
-                        )
-                        ext = ".nc"
-                    elif stage.container == Container.GeoDataFrame:
-                        ds = geopandas.read_parquet(f.name)
-                        ext = ".gpq"
-                    else:
-                        ds = pandas.read_parquet(f.name)
-                        ext = ".pq"
+                    localcache.lock(query)
+                transfer_format = (
+                    "application/x-netcdf4"
+                    if stage.container == Container.Dataset
+                    else "application/parquet"
+                )
+                headers = {"Accept": transfer_format, **self._auth_headers}
+                resp = requests.post(
+                    f"{self._gateway}/oceanql/",
+                    headers=headers,
+                    data=query.model_dump_json(warnings=False),
+                )
+                if resp.status_code >= 500:
                     if cache_timeout:
-                        localcache.copy(query, f.name, ext)
                         localcache.unlock(query)
-                return ds
+                    if retry < 5:
+                        time.sleep(retry)
+                        return self._query(query, use_dask, cache_timeout, retry + 1)
+                    else:
+                        raise DatameshConnectError("Datamesh server error: " + resp.text)
+                if resp.status_code >= 400:
+                    try:
+                        msg = resp.json()["detail"]
+                    except:
+                        raise DatameshConnectError("Datamesh server error: " + resp.text)
+                    if cache_timeout:
+                        localcache.unlock(query)
+                    raise DatameshQueryError(msg)
+                else:
+                    with tempFile("wb") as f:
+                        f.write(resp.content)
+                        f.seek(0)
+                        if stage.container == Container.Dataset:
+                            ds = xarray.load_dataset(
+                                f.name, decode_coords="all", mask_and_scale=True
+                            )
+                            ext = ".nc"
+                        elif stage.container == Container.GeoDataFrame:
+                            ds = geopandas.read_parquet(f.name)
+                            ext = ".gpq"
+                        else:
+                            ds = pandas.read_parquet(f.name)
+                            ext = ".pq"
+                        if cache_timeout:
+                            localcache.copy(query, f.name, ext)
+                            localcache.unlock(query)
+                    return ds
+            finally:
+                session.close()
 
     def get_catalog(self, search=None, timefilter=None, geofilter=None):
         """Get datamesh catalog
@@ -407,14 +450,16 @@ class Connector(object):
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
+        session = Session.acquire(self)
         stage = self._stage_request(
-            Query(datasource=datasource_id, parameters=parameters)
+            Query(datasource=datasource_id, parameters=parameters),
+            session=session
         )
         if stage is None:
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset or use_dask:
-            mapper = ZarrClient(self, datasource_id, parameters=parameters)
+            mapper = ZarrClient(self, datasource_id, session, parameters=parameters, api="zarr")
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
@@ -631,6 +676,7 @@ class Connector(object):
         except Exception as e:
             raise DatameshWriteError(f"Cannot register datasource {datasource_id}: {e}")
         return ds
+
 
     @asyncwrapper
     def write_datasource_async(
