@@ -2,29 +2,22 @@ import asyncio
 import io
 import os
 import logging
-import re
 import weakref
 import random
-from copy import copy
 from urllib.parse import urlparse
 from decorator import decorator
 from pathlib import Path
 
 import aiohttp
-import fsspec
 import requests
-import yarl
-import fsspec
 from fsspec.asyn import (
-    AbstractAsyncStreamedFile,
     AsyncFileSystem,
     sync,
     sync_wrapper,
 )
 from fsspec.callbacks import _DEFAULT_CALLBACK
 from fsspec.exceptions import FSTimeoutError
-from fsspec.spec import AbstractBufferedFile
-from fsspec.utils import DEFAULT_BLOCK_SIZE, isfilelike, nullcontext, tokenize
+from fsspec.utils import isfilelike, nullcontext, tokenize
 from fsspec.implementations.memory import MemoryFile
 
 DEFAULT_CONFIG = {"STORAGE_SERVICE": "https://storage.oceanum.io"}
@@ -137,20 +130,40 @@ class FileSystem(AsyncFileSystem):
                 weakref.finalize(self, self.close_session, self.loop, self._session)
         return self._session
 
-    async def _ls(self, path="", detail=True, **kwargs):
+    async def _ls(self,
+        path="",
+        detail=True,
+        file_prefix=None,
+        match_glob=None,
+        limit=None,
+    ):
         logger.debug(path)
         session = await self.set_session()
         spath = path.lstrip("/")
-        async with session.get(self._base_url + spath) as r:
+        params = {}
+
+        if limit:
+            params["limit"] = limit
+        if file_prefix:
+            params["file_prefix"] = file_prefix
+        if match_glob:
+            params["match_glob"] = match_glob
+        
+        async with session.get(self._base_url + spath, params=params or None) as r:
             try:
                 self._raise_not_found_for_status(r, path)
-            except (
-                FileNotFoundError
-            ):  # The storage endpoint enforces trailing slash for directories, so test for that
-                if path[-1] == "/":
+            except FileNotFoundError:
+                # The storage endpoint enforces trailing slash for directories, so test for that
+                if path.endswith("/"):
                     raise FileNotFoundError(path)
                 else:
-                    return await self._ls(path + "/", detail=detail, **kwargs)
+                    return await self._ls(
+                        path + "/",
+                        detail=detail,
+                        file_prefix=file_prefix,
+                        match_glob=match_glob,
+                        limit=limit,
+                    )
             listing = await r.json()
             if not listing:
                 raise FileNotFoundError(path)
@@ -366,6 +379,7 @@ def ls(
     detail: bool = False,
     token: str | None = None,
     service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    **kwargs,
 ):
     """List contents in the oceanum storage (the root directory by default).
 
@@ -391,7 +405,8 @@ def ls(
     fs = FileSystem(token=token, service=service)
     try:
         maxdepth = None if recursive else 1
-        paths = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=detail)
+        paths = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=detail, 
+                        **kwargs)
         if not paths:
             raise FileNotFoundError(f"Path {path} not found")
         return paths

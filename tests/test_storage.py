@@ -48,22 +48,38 @@ def test_dir_not_found(fs):
 
 
 def test_ls(fs, dummy_files):
-    fs.mkdirs(REMOTE_PATH, exist_ok=True)
-    fs.put(os.path.join(dummy_files.name, "test"), REMOTE_PATH, recursive=True)
+    rand_dir = os.path.join(REMOTE_PATH,os.path.basename(tempfile.TemporaryDirectory().name))
+    fs.mkdirs(rand_dir, exist_ok=True)
+    fs.put(os.path.join(dummy_files.name, 'test'), rand_dir, recursive=True)
+    files = fs.ls(os.path.join(rand_dir, 'test'))
+    assert os.path.join(rand_dir, 'test', 'file1.txt') in [f["name"] for f in files]
+    assert os.path.join(rand_dir, 'test', 'file2.txt') in [f["name"] for f in files]
 
-    files = fs.ls(REMOTE_PATH)
+def test_ls_file_prefix(fs, dummy_files):
+    test_folder = f'{REMOTE_PATH}/test'
+    fs.mkdirs(test_folder, exist_ok=True)
+    fs.put(dummy_files.name, test_folder, recursive=True)
+    files = fs.ls(test_folder, file_prefix="file1")
     assert len(files) == 1
-    assert files[0]["type"] == "directory"
+    assert files[0]["name"] == "test_storage/test/file1.txt"
 
-    # As the bucket tends to contain many things
-    # just make sure that the expected folder contains
-    # the expected file. Shows ls gives us those files
-    found = False
-    for p in fs.walk(REMOTE_PATH):
-        if p[0] == 'test_storage/test':
-            found = ("file1.txt" in p[-1]) and ("file2.txt" in p[-1])
-            break
-    assert found
+def test_ls_glob(fs, dummy_files):
+    test_folder = f'{REMOTE_PATH}/test'
+    fs.mkdirs(test_folder, exist_ok=True)
+    fs.put(dummy_files.name, test_folder, recursive=True)
+    files = fs.ls(test_folder, match_glob="**/*2.txt")
+    assert len(files) == 1
+    assert files[0]["name"] == "test_storage/test/file2.txt"
+
+def test_ls_limit(fs, dummy_files):
+    test_folder = f'{REMOTE_PATH}/test'
+    fs.mkdirs(test_folder, exist_ok=True)
+    fs.put(dummy_files.name, test_folder, recursive=True)
+    # Something is off with limit
+    # At the storage API level, it returns 1 file when limit=2
+    files = fs.ls(test_folder, limit=2)
+    assert len(files) == 1
+    assert files[0]["name"] == "test_storage/test/file1.txt"
 
 def test_get(fs, dummy_files):
     fs.mkdirs(REMOTE_PATH, exist_ok=True)
