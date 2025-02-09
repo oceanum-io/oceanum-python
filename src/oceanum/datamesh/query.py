@@ -124,6 +124,8 @@ class LevelFilterInterp(str, Enum):
     Interpolation method for levelfilter. Can be one of:
     - 'nearest': Nearest neighbor
     - 'linear': Linear interpolation
+
+    Linear interpolation does not extrapolate outside the bounds of the level coordinate.
     """
 
     nearest = "nearest"
