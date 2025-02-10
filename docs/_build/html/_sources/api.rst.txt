@@ -3,7 +3,7 @@
 =================
 API documentation
 =================
-
+Version |version|
 
 Datamesh
 ---------------------
@@ -19,6 +19,7 @@ End-user classes
     Datasource
     Catalog
     Query
+
 
 Storage
 ---------------------
