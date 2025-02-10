@@ -1,16 +1,15 @@
 import datetime
 import json
 import re
-import time
 from collections.abc import MutableMapping
 
 import numpy
-import requests
 import xarray
 import fsspec
 
 from .exceptions import DatameshConnectError, DatameshWriteError
 from .session import Session
+from .utils import retried_request
 
 try:
     import xarray_video as xv
@@ -77,30 +76,14 @@ class ZarrClient(MutableMapping):
         self.timeout = timeout
 
     def _retried_request(self, path, method="GET", data=None):
-        # Head not supported in v0
-        if not self._is_v1 and method == "HEAD":
-            method = "GET"
-        retries = 0
-        while retries < self.retries:
-            try:
-                resp = requests.request(method,
-                                        url=path,
-                                        data=data,
-                                        headers=self.headers,
-                                        timeout=self.timeout)
-                # Bad Gateway results in waiting for 10 seconds
-                # and retrying
-                if resp.status_code == 502:
-                    time.sleep(10)
-                    raise requests.RequestException
-            except (requests.RequestException,
-                    requests.ReadTimeout,
-                    requests.ConnectionError,
-                    requests.ConnectTimeout):
-                time.sleep(0.1 * 2**retries)
-                retries += 1
-            else:
-                return resp
+        return retried_request(
+            url=path,
+            method=method,
+            data=data,
+            headers=self.headers,
+            retries=self.retries,
+            timeout=self.timeout,
+        )
 
     def __getitem__(self, item):
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}")
@@ -113,7 +96,7 @@ class ZarrClient(MutableMapping):
         #if not self._is_v1:
         #    raise NotImplementedError
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
-                                     method="HEAD")
+                                     method="HEAD" if self._is_v1 else "GET")
         if resp.status_code != 200:
             return False
         return True

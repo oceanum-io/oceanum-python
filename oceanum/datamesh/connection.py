@@ -7,7 +7,6 @@ import time
 import datetime
 import tempfile
 import hashlib
-import requests
 import fsspec
 import xarray
 import geopandas
@@ -32,6 +31,7 @@ from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
+from .utils import retried_request
 from ..__init__ import __version__
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
@@ -126,7 +126,8 @@ class Connector(object):
 
     # Check the status of the metadata server
     def _status(self):
-        resp = requests.get(f"{self._proto}://{self._host}", headers=self._auth_headers)
+        resp = retried_request(f"{self._proto}://{self._host}",
+                               headers=self._auth_headers)
         return resp.status_code == 200
 
     def _check_info(self):
@@ -138,8 +139,8 @@ class Connector(object):
 
         _gateway = self._gateway or f"{self._proto}://{self._host}"
         try:
-            resp = requests.get(f"{_gateway}/info/oceanum_python/{__version__}",
-                            headers=self._auth_headers)
+            resp = retried_request(f"{_gateway}/info/oceanum_python/{__version__}",
+                                   headers=self._auth_headers)
             if resp.status_code == 200:
                 r = resp.json()
                 if "message" in r:
@@ -165,7 +166,7 @@ class Connector(object):
             raise DatameshConnectError(msg)
 
     def _metadata_request(self, datasource_id="", params={}):
-        resp = requests.get(
+        resp = retried_request(
             f"{self._proto}://{self._host}/datasource/{datasource_id}",
             headers=self._auth_headers,
             params=params,
@@ -183,15 +184,17 @@ class Connector(object):
         )
         headers = {**self._auth_headers, "Content-Type": "application/json"}
         if datasource._exists:
-            resp = requests.patch(
+            resp = retried_request(
                 f"{self._proto}://{self._host}/datasource/{datasource.id}/",
+                method="PATCH",
                 data=data,
                 headers=headers,
             )
 
         else:
-            resp = requests.post(
+            resp = retried_request(
                 f"{self._proto}://{self._host}/datasource/",
+                method="POST",
                 data=data,
                 headers=headers,
             )
@@ -199,8 +202,9 @@ class Connector(object):
         return resp
 
     def _delete(self, datasource_id):
-        resp = requests.delete(
+        resp = retried_request(
             f"{self._gateway}/data/{datasource_id}",
+            method="DELETE",
             headers=self._auth_headers,
         )
         self._validate_response(resp)
@@ -208,7 +212,7 @@ class Connector(object):
 
     def _data_request(self, datasource_id, data_format="application/json", cache=False):
         tmpfile = os.path.join(self._cachedir.name, datasource_id)
-        resp = requests.get(
+        resp = retried_request(
             f"{self._gateway}/data/{datasource_id}",
             headers={"Accept": data_format, **self._auth_headers},
         )
@@ -226,8 +230,9 @@ class Connector(object):
         overwrite=False,
     ):
         if overwrite:
-            resp = requests.put(
+            resp = retried_request(
                 f"{self._gateway}/data/{datasource_id}",
+                method="PUT",
                 data=data,
                 headers={"Content-Type": data_format, **self._auth_headers},
             )
@@ -235,8 +240,9 @@ class Connector(object):
             headers = {"Content-Type": data_format, **self._auth_headers}
             if append:
                 headers["X-Append"] = str(append)
-            resp = requests.patch(
+            resp = retried_request(
                 f"{self._gateway}/data/{datasource_id}",
+                method="PATCH",
                 data=data,
                 headers=headers,
             )
@@ -248,8 +254,9 @@ class Connector(object):
             query.model_dump_json(warnings=False).encode()
         ).hexdigest()
 
-        resp = requests.post(
+        resp = retried_request(
             f"{self._gateway}/oceanql/stage/",
+            method="POST",
             headers=session.add_header(self._auth_headers),
             data=query.model_dump_json(warnings=False),
         )
@@ -304,8 +311,9 @@ class Connector(object):
                     else "application/parquet"
                 )
                 headers = {"Accept": transfer_format, **self._auth_headers}
-                resp = requests.post(
+                resp = retried_request(
                     f"{self._gateway}/oceanql/",
+                    method="POST",
                     headers=headers,
                     data=query.model_dump_json(warnings=False),
                 )

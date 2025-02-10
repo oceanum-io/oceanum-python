@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timedelta
-import requests
 from .exceptions import DatameshConnectError, DatameshSessionError
+from .utils import retried_request
 import atexit
 import os
 
@@ -43,9 +43,9 @@ class Session(BaseModel):
         try:
             headers = connection._auth_headers.copy()
             headers["Cache-Control"] = "no-store"
-            res = requests.get(f"{connection._gateway}/session/",
-                               params=connection._session_params,
-                               headers=headers)
+            res = retried_request(f"{connection._gateway}/session/",
+                                  params=connection._session_params,
+                                  headers=headers)
             if res.status_code != 200:
                 raise DatameshConnectError("Failed to create session with error: " + res.text)
             session = cls(**res.json())
@@ -64,11 +64,11 @@ class Session(BaseModel):
         """
 
         try:
-            res = requests.get(f"{os.environ['DATAMESH_ZARR_PROXY']}/session/",
-                               params={'duration': session_duration or 1},
-                               headers={"X-DATAMESH-TOKEN": os.environ['DATAMESH_TOKEN'],
-                                        "USER": os.environ['DATAMESH_USER'],
-                                        'Cache-Control': 'no-cache'})
+            res = retried_request(f"{os.environ['DATAMESH_ZARR_PROXY']}/session/",
+                                  params={'duration': session_duration or 1},
+                                  headers={"X-DATAMESH-TOKEN": os.environ['DATAMESH_TOKEN'],
+                                           "USER": os.environ['DATAMESH_USER'],
+                                           'Cache-Control': 'no-cache'})
             if res.status_code != 200:
                 raise DatameshConnectError("Failed to create session with error: " + res.text)
             session = cls(**res.json())
@@ -97,7 +97,8 @@ class Session(BaseModel):
             atexit.unregister(self.close)
         except:
             pass
-        res = requests.delete(f"{self._connection._gateway}/session/{self.id}",
+        res = retried_request(f"{self._connection._gateway}/session/{self.id}",
+                              method="DELETE",
                               params={"finalise_write": finalise_write},
                               headers=self.header)
         if res.status_code != 204:
