@@ -51,4 +51,4 @@ Remove content from storage system (not implemented yet)
 Oceanum PRAX commands
 ---------------------
 
-Please refer to the `Oceanum PRAX documentation <https://oceanum-prax.readthedocs.io/en/latest/>`_ for more details.
+Please refer to the `Oceanum PRAX documentation <https://oceanum-prax-cli.readthedocs.io/en/latest/>`_ for more details.
