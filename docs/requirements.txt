@@ -2,3 +2,4 @@ autodoc-pydantic
 pydata-sphinx-theme
 sphinxcontrib-programoutput
 decorator
+oceanum-prax
