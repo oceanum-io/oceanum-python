@@ -93,7 +93,6 @@ todo_include_todos = False
 # a list of builtin themes.
 #
 html_theme = "pydata_sphinx_theme"
-html_logo = "oceanum-secondary-logo-marine-rgb.svg"
 html_favicon = "favicon.ico"
 
 # Theme options are theme-specific and customize the look and feel of a
@@ -104,6 +103,10 @@ html_theme_options = {
     "collapse_navigation": True,
     "show_nav_level": 2,
     "secondary_sidebar_items": ["page-toc", "edit-this-page", "sourcelink"],
+    "logo": {
+      "image_light": "oceanum-secondary-logo-marine-rgb.svg",
+      "image_dark": "oceanum-secondary-logo-powder-blue-rgb.svg",
+    },
     "icon_links": [
         {
             "name": "GitHub",
