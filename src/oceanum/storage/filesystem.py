@@ -65,12 +65,12 @@ class FileSystem(AsyncFileSystem):
 
     def __init__(
         self,
-        token=None,
-        service=os.environ.get("STORAGE_SERVICE", DEFAULT_CONFIG["STORAGE_SERVICE"]),
-        asynchronous=False,
-        loop=None,
-        timeout=3600,
-        batch_size=_DEFAULT_BATCH_SIZE,
+        token:str|None=None,
+        service:str=os.environ.get("STORAGE_SERVICE", DEFAULT_CONFIG["STORAGE_SERVICE"]),
+        asynchronous:bool=False,
+        loop:asyncio.AbstractEventLoop|None=None,
+        timeout:int=3600,
+        batch_size:int=_DEFAULT_BATCH_SIZE,
     ):
         """Storage filesystem constructor
 
@@ -82,20 +82,12 @@ class FileSystem(AsyncFileSystem):
         Raises:
             ValueError: Missing or invalid arguments
         """
-        if token is None:
-            token = os.environ.get("DATAMESH_TOKEN", None)
-            if token is None:
-                raise ValueError(
-                    "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
-                )
-        self._token = token
+        self._token = token or os.environ.get("DATAMESH_TOKEN", None)
         url = urlparse(service)
         self._proto = url.scheme
         self._host = url.netloc
         self._base_url = f"{self._proto}://{self._host}/"
-        self._auth_headers = {
-            "X-DATAMESH-TOKEN": self._token,
-        }
+        self._init_auth_headers(self._token)
         super().__init__(
             self, asynchronous=asynchronous, loop=loop, batch_size=batch_size
         )
@@ -105,6 +97,19 @@ class FileSystem(AsyncFileSystem):
             "timeout": aiohttp.ClientTimeout(total=timeout, sock_read=timeout),
         }
         self._session = None
+
+    def _init_auth_headers(self, token: str| None):
+        if token is not None:
+            if token.startswith("Bearer "):
+                self._auth_headers = {"Authorization": token}
+            else:
+                self._auth_headers = {
+                    "X-DATAMESH-TOKEN": token,
+                }
+        else:
+            raise ValueError(
+                "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
+            )
 
     @property
     def fsid(self):
