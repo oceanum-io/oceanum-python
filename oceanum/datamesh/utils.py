@@ -1,6 +1,7 @@
 from time import sleep
 import requests
 import numpy as np
+from .exceptions import DatameshConnectError
 import os
 
 def retried_request(url, method="GET", data=None, params=None, headers=None, retries=8, timeout=10):
@@ -52,7 +53,7 @@ def retried_request(url, method="GET", data=None, params=None, headers=None, ret
         ) as e:
             sleep(0.1 * 2**retried)
             retried += 1
-            with open("/tmp/retried.log", "a") as f:
-                f.write(f"{str(np.datetime64('now'))} Retrying request {url} {retried}/{retries} following error: {e}\n")
+            if retried == retries:
+                raise DatameshConnectError(f"Failed to connect to {url} after {retries} retries with error: {e}")
         else:
             return resp
