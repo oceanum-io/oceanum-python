@@ -62,7 +62,7 @@ class Auth0Client:
                 time.sleep(device_code.interval)
                 token = self.get_token(device_code.device_code)
             except requests.HTTPError as e:
-                print(f'Error fetching auth token: {e}')
+                #print(f'Error fetching auth token: {e}')
                 continue
             else:
                 token.save()
