@@ -10,12 +10,22 @@ Top level commands
 .. command-output:: oceanum --help
 
 
+Auth commands
+------------------
+
+.. command-output:: oceanum auth --help
+
 Datamesh commands
 -----------------
-(not implmemented yet)  
 
 .. command-output:: oceanum datamesh --help
 
+Datasources commands
+=========================
+
+List datasources
+
+.. command-output:: oceanum datamesh list datasources --help
 
 Storage commands
 ----------------
@@ -37,3 +47,8 @@ Upload content to storage system
 Remove content from storage system (not implemented yet)
 
 .. command-output:: oceanum storage rm --help
+
+Oceanum PRAX commands
+---------------------
+
+Please refer to the `Oceanum PRAX documentation <https://oceanum-prax-cli.readthedocs.io/en/latest/>`_ for more details.

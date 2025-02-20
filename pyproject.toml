@@ -23,15 +23,16 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
   "aiohttp",
   "click",
+  "cftime",
+  "dask",
   "decorator",
   "fsspec",
   "geojson-pydantic",
@@ -40,15 +41,19 @@ dependencies = [
   "numpy",
   "orjson",
   "pandas",
+  "platformdirs",
   "pyarrow",
-  "requests",
+  "pydantic[email]",
   "shapely",
+  "tabulate",
   "xarray",
   "rioxarray",
-  "zarr",
+  "zarr<3",
   "dask[dataframe,distributed]",
   "msgpack",
-  "cftime"
+  "cftime",
+  "python-jsonpath",
+  "requests",
 ]
 dynamic = ["version"]
 
@@ -69,6 +74,9 @@ docs = [
   "sphinx",
   "sphinxcontrib-programoutput",
 ]
+prax = [
+  "oceanum-prax",
+]
 
 [project.urls]
 "Homepage" = "https://oceanum.io/"
@@ -77,15 +85,41 @@ docs = [
 "Tracker" = "https://github.com/oceanum-io/oceanum-python/issues"
 
 [project.scripts]
-oceanum = "oceanum.cli:main"
+oceanum = "oceanum.__main__:main"
 
 [project.entry-points."fsspec.specs"]
 "oceanum" = "oceanum.storage:FileSystem"
+
+[project.entry-points."oceanum.cli"]
+"auth" = "oceanum.cli.auth"
+"datamesh" = "oceanum.cli.datamesh"
+"storage" = "oceanum.cli.storage"
+
+[project.entry-points."oceanum.cli.prax"]
+"main" = "oceanum.cli.prax.main"
+"project" = "oceanum.cli.prax.project"
+"workflows" = "oceanum.cli.prax.workflows"
+"stage" = "oceanum.cli.prax.stage"
+"log" = "oceanum.cli.prax.log"
+"route" = "oceanum.cli.prax.route"
+"user" = "oceanum.cli.prax.user"
+"client" = "oceanum.cli.prax.client"
 
 [tool.setuptools.dynamic]
 version = {attr = "oceanum.__version__"}
 
 [tool.setuptools.packages.find]
+where = ["src/"]
+include = [
+  "oceanum",
+  "oceanum.datamesh",
+  "oceanum.storage",
+  "oceanum.cli.main",
+  "oceanum.cli.common",
+  "oceanum.cli.auth",
+  "oceanum.cli.datamesh",
+  "oceanum.cli.storage",
+]
 exclude = ["tests", "docs"]
 
 [tool.distutils.bdist_wheel]
