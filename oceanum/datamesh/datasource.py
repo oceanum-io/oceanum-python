@@ -314,7 +314,7 @@ class Datasource(BaseModel):
         if self._detail:
             return f"""
         {self.name} [{self.id}]
-            Extent: {self.bounds}
+            Extent: {None if self.geom is None else self.bounds}
             Timerange: {self.tstart} to {self.tend}
             {len(self.attributes)} attributes
             {len(self.variables)} {"properties" if "g" in self.coordinates else "variables"}
@@ -322,7 +322,7 @@ class Datasource(BaseModel):
         else:
             return f"""
         {self.name} [{self.id}]
-            Extent: {self.bounds}
+            Extent: {None if self.geom is None else self.bounds}
             Timerange: {self.tstart} to {self.tend}
         """
 
