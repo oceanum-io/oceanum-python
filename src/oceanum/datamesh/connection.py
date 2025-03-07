@@ -240,6 +240,7 @@ class Connector(object):
                 method="PUT",
                 data=data,
                 headers={"Content-Type": data_format, **self._auth_headers},
+                timeout=(3.05, None),
             )
         else:
             headers = {"Content-Type": data_format, **self._auth_headers}
@@ -250,6 +251,7 @@ class Connector(object):
                 method="PATCH",
                 data=data,
                 headers=headers,
+                timeout=(3.05, None),
             )
         self._validate_response(resp)
         return Datasource(**resp.json())
@@ -301,13 +303,13 @@ class Connector(object):
                 "Query is too large for direct access, using lazy access with dask"
             )
             use_dask = True
-        if use_dask and (stage.container == Container.Dataset):
-            mapper = ZarrClient(self, stage.qhash, session=session, api="query")
-            return xarray.open_zarr(
-                mapper, consolidated=True, decode_coords="all", mask_and_scale=True
-            )
-        else:
-            try:
+        try:
+            if use_dask and (stage.container == Container.Dataset):
+                mapper = ZarrClient(self, stage.qhash, session=session, api="query")
+                return xarray.open_zarr(
+                    mapper, consolidated=True, decode_coords="all", mask_and_scale=True
+                )
+            else:
                 if cache_timeout:
                     localcache.lock(query)
                 transfer_format = (
@@ -357,8 +359,8 @@ class Connector(object):
                             localcache.copy(query, f.name, ext)
                             localcache.unlock(query)
                     return ds
-            finally:
-                session.close()
+        finally:
+            session.close()
 
     def get_catalog(self, search=None, timefilter=None, geofilter=None, limit=None):
         """Get datamesh catalog

@@ -2,6 +2,7 @@ import datetime
 import json
 import re
 from collections.abc import MutableMapping
+import os
 
 import numpy
 import xarray
@@ -18,7 +19,10 @@ try:
 except:
     _VIDEO_SUPPORT = False
 
-    
+DATAMESH_TIMEOUT = os.getenv("DATAMESH_TIMEOUT", 10)
+DATAMESH_TIMEOUT = None if DATAMESH_TIMEOUT == "None" else int(DATAMESH_TIMEOUT)
+
+
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
 
@@ -49,8 +53,8 @@ class ZarrClient(MutableMapping):
         session,
         parameters={},
         method="post",
-        retries=8,
-        timeout=10,
+        retries=10,
+        timeout=DATAMESH_TIMEOUT,
         nocache=False,
         api="query",
         reference_id=None
@@ -75,18 +79,19 @@ class ZarrClient(MutableMapping):
         self.retries = retries
         self.timeout = timeout
 
-    def _retried_request(self, path, method="GET", data=None):
+    def _retried_request(self, path, method="GET", data=None, timeout=None):
         return retried_request(
             url=path,
             method=method,
             data=data,
             headers=self.headers,
             retries=self.retries,
-            timeout=self.timeout,
+            timeout=(3.05, timeout),
         )
 
     def __getitem__(self, item):
-        resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}")
+        resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
+                                     timeout=self.timeout)
         print("GETITEM", f"{self._proxy}/{self.datasource}/{item}")
         if resp.status_code >= 300:
             raise KeyError(item)
@@ -96,7 +101,8 @@ class ZarrClient(MutableMapping):
         #if not self._is_v1:
         #    raise NotImplementedError
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
-                                     method="HEAD" if self._is_v1 else "GET")
+                                     method="HEAD" if self._is_v1 else "GET",
+                                     timeout=self.timeout)
         if resp.status_code != 200:
             return False
         return True
@@ -106,7 +112,8 @@ class ZarrClient(MutableMapping):
             raise DatameshConnectError("Query api does not support write operations")
         res = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
                                     method=self.method,
-                                    data=value)
+                                    data=value,
+                                    timeout=None)
         if res.status_code >= 300:
             raise DatameshWriteError(f"Failed to write {item}: {res.status_code} - {res.text}")
 
@@ -117,7 +124,8 @@ class ZarrClient(MutableMapping):
                               method="DELETE")
 
     def __iter__(self):
-        resp = self._retried_request(f"{self._proxy}/{self.datasource}/")
+        resp = self._retried_request(f"{self._proxy}/{self.datasource}/",
+                                     timeout=self.timeout)
         if not resp:
             return
         ex = re.compile(r"""<(a|A)\s+(?:[^>]*?\s+)?(href|HREF)=["'](?P<url>[^"']+)""")

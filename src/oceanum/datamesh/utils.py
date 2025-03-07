@@ -4,7 +4,10 @@ import numpy as np
 from .exceptions import DatameshConnectError
 import os
 
-def retried_request(url, method="GET", data=None, params=None, headers=None, retries=8, timeout=10):
+DATAMESH_TIMEOUT = os.getenv("DATAMESH_TIMEOUT", 10)
+DATAMESH_TIMEOUT = None if DATAMESH_TIMEOUT == "None" else int(DATAMESH_TIMEOUT)
+
+def retried_request(url, method="GET", data=None, params=None, headers=None, retries=8, timeout=DATAMESH_TIMEOUT):
     """
     Retried request function with exponential backoff
 
