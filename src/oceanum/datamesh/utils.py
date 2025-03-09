@@ -4,10 +4,13 @@ import numpy as np
 from .exceptions import DatameshConnectError
 import os
 
-DATAMESH_TIMEOUT = os.getenv("DATAMESH_TIMEOUT", 10)
-DATAMESH_TIMEOUT = None if DATAMESH_TIMEOUT == "None" else int(DATAMESH_TIMEOUT)
+DATAMESH_READ_TIMEOUT = os.getenv("DATAMESH_READ_TIMEOUT", 10)
+DATAMESH_READ_TIMEOUT = None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
+DATAMESH_CONNECT_TIMEOUT = os.getenv("DATAMESH_CONNECT_TIMEOUT", 3.05)
+DATAMESH_CONNECT_TIMEOUT = None if DATAMESH_CONNECT_TIMEOUT == "None" else float(DATAMESH_CONNECT_TIMEOUT)
 
-def retried_request(url, method="GET", data=None, params=None, headers=None, retries=8, timeout=DATAMESH_TIMEOUT):
+
+def retried_request(url, method="GET", data=None, params=None, headers=None, retries=8, timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_READ_TIMEOUT)):
     """
     Retried request function with exponential backoff
 
@@ -23,8 +26,8 @@ def retried_request(url, method="GET", data=None, params=None, headers=None, ret
         Request headers, by default None
     retries : int, optional
         Number of retries, by default 8
-    timeout : int, optional
-        Request timeout, by default 10
+    timeout : tupe(float, float), optional
+        Request connect and read timeout in seconds, by default (3.05, 10)
 
     Returns
     -------
@@ -46,7 +49,7 @@ def retried_request(url, method="GET", data=None, params=None, headers=None, ret
             # Bad Gateway results in waiting for 10 seconds
             # and retrying
             if resp.status_code == 502:
-                # time.sleep(10)
+                sleep(30)
                 raise requests.RequestException
         except (
             requests.RequestException,

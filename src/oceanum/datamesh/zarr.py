@@ -10,7 +10,7 @@ import fsspec
 
 from .exceptions import DatameshConnectError, DatameshWriteError
 from .session import Session
-from .utils import retried_request
+from .utils import retried_request, DATAMESH_CONNECT_TIMEOUT
 
 try:
     import xarray_video as xv
@@ -19,8 +19,9 @@ try:
 except:
     _VIDEO_SUPPORT = False
 
-DATAMESH_TIMEOUT = os.getenv("DATAMESH_TIMEOUT", 10)
-DATAMESH_TIMEOUT = None if DATAMESH_TIMEOUT == "None" else int(DATAMESH_TIMEOUT)
+# Different default for zarr client
+DATAMESH_READ_TIMEOUT = os.getenv("DATAMESH_READ_TIMEOUT", 60)
+DATAMESH_READ_TIMEOUT = None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
 
 
 def json_serial(obj):
@@ -54,7 +55,7 @@ class ZarrClient(MutableMapping):
         parameters={},
         method="post",
         retries=10,
-        timeout=DATAMESH_TIMEOUT,
+        timeout=DATAMESH_READ_TIMEOUT,
         nocache=False,
         api="query",
         reference_id=None
@@ -86,20 +87,17 @@ class ZarrClient(MutableMapping):
             data=data,
             headers=self.headers,
             retries=self.retries,
-            timeout=(3.05, timeout),
+            timeout=(DATAMESH_CONNECT_TIMEOUT, timeout),
         )
 
     def __getitem__(self, item):
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
                                      timeout=self.timeout)
-        print("GETITEM", f"{self._proxy}/{self.datasource}/{item}")
         if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
 
     def __contains__(self, item):
-        #if not self._is_v1:
-        #    raise NotImplementedError
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
                                      method="HEAD" if self._is_v1 else "GET",
                                      timeout=self.timeout)
@@ -121,7 +119,8 @@ class ZarrClient(MutableMapping):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support delete operations")
         self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
-                              method="DELETE")
+                              method="DELETE",
+                              timeout=10)
 
     def __iter__(self):
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/",

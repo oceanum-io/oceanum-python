@@ -31,7 +31,7 @@ from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
-from .utils import retried_request
+from .utils import retried_request, DATAMESH_READ_TIMEOUT
 from ..__init__ import __version__
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
@@ -220,6 +220,7 @@ class Connector(object):
         resp = retried_request(
             f"{self._gateway}/data/{datasource_id}",
             headers={"Accept": data_format, **self._auth_headers},
+            timeout=(DATAMESH_READ_TIMEOUT, 1800),
         )
         self._validate_response(resp)
         with open(tmpfile, "wb") as f:
@@ -240,7 +241,7 @@ class Connector(object):
                 method="PUT",
                 data=data,
                 headers={"Content-Type": data_format, **self._auth_headers},
-                timeout=(3.05, None),
+                timeout=(DATAMESH_READ_TIMEOUT, None),
             )
         else:
             headers = {"Content-Type": data_format, **self._auth_headers}
@@ -251,7 +252,7 @@ class Connector(object):
                 method="PATCH",
                 data=data,
                 headers=headers,
-                timeout=(3.05, None),
+                timeout=(DATAMESH_READ_TIMEOUT, None),
             )
         self._validate_response(resp)
         return Datasource(**resp.json())
@@ -326,6 +327,7 @@ class Connector(object):
                     method="POST",
                     headers=headers,
                     data=query.model_dump_json(warnings=False),
+                    timeout=(DATAMESH_READ_TIMEOUT, 600)
                 )
                 if resp.status_code >= 500:
                     if cache_timeout:
