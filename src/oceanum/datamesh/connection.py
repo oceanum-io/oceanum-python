@@ -303,13 +303,16 @@ class Connector(object):
                 "Query is too large for direct access, using lazy access with dask"
             )
             use_dask = True
-        try:
-            if use_dask and (stage.container == Container.Dataset):
-                mapper = ZarrClient(self, stage.qhash, session=session, api="query")
-                return xarray.open_zarr(
-                    mapper, consolidated=True, decode_coords="all", mask_and_scale=True
-                )
-            else:
+        if use_dask and (stage.container == Container.Dataset):
+            mapper = ZarrClient(self, stage.qhash, session=session, api="query")
+            return xarray.open_zarr(
+                mapper, consolidated=True, decode_coords="all", mask_and_scale=True
+            )
+        else:
+            # Try finally takes care of closing the session
+            # in the previous use_dask case the session needs to carry on
+            # in order to the zarr client to keep working
+            try:
                 if cache_timeout:
                     localcache.lock(query)
                 transfer_format = (
@@ -359,8 +362,8 @@ class Connector(object):
                             localcache.copy(query, f.name, ext)
                             localcache.unlock(query)
                     return ds
-        finally:
-            session.close()
+            finally:
+                session.close()
 
     def get_catalog(self, search=None, timefilter=None, geofilter=None, limit=None):
         """Get datamesh catalog
