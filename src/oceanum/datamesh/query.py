@@ -239,6 +239,7 @@ class LevelFilter(BaseModel):
         Type of the levelfilter. Can be one of:
             - 'range': Select levels within a range, levels are a list of [levelstart, levelend]
             - 'series': Select levels in a series, levels are a list of levels
+            - 'trajectory': Select levels along a trajectory, levels are a list of levels corresponding to subfeatures in a feature filter
         """,
     )
     levels: List[Union[float, None]] = Field(
@@ -396,6 +397,22 @@ class Query(BaseModel):
     functions: Optional[List[Function]] = Field(title="Functions", default=[])
     limit: Optional[int] = Field(title="Limit size of response", default=None)
     id: Optional[str] = Field(title="Unique ID of this query", default=None)
+
+    def __bool__(self):
+        for k,v in self.__dict__.items():
+            if not k in ["datasource", "description", "id"] and v:
+                return True
+        return False
+
+    def __hash__(self):
+        return hash(self.model_dump_json(warnings=False))
+
+
+class Workspace(BaseModel):
+    data: List[Query] = Field(title="Datamesh queries")
+    id: Optional[str] = Field(title="Unique ID of this package", default=None)
+    name: Optional[str] = Field(title="Package name", default="OceanQL package")
+    description: Optional[str] = Field(title="Package description", default="")
 
 
 class Workspace(BaseModel):

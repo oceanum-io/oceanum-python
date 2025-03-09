@@ -85,6 +85,11 @@ class _GeometryAnnotation:
     @classmethod
     def __get_pydantic_core_schema__(cls, source, handler):
         def validate(geometry):
+            if isinstance(geometry, str):
+                try:
+                    geometry = shapely.from_geojson(geometry)
+                except:
+                    "Not a valid GeoJSON string"
             if isinstance(geometry, dict):
                 try:
                     geometry = shapely.geometry.shape(geometry)
@@ -99,7 +104,7 @@ class _GeometryAnnotation:
             ):
                 return geometry
             else:
-                raise BaseException("Geometry must be Point, MultiPoint or Polygon")
+                raise BaseException(f"Geometry must be Point, MultiPoint or Polygon: {geometry}")
 
         from_geometry_schema = core_schema.no_info_plain_validator_function(validate)
 
@@ -309,7 +314,7 @@ class Datasource(BaseModel):
         if self._detail:
             return f"""
         {self.name} [{self.id}]
-            Extent: {self.bounds}
+            Extent: {None if self.geom is None else self.bounds}
             Timerange: {self.tstart} to {self.tend}
             {len(self.attributes)} attributes
             {len(self.variables)} {"properties" if "g" in self.coordinates else "variables"}
@@ -317,7 +322,7 @@ class Datasource(BaseModel):
         else:
             return f"""
         {self.name} [{self.id}]
-            Extent: {self.bounds}
+            Extent: {None if self.geom is None else self.bounds}
             Timerange: {self.tstart} to {self.tend}
         """
 
@@ -369,10 +374,10 @@ class Datasource(BaseModel):
             if "x" in self.coordinates and "y" in self.coordinates:
                 warnings.warn("Setting geometry as a bbox from x and y coordinates")
                 self.geom = shapely.geometry.box(
-                    min(data[self.coordinates["x"]]),
-                    min(data[self.coordinates["y"]]),
-                    max(data[self.coordinates["x"]]),
-                    max(data[self.coordinates["y"]]),
+                    float(data[self.coordinates["x"]].min()),
+                    float(data[self.coordinates["y"]].min()),
+                    float(data[self.coordinates["x"]].max()),
+                    float(data[self.coordinates["y"]].max()),
                 )
                 if crs:
                     self.geom = shapely.ops.transform(
