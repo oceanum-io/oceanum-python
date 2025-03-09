@@ -159,7 +159,7 @@ class Connector(object):
             _gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
             self._gateway = _gateway
             self._is_v1 = False
-            print("Using datamesh API version beta")
+            print("Using datamesh API version 0")
         return
 
     def _validate_response(self, resp):
