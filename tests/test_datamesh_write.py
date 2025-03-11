@@ -149,6 +149,36 @@ def test_append_dataset(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
+def test_write_region_dataset(conn, dataset):
+    datasource_id = "test-write-dataset-region"
+    dataset2 = dataset.isel(time=slice(10,-10))+2
+    conn.write_datasource(datasource_id, dataset, overwrite=True)
+    conn.write_datasource(datasource_id, dataset2, append="time")
+    ds = conn.load_datasource(datasource_id)
+    assert len(ds["u10"]) == 49
+    assert (ds["u10"][:10] == dataset["u10"][:10]).all()
+    numpy.testing.assert_almost_equal(ds["u10"][10:-10].values,
+                                      (dataset["u10"][10:-10]+2).values,
+                                      decimal=14)
+    assert (ds["u10"][-10:] == dataset["u10"][-10:]).all()
+    conn.delete_datasource(datasource_id)
+
+
+def test_write_region_chunked_dataset(conn, dataset):
+    datasource_id = "test-write-dataset-region"
+    dataset2 = dataset.isel(time=slice(10,-10))+2
+    conn.write_datasource(datasource_id, dataset.chunk({"time": 7}), overwrite=True)
+    conn.write_datasource(datasource_id, dataset2, append="time")
+    ds = conn.load_datasource(datasource_id)
+    assert len(ds["u10"]) == 49
+    assert (ds["u10"][:10] == dataset["u10"][:10]).all()
+    numpy.testing.assert_almost_equal(ds["u10"][10:-10].values,
+                                      (dataset["u10"][10:-10]+2).values,
+                                      decimal=14)
+    assert (ds["u10"][-10:] == dataset["u10"][-10:]).all()
+    conn.delete_datasource(datasource_id)
+
+
 def test_append_dataset_fail(conn, dataset):
     datasource_id = "test-write-dataset-fail"
     dataset2 = dataset.copy()
