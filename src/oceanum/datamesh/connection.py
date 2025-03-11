@@ -267,6 +267,7 @@ class Connector(object):
             method="POST",
             headers=session.add_header(self._auth_headers),
             data=query.model_dump_json(warnings=False),
+            timeout=(DATAMESH_READ_TIMEOUT, 300)
         )
         if resp.status_code >= 400:
             try:
