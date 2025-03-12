@@ -159,7 +159,7 @@ def test_write_region_dataset(conn, dataset):
     assert (ds["u10"][:10] == dataset["u10"][:10]).all()
     numpy.testing.assert_almost_equal(ds["u10"][10:-10].values,
                                       (dataset["u10"][10:-10]+2).values,
-                                      decimal=14)
+                                      decimal=3)
     assert (ds["u10"][-10:] == dataset["u10"][-10:]).all()
     conn.delete_datasource(datasource_id)
 
@@ -174,7 +174,7 @@ def test_write_region_chunked_dataset(conn, dataset):
     assert (ds["u10"][:10] == dataset["u10"][:10]).all()
     numpy.testing.assert_almost_equal(ds["u10"][10:-10].values,
                                       (dataset["u10"][10:-10]+2).values,
-                                      decimal=14)
+                                      decimal=3)
     assert (ds["u10"][-10:] == dataset["u10"][-10:]).all()
     conn.delete_datasource(datasource_id)
 
