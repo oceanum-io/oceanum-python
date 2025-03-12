@@ -165,7 +165,7 @@ def test_write_region_dataset(conn, dataset):
 
 
 def test_write_region_chunked_dataset(conn, dataset):
-    datasource_id = "test-write-dataset-region"
+    datasource_id = "test-write-dataset-region-chunked"
     dataset2 = dataset.isel(time=slice(10,-10))+2
     conn.write_datasource(datasource_id, dataset.chunk({"time": 7}), overwrite=True)
     conn.write_datasource(datasource_id, dataset2, append="time")
