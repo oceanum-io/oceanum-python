@@ -81,7 +81,7 @@ class ZarrClient(MutableMapping):
         self.timeout = timeout
 
     def _retried_request(self, path, method="GET", data=None, timeout=None):
-        return retried_request(
+        resp = retried_request(
             url=path,
             method=method,
             data=data,
@@ -89,6 +89,9 @@ class ZarrClient(MutableMapping):
             retries=self.retries,
             timeout=(DATAMESH_CONNECT_TIMEOUT, timeout),
         )
+        if resp.status_code == 401:
+            raise DatameshConnectError(f"Not Authorized {resp.text}")
+        return resp
 
     def __getitem__(self, item):
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
