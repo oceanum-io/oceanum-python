@@ -177,9 +177,10 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
                         )
 
                     drop_coords = [c for c in data.coords if c != append]
+                    drop_vars = [v for v in data.data_vars if not append in data[v].dims]
                     replace_section = data.isel(
                         **{append_dim: slice(0, len(replace_range))}
-                    ).drop(drop_coords)
+                    ).drop(drop_coords+drop_vars)
                     replace_slice = slice(replace_range[0], replace_range[-1] + 1)
                     # Fail if we are replacing an internal section and ends of coordinates do not match
                     if replace_range[-1] + 1 < len(cexist) and not numpy.array_equal(
