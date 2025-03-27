@@ -241,7 +241,7 @@ class Connector(object):
                 method="PUT",
                 data=data,
                 headers={"Content-Type": data_format, **self._auth_headers},
-                timeout=(DATAMESH_READ_TIMEOUT, None),
+                timeout=(None, None),
             )
         else:
             headers = {"Content-Type": data_format, **self._auth_headers}
@@ -252,7 +252,7 @@ class Connector(object):
                 method="PATCH",
                 data=data,
                 headers=headers,
-                timeout=(DATAMESH_READ_TIMEOUT, None),
+                timeout=(None, None),
             )
         self._validate_response(resp)
         return Datasource(**resp.json())

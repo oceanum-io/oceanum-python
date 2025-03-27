@@ -22,7 +22,10 @@ except:
 # Different default for zarr client
 DATAMESH_READ_TIMEOUT = os.getenv("DATAMESH_READ_TIMEOUT", 60)
 DATAMESH_READ_TIMEOUT = None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
-
+DATAMESH_CONNECT_TIMEOUT = os.getenv("DATAMESH_CONNECT_TIMEOUT", 3.05)
+DATAMESH_CONNECT_TIMEOUT = None if DATAMESH_CONNECT_TIMEOUT == "None" else float(DATAMESH_CONNECT_TIMEOUT)
+DATAMESH_WRITE_TIMEOUT = os.getenv("DATAMESH_WRITE_TIMEOUT", 600)
+DATAMESH_WRITE_TIMEOUT = None if DATAMESH_WRITE_TIMEOUT == "None" else float(DATAMESH_WRITE_TIMEOUT)
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -55,7 +58,9 @@ class ZarrClient(MutableMapping):
         parameters={},
         method="post",
         retries=10,
-        timeout=DATAMESH_READ_TIMEOUT,
+        read_timeout=DATAMESH_READ_TIMEOUT,
+        connect_timeout=DATAMESH_CONNECT_TIMEOUT,
+        write_timeout=DATAMESH_WRITE_TIMEOUT,
         nocache=False,
         api="query",
         reference_id=None
@@ -78,16 +83,21 @@ class ZarrClient(MutableMapping):
         else:
             raise DatameshConnectError(f"Unknown api: {self.api}")
         self.retries = retries
-        self.timeout = timeout
+        self.read_timeout = read_timeout
+        self.connect_timeout = connect_timeout
+        self.write_timeout = write_timeout
 
-    def _retried_request(self, path, method="GET", data=None, timeout=None):
+    def _retried_request(self, path, method="GET", data=None,
+                         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
+                         read_timeout=DATAMESH_READ_TIMEOUT):
         resp = retried_request(
             url=path,
             method=method,
             data=data,
             headers=self.headers,
             retries=self.retries,
-            timeout=(DATAMESH_CONNECT_TIMEOUT, timeout),
+            timeout=(connect_timeout,
+                     read_timeout),
         )
         if resp.status_code == 401:
             raise DatameshConnectError(f"Not Authorized {resp.text}")
@@ -95,7 +105,8 @@ class ZarrClient(MutableMapping):
 
     def __getitem__(self, item):
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
-                                     timeout=self.timeout)
+                                     connect_timeout=self.connect_timeout,
+                                     read_timeout=self.read_timeout)
         if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
@@ -103,7 +114,8 @@ class ZarrClient(MutableMapping):
     def __contains__(self, item):
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
                                      method="HEAD" if self._is_v1 else "GET",
-                                     timeout=self.timeout)
+                                     connect_timeout=self.connect_timeout,
+                                     read_timeout=self.read_timeout)
         if resp.status_code != 200:
             return False
         return True
@@ -114,7 +126,8 @@ class ZarrClient(MutableMapping):
         res = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
                                     method=self.method,
                                     data=value,
-                                    timeout=None)
+                                    connect_timeout=self.write_timeout,
+                                    read_timeout=self.write_timeout)
         if res.status_code >= 300:
             raise DatameshWriteError(f"Failed to write {item}: {res.status_code} - {res.text}")
 
@@ -123,11 +136,13 @@ class ZarrClient(MutableMapping):
             raise DatameshConnectError("Query api does not support delete operations")
         self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
                               method="DELETE",
-                              timeout=10)
+                              connect_timeout=self.connect_timeout,
+                              read_timeout=10)
 
     def __iter__(self):
         resp = self._retried_request(f"{self._proxy}/{self.datasource}/",
-                                     timeout=self.timeout)
+                                     connect_timeout=self.connect_timeout,
+                                     read_timeout=self.read_timeout)
         if not resp:
             return
         ex = re.compile(r"""<(a|A)\s+(?:[^>]*?\s+)?(href|HREF)=["'](?P<url>[^"']+)""")
