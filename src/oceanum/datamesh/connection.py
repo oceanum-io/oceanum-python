@@ -160,6 +160,15 @@ class Connector(object):
             self._gateway = _gateway
             self._is_v1 = False
             print("Using datamesh API version 0")
+            try:
+                resp = retried_request(f"http://datamesh-v1.oceanum.io/info/oceanum_python/{__version__}",
+                                       headers=self._auth_headers)
+                if resp.status_code == 200:
+                    r = resp.json()
+                    if "message" in r:
+                        print(r["message"])
+            except:
+                pass
         return
 
     def _validate_response(self, resp):
