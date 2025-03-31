@@ -61,6 +61,18 @@ def test_write_dataframe(conn, dataframe):
     assert (df == dataframe).all().all()
     conn.delete_datasource(datasource_id)
 
+def test_write_dataframe_with_label(conn, dataframe):
+    datasource_id = "test-write-dataframe-with-label"
+    conn.write_datasource(
+        datasource_id,
+        dataframe,
+        {"type": "Point", "coordinates": [174, -39]},
+        labels=['test_label'],
+        overwrite=True,
+    )
+    df = conn.load_datasource(datasource_id)
+    assert (df == dataframe).all().all()
+    conn.delete_datasource(datasource_id)
 
 def test_write_dask_dataframe(conn, dataframe):
     datasource_id = "test-write-dask-dataframe"

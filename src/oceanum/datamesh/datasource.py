@@ -245,6 +245,11 @@ class Datasource(BaseModel):
         description="Metadata keyword tags related to the datasource",
         default=[],
     )
+    labels: Optional[list] = Field(
+        title="Datasource labels",
+        description="Metadata labels related to the datasource. A given label can only be owned by one organisation.",
+        default=[],
+    )
     info: Optional[dict] = Field(
         title="Datasource metadata",
         description="Additional datasource descriptive metadata",

@@ -60,6 +60,7 @@ def test_all_properties(dataframe):
         schema=dataframe.to_xarray().to_dict(data=False),
         coordinates={"t": "time"},
         info={"some": "info"},
+        labels=["test_label"],
         last_modified=datetime.datetime.utcnow(),
         tstart=datetime.datetime(2000, 1, 1),
         tend=datetime.datetime(2020, 1, 1),
