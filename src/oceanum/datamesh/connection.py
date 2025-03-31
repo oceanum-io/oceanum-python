@@ -145,7 +145,8 @@ class Connector(object):
         _gateway = self._gateway or f"{self._proto}://{self._host}"
         try:
             resp = retried_request(f"{_gateway}/info/oceanum_python/{__version__}",
-                                   headers=self._auth_headers)
+                                   headers=self._auth_headers,
+                                   retries=1)
             if resp.status_code == 200:
                 r = resp.json()
                 if "message" in r:
@@ -161,8 +162,9 @@ class Connector(object):
             self._is_v1 = False
             print("Using datamesh API version 0")
             try:
-                resp = retried_request(f"http://datamesh-v1.oceanum.io/info/oceanum_python/{__version__}",
-                                       headers=self._auth_headers)
+                resp = retried_request(f"https://datamesh-v1.oceanum.io/info/oceanum_python/{__version__}",
+                                       headers=self._auth_headers,
+                                       retries=1)
                 if resp.status_code == 200:
                     r = resp.json()
                     if "message" in r:
