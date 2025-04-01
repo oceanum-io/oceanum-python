@@ -249,7 +249,7 @@ def test_write_metadata_with_label(conn, dataframe):
         name=datasource_id,
         coordinates={},
         driver="null",
-        geometry={"type": "Point", "coordinates": [1686592, 5682747]},
+        geometry={"type": "Point", "coordinates": [10, -15]},
         tstart="2020-01-01T00:00:00Z",
         labels=["test_label"],
     )
