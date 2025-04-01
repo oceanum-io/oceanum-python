@@ -61,18 +61,6 @@ def test_write_dataframe(conn, dataframe):
     assert (df == dataframe).all().all()
     conn.delete_datasource(datasource_id)
 
-def test_write_dataframe_with_label(conn, dataframe):
-    datasource_id = "test-write-dataframe-with-label"
-    conn.write_datasource(
-        datasource_id,
-        dataframe,
-        {"type": "Point", "coordinates": [174, -39]},
-        labels=['test_label'],
-        overwrite=True,
-    )
-    df = conn.load_datasource(datasource_id)
-    assert (df == dataframe).all().all()
-    conn.delete_datasource(datasource_id)
 
 def test_write_dask_dataframe(conn, dataframe):
     datasource_id = "test-write-dask-dataframe"
@@ -133,7 +121,7 @@ def test_write_dataset_crs(conn, dataset):
 
 
 def test_bad_coordinates_fail(conn, dataset):
-    datasource_id = "test-write-dataset"
+    datasource_id = "test-write-dataset-coord-fail"
     with pytest.raises(DatameshWriteError):
         conn.write_datasource(
             datasource_id,
@@ -204,7 +192,7 @@ def test_append_dataset_fail(conn, dataset):
 
 
 def test_write_metadata(conn, dataframe):
-    datasource_id = "test-write-dataframe"
+    datasource_id = "test-write-metadata"
     conn.write_datasource(
         datasource_id,
         None,
@@ -221,7 +209,7 @@ def test_write_metadata(conn, dataframe):
 
 
 def test_update_metadata(conn, dataframe):
-    datasource_id = "test-write-dataframe2"
+    datasource_id = "test-write-update-metadata"
     conn.write_datasource(
         datasource_id, dataframe, {"type": "Point", "coordinates": [174, -39]}
     )
@@ -236,7 +224,7 @@ def test_update_metadata(conn, dataframe):
 
 
 def test_write_metadata_with_crs(conn, dataframe):
-    datasource_id = "test-write-dataframe"
+    datasource_id = "test-write-metadata-crs"
     conn.write_datasource(
         datasource_id,
         None,
@@ -253,8 +241,26 @@ def test_write_metadata_with_crs(conn, dataframe):
     conn.delete_datasource(datasource_id)
 
 
+def test_write_metadata_with_label(conn, dataframe):
+    datasource_id = "test-write-metadata-label"
+    conn.write_datasource(
+        datasource_id,
+        None,
+        name=datasource_id,
+        coordinates={},
+        driver="null",
+        geometry={"type": "Point", "coordinates": [10, -15]},
+        tstart="2020-01-01T00:00:00Z",
+        labels=["test_label"],
+    )
+    ds = conn.get_datasource(datasource_id)
+    assert ds.labels[0] == "test_label"
+    assert len(ds.labels) == 1
+    conn.delete_datasource(datasource_id)
+
+
 def test_write_metadata_with_bad_crs(conn, dataframe):
-    datasource_id = "test-write-dataframe"
+    datasource_id = "test-write-metadata-bad-crs"
     with pytest.raises(DatameshWriteError):
         conn.write_datasource(
             datasource_id,
