@@ -33,7 +33,7 @@ class Session(BaseModel):
                 cls(id="dummy_session",
                     user="dummy_user",
                     creation_time=datetime.now(),
-                    end_time=datetime.now()+timedelta(hours=connection._session_params.get("duration", 1)),
+                    end_time=datetime.now()+timedelta(seconds=connection._session_params.get("duration", 3600)),
                     write=False,
                     verified=False)
             session._connection = connection
@@ -65,7 +65,7 @@ class Session(BaseModel):
 
         try:
             res = retried_request(f"{os.environ['DATAMESH_ZARR_PROXY']}/session/",
-                                  params={'duration': session_duration or 1},
+                                  params={'duration': session_duration or 3600},
                                   headers={"X-DATAMESH-TOKEN": os.environ['DATAMESH_TOKEN'],
                                            "USER": os.environ['DATAMESH_USER'],
                                            'Cache-Control': 'no-cache'})
