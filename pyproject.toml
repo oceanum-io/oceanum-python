@@ -55,6 +55,7 @@ dependencies = [
   "cftime",
   "python-jsonpath",
   "requests",
+  "pip-system-certs"
 ]
 dynamic = ["version"]
 
