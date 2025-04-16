@@ -74,7 +74,7 @@ class Connector(object):
         service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
         gateway=os.environ.get("DATAMESH_GATEWAY", None),
         user=None,
-        session_duration=None
+        session_duration=None,
     ):
         """Datamesh connector constructor
 
@@ -94,9 +94,12 @@ class Connector(object):
         self._host = url.netloc
         self._init_auth_headers(self._token, user)
         if session_duration and not isinstance(session_duration, numbers.Number):
-            raise ValueError(f"Session duration must be a valid numbers: {session_duration}")
-        self._session_params =\
+            raise ValueError(
+                f"Session duration must be a valid numbers: {session_duration}"
+            )
+        self._session_params = (
             {"duration": float(session_duration)} if session_duration else {}
+        )
         self._gateway = gateway
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
 
@@ -104,7 +107,7 @@ class Connector(object):
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
 
-    def _init_auth_headers(self, token: str| None, user: str| None = None):
+    def _init_auth_headers(self, token: str | None, user: str | None = None):
         if token is not None:
             if token.startswith("Bearer "):
                 self._auth_headers = {"Authorization": token}
@@ -131,8 +134,9 @@ class Connector(object):
 
     # Check the status of the metadata server
     def _status(self):
-        resp = retried_request(f"{self._proto}://{self._host}",
-                               headers=self._auth_headers)
+        resp = retried_request(
+            f"{self._proto}://{self._host}", headers=self._auth_headers
+        )
         return resp.status_code == 200
 
     def _check_info(self):
@@ -144,9 +148,11 @@ class Connector(object):
 
         _gateway = self._gateway or f"{self._proto}://{self._host}"
         try:
-            resp = retried_request(f"{_gateway}/info/oceanum_python/{__version__}",
-                                   headers=self._auth_headers,
-                                   retries=1)
+            resp = retried_request(
+                f"{_gateway}/info/oceanum_python/{__version__}",
+                headers=self._auth_headers,
+                retries=1,
+            )
             if resp.status_code == 200:
                 r = resp.json()
                 if "message" in r:
@@ -155,16 +161,20 @@ class Connector(object):
                 self._gateway = _gateway
                 self._is_v1 = True
                 return
-            raise DatameshConnectError(f"Failed to reach datamesh: {resp.status_code}-{resp.text}")
+            raise DatameshConnectError(
+                f"Failed to reach datamesh: {resp.status_code}-{resp.text}"
+            )
         except:
             _gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
             self._gateway = _gateway
             self._is_v1 = False
             print("Using datamesh API version 0")
             try:
-                resp = retried_request(f"https://datamesh-v1.oceanum.io/info/oceanum_python/{__version__}",
-                                       headers=self._auth_headers,
-                                       retries=1)
+                resp = retried_request(
+                    f"https://datamesh-v1.oceanum.io/info/oceanum_python/{__version__}",
+                    headers=self._auth_headers,
+                    retries=1,
+                )
                 if resp.status_code == 200:
                     r = resp.json()
                     if "message" in r:
@@ -278,7 +288,7 @@ class Connector(object):
             method="POST",
             headers=session.add_header(self._auth_headers),
             data=query.model_dump_json(warnings=False),
-            timeout=(DATAMESH_READ_TIMEOUT, 300)
+            timeout=(DATAMESH_READ_TIMEOUT, 300),
         )
         if resp.status_code >= 400:
             try:
@@ -339,7 +349,7 @@ class Connector(object):
                     method="POST",
                     headers=headers,
                     data=query.model_dump_json(warnings=False),
-                    timeout=(DATAMESH_READ_TIMEOUT, 900)
+                    timeout=(DATAMESH_READ_TIMEOUT, 900),
                 )
                 if resp.status_code >= 500:
                     if cache_timeout:
@@ -348,12 +358,16 @@ class Connector(object):
                         time.sleep(retry)
                         return self._query(query, use_dask, cache_timeout, retry + 1)
                     else:
-                        raise DatameshConnectError("Datamesh server error: " + resp.text)
+                        raise DatameshConnectError(
+                            "Datamesh server error: " + resp.text
+                        )
                 if resp.status_code >= 400:
                     try:
                         msg = resp.json()["detail"]
                     except:
-                        raise DatameshConnectError("Datamesh server error: " + resp.text)
+                        raise DatameshConnectError(
+                            "Datamesh server error: " + resp.text
+                        )
                     if cache_timeout:
                         localcache.unlock(query)
                     raise DatameshQueryError(msg)
@@ -487,14 +501,15 @@ class Connector(object):
         """
         session = Session.acquire(self)
         stage = self._stage_request(
-            Query(datasource=datasource_id, parameters=parameters),
-            session=session
+            Query(datasource=datasource_id, parameters=parameters), session=session
         )
         if stage is None:
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset or use_dask:
-            mapper = ZarrClient(self, datasource_id, session, parameters=parameters, api="zarr")
+            mapper = ZarrClient(
+                self, datasource_id, session, parameters=parameters, api="zarr"
+            )
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
@@ -623,8 +638,11 @@ class Connector(object):
         try:
             ds = self.get_datasource(datasource_id)
         except DatameshConnectError as e:
-            overwrite = True
-            ds = _ds
+            if append:
+                raise DatameshWriteError(f"Cannot append to non-existent datasource")
+            else:
+                overwrite = True
+                ds = _ds
 
         if ds._exists and overwrite:
             try:
@@ -711,7 +729,6 @@ class Connector(object):
         except Exception as e:
             raise DatameshWriteError(f"Cannot register datasource {datasource_id}: {e}")
         return ds
-
 
     @asyncwrapper
     def write_datasource_async(
