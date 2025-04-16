@@ -49,11 +49,13 @@ dependencies = [
   "xarray",
   "rioxarray",
   "zarr<3",
+  "numcodecs<0.16.0",
   "dask[dataframe,distributed]",
   "msgpack",
   "cftime",
   "python-jsonpath",
   "requests",
+  "pip-system-certs"
 ]
 dynamic = ["version"]
 

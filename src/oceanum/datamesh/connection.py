@@ -83,7 +83,7 @@ class Connector(object):
             service (string, optional): URL of datamesh service. Defaults to os.environ.get("DATAMESH_SERVICE", "https://datamesh.oceanum.io").
             gateway (string, optional): URL of gateway service. Defaults to os.environ.get("DATAMESH_GATEWAY", "https://gateway.<datamesh_service_domain>").
             user (string, optional): Organisation user name for the datamesh connection. Defaults to None.
-            session_duration (float, optional): The desired length of time for acquired datamesh sessions in hours. Will be 1 hour by default.
+            session_duration (float, optional): The desired length of time for acquired datamesh sessions in seconds. Will be 3600 seconds by default.
 
         Raises:
             ValueError: Missing or invalid arguments

@@ -1,5 +1,9 @@
+import logging
+from pydantic import ValidationError
 from geojson_pydantic import Feature, FeatureCollection
 from .datasource import Datasource
+
+logger = logging.getLogger(__name__)
 
 
 class Catalog(object):
@@ -27,9 +31,15 @@ class Catalog(object):
         if item in self._ids:
             index = self._ids.index(item)
             feature = self._geojson.features[index]
-            return Datasource(
-                id=feature.id, geom=feature.geometry.model_dump(), **feature.properties
-            )
+            try:
+                return Datasource(
+                    id=feature.id,
+                    geom=feature.geometry.model_dump(),
+                    **feature.properties
+                )
+            except ValidationError:
+                logger.warning(f"Failed to get datasource {item} in catalog")
+                return None
         else:
             raise IndexError(f"Datasource {item} not in catalog")
 
