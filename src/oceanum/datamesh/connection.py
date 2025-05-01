@@ -105,7 +105,7 @@ class Connector(object):
         self._gateway = gateway
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         self._verify = verify
-        
+
         # Suppress InsecureRequestWarning when verify=False is used
         if not verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -142,7 +142,7 @@ class Connector(object):
     # Check the status of the metadata server
     def _status(self):
         resp = retried_request(
-            f"{self._proto}://{self._host}/status",
+            f"{self._proto}://{self._host}",
             headers=self._auth_headers,
             verify=self._verify,
         )
@@ -204,7 +204,7 @@ class Connector(object):
 
     def _metadata_request(self, datasource_id="", params={}):
         resp = retried_request(
-            f"{self._proto}://{self._host}/datasources/{datasource_id}",
+            f"{self._proto}://{self._host}/datasource/{datasource_id}",
             params=params,
             headers=self._auth_headers,
             verify=self._verify,
@@ -728,7 +728,7 @@ class Connector(object):
 
         # Update the datasource properties
         for key in properties:
-            if key not in ["driver", "schema", "driver_args"]:
+            if key not in ["driver", "schema", "crs"]:
                 setattr(ds, key, properties[key])
         if name:
             ds.name = name
