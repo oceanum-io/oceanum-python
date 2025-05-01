@@ -23,6 +23,7 @@ from functools import wraps, partial
 from contextlib import contextmanager
 import pyproj
 import numbers
+import urllib3
 
 from .datasource import Datasource
 from .catalog import Catalog
@@ -75,6 +76,7 @@ class Connector(object):
         gateway=os.environ.get("DATAMESH_GATEWAY", None),
         user=None,
         session_duration=None,
+        verify=True,
     ):
         """Datamesh connector constructor
 
@@ -84,7 +86,7 @@ class Connector(object):
             gateway (string, optional): URL of gateway service. Defaults to os.environ.get("DATAMESH_GATEWAY", "https://gateway.<datamesh_service_domain>").
             user (string, optional): Organisation user name for the datamesh connection. Defaults to None.
             session_duration (float, optional): The desired length of time for acquired datamesh sessions in seconds. Will be 3600 seconds by default.
-
+            verify (bool, optional): Whether to verify the datamesh server certificate. Defaults to True.
         Raises:
             ValueError: Missing or invalid arguments
         """
@@ -102,6 +104,11 @@ class Connector(object):
         )
         self._gateway = gateway
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
+        self._verify = verify
+        
+        # Suppress InsecureRequestWarning when verify=False is used
+        if not verify:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         self._check_info()
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
@@ -135,7 +142,9 @@ class Connector(object):
     # Check the status of the metadata server
     def _status(self):
         resp = retried_request(
-            f"{self._proto}://{self._host}", headers=self._auth_headers
+            f"{self._proto}://{self._host}/status",
+            headers=self._auth_headers,
+            verify=self._verify,
         )
         return resp.status_code == 200
 
@@ -152,6 +161,7 @@ class Connector(object):
                 f"{_gateway}/info/oceanum_python/{__version__}",
                 headers=self._auth_headers,
                 retries=1,
+                verify=self._verify,
             )
             if resp.status_code == 200:
                 r = resp.json()
@@ -174,6 +184,7 @@ class Connector(object):
                     f"https://datamesh-v1.oceanum.io/info/oceanum_python/{__version__}",
                     headers=self._auth_headers,
                     retries=1,
+                    verify=self._verify,
                 )
                 if resp.status_code == 200:
                     r = resp.json()
@@ -193,9 +204,10 @@ class Connector(object):
 
     def _metadata_request(self, datasource_id="", params={}):
         resp = retried_request(
-            f"{self._proto}://{self._host}/datasource/{datasource_id}",
-            headers=self._auth_headers,
+            f"{self._proto}://{self._host}/datasources/{datasource_id}",
             params=params,
+            headers=self._auth_headers,
+            verify=self._verify,
         )
         if resp.status_code == 404:
             raise DatameshConnectError(f"Datasource {datasource_id} not found")
@@ -215,6 +227,7 @@ class Connector(object):
                 method="PATCH",
                 data=data,
                 headers=headers,
+                verify=self._verify,
             )
 
         else:
@@ -223,6 +236,7 @@ class Connector(object):
                 method="POST",
                 data=data,
                 headers=headers,
+                verify=self._verify,
             )
         self._validate_response(resp)
         return resp
@@ -232,6 +246,7 @@ class Connector(object):
             f"{self._gateway}/data/{datasource_id}",
             method="DELETE",
             headers=self._auth_headers,
+            verify=self._verify,
         )
         self._validate_response(resp)
         return True
@@ -242,6 +257,7 @@ class Connector(object):
             f"{self._gateway}/data/{datasource_id}",
             headers={"Accept": data_format, **self._auth_headers},
             timeout=(DATAMESH_READ_TIMEOUT, 1800),
+            verify=self._verify,
         )
         self._validate_response(resp)
         with open(tmpfile, "wb") as f:
@@ -263,6 +279,7 @@ class Connector(object):
                 data=data,
                 headers={"Content-Type": data_format, **self._auth_headers},
                 timeout=(DATAMESH_WRITE_TIMEOUT, DATAMESH_WRITE_TIMEOUT),
+                verify=self._verify,
             )
         else:
             headers = {"Content-Type": data_format, **self._auth_headers}
@@ -274,6 +291,7 @@ class Connector(object):
                 data=data,
                 headers=headers,
                 timeout=(DATAMESH_WRITE_TIMEOUT, DATAMESH_WRITE_TIMEOUT),
+                verify=self._verify,
             )
         self._validate_response(resp)
         return Datasource(**resp.json())
@@ -289,6 +307,7 @@ class Connector(object):
             headers=session.add_header(self._auth_headers),
             data=query.model_dump_json(warnings=False),
             timeout=(DATAMESH_READ_TIMEOUT, 300),
+            verify=self._verify,
         )
         if resp.status_code >= 400:
             try:
@@ -327,7 +346,9 @@ class Connector(object):
             )
             use_dask = True
         if use_dask and (stage.container == Container.Dataset):
-            mapper = ZarrClient(self, stage.qhash, session=session, api="query")
+            mapper = ZarrClient(
+                self, stage.qhash, session=session, api="query", verify=self._verify
+            )
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
@@ -350,6 +371,7 @@ class Connector(object):
                     headers=headers,
                     data=query.model_dump_json(warnings=False),
                     timeout=(DATAMESH_READ_TIMEOUT, 900),
+                    verify=self._verify,
                 )
                 if resp.status_code >= 500:
                     if cache_timeout:
@@ -508,7 +530,12 @@ class Connector(object):
             return None
         if stage.container == Container.Dataset or use_dask:
             mapper = ZarrClient(
-                self, datasource_id, session, parameters=parameters, api="zarr"
+                self,
+                datasource_id,
+                session,
+                parameters=parameters,
+                api="zarr",
+                verify=self._verify,
             )
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
@@ -701,7 +728,7 @@ class Connector(object):
 
         # Update the datasource properties
         for key in properties:
-            if key not in ["driver", "schema", "crs"]:
+            if key not in ["driver", "schema", "driver_args"]:
                 setattr(ds, key, properties[key])
         if name:
             ds.name = name

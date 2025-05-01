@@ -21,11 +21,18 @@ except:
 
 # Different default for zarr client
 DATAMESH_READ_TIMEOUT = os.getenv("DATAMESH_READ_TIMEOUT", 60)
-DATAMESH_READ_TIMEOUT = None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
+DATAMESH_READ_TIMEOUT = (
+    None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
+)
 DATAMESH_CONNECT_TIMEOUT = os.getenv("DATAMESH_CONNECT_TIMEOUT", 3.05)
-DATAMESH_CONNECT_TIMEOUT = None if DATAMESH_CONNECT_TIMEOUT == "None" else float(DATAMESH_CONNECT_TIMEOUT)
+DATAMESH_CONNECT_TIMEOUT = (
+    None if DATAMESH_CONNECT_TIMEOUT == "None" else float(DATAMESH_CONNECT_TIMEOUT)
+)
 DATAMESH_WRITE_TIMEOUT = os.getenv("DATAMESH_WRITE_TIMEOUT", 600)
-DATAMESH_WRITE_TIMEOUT = None if DATAMESH_WRITE_TIMEOUT == "None" else float(DATAMESH_WRITE_TIMEOUT)
+DATAMESH_WRITE_TIMEOUT = (
+    None if DATAMESH_WRITE_TIMEOUT == "None" else float(DATAMESH_WRITE_TIMEOUT)
+)
+
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -63,7 +70,8 @@ class ZarrClient(MutableMapping):
         write_timeout=DATAMESH_WRITE_TIMEOUT,
         nocache=False,
         api="query",
-        reference_id=None
+        reference_id=None,
+        verify=True,
     ):
         self.datasource = datasource
         self.session = session
@@ -86,36 +94,46 @@ class ZarrClient(MutableMapping):
         self.read_timeout = read_timeout
         self.connect_timeout = connect_timeout
         self.write_timeout = write_timeout
+        self.verify = verify
 
-    def _retried_request(self, path, method="GET", data=None,
-                         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
-                         read_timeout=DATAMESH_READ_TIMEOUT):
+    def _retried_request(
+        self,
+        path,
+        method="GET",
+        data=None,
+        connect_timeout=DATAMESH_CONNECT_TIMEOUT,
+        read_timeout=DATAMESH_READ_TIMEOUT,
+    ):
         resp = retried_request(
             url=path,
             method=method,
             data=data,
             headers=self.headers,
             retries=self.retries,
-            timeout=(connect_timeout,
-                     read_timeout),
+            timeout=(connect_timeout, read_timeout),
+            verify=self.verify,
         )
         if resp.status_code == 401:
             raise DatameshConnectError(f"Not Authorized {resp.text}")
         return resp
 
     def __getitem__(self, item):
-        resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
-                                     connect_timeout=self.connect_timeout,
-                                     read_timeout=self.read_timeout)
+        resp = self._retried_request(
+            f"{self._proxy}/{self.datasource}/{item}",
+            connect_timeout=self.connect_timeout,
+            read_timeout=self.read_timeout,
+        )
         if resp.status_code >= 300:
             raise KeyError(item)
         return resp.content
 
     def __contains__(self, item):
-        resp = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
-                                     method="HEAD" if self._is_v1 else "GET",
-                                     connect_timeout=self.connect_timeout,
-                                     read_timeout=self.read_timeout)
+        resp = self._retried_request(
+            f"{self._proxy}/{self.datasource}/{item}",
+            method="HEAD" if self._is_v1 else "GET",
+            connect_timeout=self.connect_timeout,
+            read_timeout=self.read_timeout,
+        )
         if resp.status_code != 200:
             return False
         return True
@@ -123,26 +141,34 @@ class ZarrClient(MutableMapping):
     def __setitem__(self, item, value):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support write operations")
-        res = self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
-                                    method=self.method,
-                                    data=value,
-                                    connect_timeout=self.write_timeout,
-                                    read_timeout=self.write_timeout)
+        res = self._retried_request(
+            f"{self._proxy}/{self.datasource}/{item}",
+            method=self.method,
+            data=value,
+            connect_timeout=self.write_timeout,
+            read_timeout=self.write_timeout,
+        )
         if res.status_code >= 300:
-            raise DatameshWriteError(f"Failed to write {item}: {res.status_code} - {res.text}")
+            raise DatameshWriteError(
+                f"Failed to write {item}: {res.status_code} - {res.text}"
+            )
 
     def __delitem__(self, item):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support delete operations")
-        self._retried_request(f"{self._proxy}/{self.datasource}/{item}",
-                              method="DELETE",
-                              connect_timeout=self.connect_timeout,
-                              read_timeout=10)
+        self._retried_request(
+            f"{self._proxy}/{self.datasource}/{item}",
+            method="DELETE",
+            connect_timeout=self.connect_timeout,
+            read_timeout=10,
+        )
 
     def __iter__(self):
-        resp = self._retried_request(f"{self._proxy}/{self.datasource}/",
-                                     connect_timeout=self.connect_timeout,
-                                     read_timeout=self.read_timeout)
+        resp = self._retried_request(
+            f"{self._proxy}/{self.datasource}/",
+            connect_timeout=self.connect_timeout,
+            read_timeout=self.read_timeout,
+        )
         if not resp:
             return
         ex = re.compile(r"""<(a|A)\s+(?:[^>]*?\s+)?(href|HREF)=["'](?P<url>[^"']+)""")
@@ -155,6 +181,7 @@ class ZarrClient(MutableMapping):
 
     def clear(self):
         self.__delitem__("")
+
 
 def _to_zarr(data, store, **kwargs):
     if _VIDEO_SUPPORT:
@@ -173,7 +200,9 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
             ds = connection.get_datasource(datasource_id)
         if append and ds._exists:
             if append not in ds.dataschema.coords:
-                raise DatameshWriteError(f"Append coordinate {append} not in existing zarr")
+                raise DatameshWriteError(
+                    f"Append coordinate {append} not in existing zarr"
+                )
             with xarray.open_zarr(store) as dexist:
                 cexist = dexist[append]
                 if len(cexist.dims) > 1:
@@ -192,10 +221,12 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
                         )
 
                     drop_coords = [c for c in data.coords if c != append]
-                    drop_vars = [v for v in data.data_vars if not append in data[v].dims]
+                    drop_vars = [
+                        v for v in data.data_vars if not append in data[v].dims
+                    ]
                     replace_section = data.isel(
                         **{append_dim: slice(0, len(replace_range))}
-                    ).drop(drop_coords+drop_vars)
+                    ).drop(drop_coords + drop_vars)
                     replace_slice = slice(replace_range[0], replace_range[-1] + 1)
                     # Fail if we are replacing an internal section and ends of coordinates do not match
                     if replace_range[-1] + 1 < len(cexist) and not numpy.array_equal(

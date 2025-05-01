@@ -5,13 +5,29 @@ from .exceptions import DatameshConnectError
 import os
 
 DATAMESH_READ_TIMEOUT = os.getenv("DATAMESH_READ_TIMEOUT", 10)
-DATAMESH_READ_TIMEOUT = None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
+DATAMESH_READ_TIMEOUT = (
+    None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
+)
 DATAMESH_CONNECT_TIMEOUT = os.getenv("DATAMESH_CONNECT_TIMEOUT", 3.05)
-DATAMESH_CONNECT_TIMEOUT = None if DATAMESH_CONNECT_TIMEOUT == "None" else float(DATAMESH_CONNECT_TIMEOUT)
+DATAMESH_CONNECT_TIMEOUT = (
+    None if DATAMESH_CONNECT_TIMEOUT == "None" else float(DATAMESH_CONNECT_TIMEOUT)
+)
 DATAMESH_WRITE_TIMEOUT = os.getenv("DATAMESH_WRITE_TIMEOUT", "None")
-DATAMESH_WRITE_TIMEOUT = None if DATAMESH_WRITE_TIMEOUT == "None" else float(DATAMESH_WRITE_TIMEOUT)
+DATAMESH_WRITE_TIMEOUT = (
+    None if DATAMESH_WRITE_TIMEOUT == "None" else float(DATAMESH_WRITE_TIMEOUT)
+)
 
-def retried_request(url, method="GET", data=None, params=None, headers=None, retries=8, timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_READ_TIMEOUT)):
+
+def retried_request(
+    url,
+    method="GET",
+    data=None,
+    params=None,
+    headers=None,
+    retries=8,
+    timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_READ_TIMEOUT),
+    verify=True,
+):
     """
     Retried request function with exponential backoff
 
@@ -45,7 +61,13 @@ def retried_request(url, method="GET", data=None, params=None, headers=None, ret
     while retried < retries:
         try:
             resp = requests.request(
-                method=method, url=url, data=data, params=params, headers=headers, timeout=timeout
+                method=method,
+                url=url,
+                data=data,
+                params=params,
+                headers=headers,
+                timeout=timeout,
+                verify=verify,
             )
             # Bad Gateway results in waiting for 10 seconds
             # and retrying
@@ -61,6 +83,8 @@ def retried_request(url, method="GET", data=None, params=None, headers=None, ret
             sleep(0.1 * 2**retried)
             retried += 1
             if retried == retries:
-                raise DatameshConnectError(f"Failed to connect to {url} after {retries} retries with error: {e}")
+                raise DatameshConnectError(
+                    f"Failed to connect to {url} after {retries} retries with error: {e}"
+                )
         else:
             return resp
