@@ -413,7 +413,7 @@ class Datasource(BaseModel):
             if "t" in self.coordinates:
                 self.tend = to_datetime(data[self.coordinates["t"]].max())
             else:
-                self.tend = datetime.datetime.now(tz=datetime.UTC)
+                self.tend = datetime.datetime.now(tz=datetime.timezone.utc)
                 warnings.warn("Setting tend to current time")
         return self
 
