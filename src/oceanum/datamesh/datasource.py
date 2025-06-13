@@ -292,13 +292,13 @@ class Datasource(BaseModel):
     modified: Optional[datetime.datetime] = Field(
         title="Last modified time",
         description="Last time datasource was modified",
-        default=datetime.datetime.now(tz=datetime.UTC),
+        default=datetime.datetime.now(tz=datetime.timezone.utc),
         frozen=True,
     )
     created: Optional[datetime.datetime] = Field(
         title="Time of creation",
         description="Time when the datasource was first created",
-        default=datetime.datetime.now(tz=datetime.UTC),
+        default=datetime.datetime.now(tz=datetime.timezone.utc,
         frozen=True,
     )
     expires: Optional[datetime.datetime] = Field(
