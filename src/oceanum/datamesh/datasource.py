@@ -289,10 +289,22 @@ class Datasource(BaseModel):
         description="URL to further details about the datasource",
         default=None,
     )
-    last_modified: Optional[datetime.datetime] = Field(
+    modified: Optional[datetime.datetime] = Field(
         title="Last modified time",
         description="Last time datasource was modified",
-        default=datetime.datetime.utcnow(),
+        default=datetime.datetime.now(tz=datetime.UTC),
+        frozen=True,
+    )
+    created: Optional[datetime.datetime] = Field(
+        title="Time of creation",
+        description="Time when the datasource was first created",
+        default=datetime.datetime.now(tz=datetime.UTC),
+        frozen=True,
+    )
+    expires: Optional[datetime.datetime] = Field(
+        title="Expiry time",
+        description="Time when the datasource expires and should get automatically deleted",
+        default=None,
         frozen=True,
     )
     driver_args: Optional[dict] = Field(
@@ -401,7 +413,7 @@ class Datasource(BaseModel):
             if "t" in self.coordinates:
                 self.tend = to_datetime(data[self.coordinates["t"]].max())
             else:
-                self.tend = datetime.datetime.utcnow()
+                self.tend = datetime.datetime.now(tz=datetime.UTC)
                 warnings.warn("Setting tend to current time")
         return self
 
