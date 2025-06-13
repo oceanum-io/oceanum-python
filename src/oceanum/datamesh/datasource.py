@@ -298,7 +298,7 @@ class Datasource(BaseModel):
     created: Optional[datetime.datetime] = Field(
         title="Time of creation",
         description="Time when the datasource was first created",
-        default=datetime.datetime.now(tz=datetime.timezone.utc,
+        default=datetime.datetime.now(tz=datetime.timezone.utc),
         frozen=True,
     )
     expires: Optional[datetime.datetime] = Field(
