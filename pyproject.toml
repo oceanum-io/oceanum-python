@@ -63,6 +63,7 @@ dynamic = ["version"]
 test = [
   "pytest",
   "pytest-env",
+  "pytest-asyncio"
 ]
 video = [
     "xarray_video",
