@@ -31,10 +31,10 @@ def ls(
 ):
     """List contents in the oceanum storage (the root directory by default)."""
     contents = filesystem.ls(
-        path=path, 
-        recursive=recursive, 
-        detail=long, 
-        token=f"Bearer {ctx.obj.token.access_token}", 
+        path=path,
+        recursive=recursive,
+        detail=long,
+        token=f"Bearer {ctx.obj.token.access_token}",
         service=f"https://storage.{ctx.obj.domain}/",
     )
     if long:
@@ -66,7 +66,7 @@ def get(
         source=source,
         dest=dest,
         recursive=recursive,
-        token=f"Bearer {ctx.obj.token.access_token}", 
+        token=f"Bearer {ctx.obj.token.access_token}",
         service=f"https://storage.{ctx.obj.domain}/",
     )
 
@@ -88,7 +88,7 @@ def put(
         source=source,
         dest=dest,
         recursive=recursive,
-        token=f"Bearer {ctx.obj.token.access_token}", 
+        token=f"Bearer {ctx.obj.token.access_token}",
         service=f"https://storage.{ctx.obj.domain}/",
     )
 
@@ -102,6 +102,6 @@ def rm(ctx: click.Context, recursive: bool, path: str):
     filesystem.rm(
         path=path,
         recursive=recursive,
-        token=f"Bearer {ctx.obj.token.access_token}", 
+        token=f"Bearer {ctx.obj.token.access_token}",
         service=f"https://storage.{ctx.obj.domain}/",
     )
