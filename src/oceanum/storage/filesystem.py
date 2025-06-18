@@ -20,7 +20,12 @@ from fsspec.exceptions import FSTimeoutError
 from fsspec.utils import isfilelike, nullcontext, tokenize
 from fsspec.implementations.memory import MemoryFile
 
-DEFAULT_CONFIG = {"STORAGE_SERVICE": "https://storage.oceanum.io"}
+DEFAULT_CONFIG = {"OCEANUM_DOMAIN": "oceanum.io"}
+
+def _get_storage_service_url(domain: str) -> str:
+    """Construct storage service URL from domain."""
+    return f"https://storage.{domain}/"
+
 _DEFAULT_BATCH_SIZE = 16
 _NOFILES_DEFAULT_BATCH_SIZE = 16
 logger = logging.getLogger("fsspec.oceanum")
@@ -66,7 +71,7 @@ class FileSystem(AsyncFileSystem):
     def __init__(
         self,
         token:str|None=None,
-        service:str=os.environ.get("STORAGE_SERVICE", DEFAULT_CONFIG["STORAGE_SERVICE"]),
+        service:str|None=None,
         asynchronous:bool=False,
         loop:asyncio.AbstractEventLoop|None=None,
         timeout:int=3600,
@@ -76,12 +81,16 @@ class FileSystem(AsyncFileSystem):
 
         Args:
             token (string): Your datamesh access token. Defaults to os.environ.get("DATAMESH_TOKEN", None).
-            service (string, optional): URL of datamesh service. Defaults to os.environ.get("STORAGE_SERVICE", "https://storage.oceanum.io").
+            service (string, optional): URL of datamesh service. If not provided, constructed from OCEANUM_DOMAIN environment variable (defaults to "oceanum.io").
             timeout (int, optional): Timeout for requests in seconds. Defaults to 3600.
             batch_size (int, optional): Number of concurrent requests. Defaults to 16.
         Raises:
             ValueError: Missing or invalid arguments
         """
+        if service is None:
+            domain = os.environ.get("OCEANUM_DOMAIN", DEFAULT_CONFIG["OCEANUM_DOMAIN"])
+            service = _get_storage_service_url(domain)
+        self._service = service
         self._token = token or os.environ.get("DATAMESH_TOKEN", None)
         url = urlparse(service)
         self._proto = url.scheme
@@ -153,7 +162,7 @@ class FileSystem(AsyncFileSystem):
             params["file_prefix"] = file_prefix
         if match_glob:
             params["match_glob"] = match_glob
-        
+
         async with session.get(self._base_url + spath, params=params or None) as r:
             try:
                 self._raise_not_found_for_status(r, path)
@@ -383,7 +392,7 @@ def ls(
     recursive: bool,
     detail: bool = False,
     token: str | None = None,
-    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    service: str | None = None,
     **kwargs,
 ):
     """List contents in the oceanum storage (the root directory by default).
@@ -410,7 +419,7 @@ def ls(
     fs = FileSystem(token=token, service=service)
     try:
         maxdepth = None if recursive else 1
-        paths = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=detail, 
+        paths = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=detail,
                         **kwargs)
         if not paths:
             raise FileNotFoundError(f"Path {path} not found")
@@ -426,7 +435,7 @@ def get(
     dest: str,
     recursive: bool = False,
     token: str | None = None,
-    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    service: str | None = None,
 ):
     """Copy remote source to local dest, or multiple sources to directory.
 
@@ -484,7 +493,7 @@ def put(
     dest: str,
     recursive: bool = False,
     token: str | None = None,
-    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    service: str | None = None,
 ):
     """Copy local source to remote dest, or multiple sources to directory.
 
@@ -525,7 +534,7 @@ def rm(
     path: str,
     recursive: bool = False,
     token: str | None = None,
-    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    service: str | None = None,
 ):
     """Remove path file or directory.
 
