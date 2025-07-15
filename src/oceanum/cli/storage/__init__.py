@@ -95,13 +95,105 @@ def put(
 
 @storage.command()
 @click.option("-r", "--recursive", is_flag=True, help="Remove directories recursively")
+@click.option("-f", "--force", is_flag=True, help="Force removal without confirmation")
 @click.argument("path")
 @click.pass_context
-def rm(ctx: click.Context, recursive: bool, path: str):
+@login_required
+def rm(ctx: click.Context, recursive: bool, force: bool, path: str):
     """Remove PATH."""
-    filesystem.rm(
-        path=path,
-        recursive=recursive,
-        token=f"Bearer {ctx.obj.token.access_token}",
-        service=f"https://storage.{ctx.obj.domain}/",
-    )
+    if not force:
+        if recursive:
+            message = f"Are you sure you want to recursively remove '{path}' and all its contents?"
+        else:
+            message = f"Are you sure you want to remove '{path}'?"
+
+        if not click.confirm(message):
+            click.echo("Operation cancelled.")
+            return
+
+    try:
+        filesystem.rm(
+            path=path,
+            recursive=recursive,
+            token=f"Bearer {ctx.obj.token.access_token}",
+            service=f"https://storage.{ctx.obj.domain}/",
+        )
+        click.echo(f"Successfully removed: {path}")
+    except FileNotFoundError:
+        click.echo(f"Error: Path '{path}' not found", err=True)
+        ctx.exit(1)
+    except OSError as e:
+        if "Directory not empty" in str(e):
+            click.echo(f"Error: Directory '{path}' is not empty. Use -r/--recursive to remove non-empty directories.", err=True)
+        else:
+            click.echo(f"Error: {e}", err=True)
+        ctx.exit(1)
+    except Exception as e:
+        click.echo(f"Error removing '{path}': {e}", err=True)
+        ctx.exit(1)
+
+
+@storage.command()
+@click.argument("path")
+@click.pass_context
+@login_required
+def exists(ctx: click.Context, path: str):
+    """Check if PATH exists in storage."""
+    try:
+        result = filesystem.exists(
+            path=path,
+            token=f"Bearer {ctx.obj.token.access_token}",
+            service=f"https://storage.{ctx.obj.domain}/",
+        )
+        if result:
+            click.echo(f"EXISTS: {path}")
+        else:
+            click.echo(f"NOT FOUND: {path}")
+            ctx.exit(1)
+    except Exception as e:
+        click.echo(f"Error checking '{path}': {e}", err=True)
+        ctx.exit(1)
+
+
+@storage.command()
+@click.argument("path")
+@click.pass_context
+@login_required
+def isfile(ctx: click.Context, path: str):
+    """Check if PATH is a file in storage."""
+    try:
+        result = filesystem.isfile(
+            path=path,
+            token=f"Bearer {ctx.obj.token.access_token}",
+            service=f"https://storage.{ctx.obj.domain}/",
+        )
+        if result:
+            click.echo(f"FILE: {path}")
+        else:
+            click.echo(f"NOT A FILE: {path}")
+            ctx.exit(1)
+    except Exception as e:
+        click.echo(f"Error checking '{path}': {e}", err=True)
+        ctx.exit(1)
+
+
+@storage.command()
+@click.argument("path")
+@click.pass_context
+@login_required
+def isdir(ctx: click.Context, path: str):
+    """Check if PATH is a directory in storage."""
+    try:
+        result = filesystem.isdir(
+            path=path,
+            token=f"Bearer {ctx.obj.token.access_token}",
+            service=f"https://storage.{ctx.obj.domain}/",
+        )
+        if result:
+            click.echo(f"DIRECTORY: {path}")
+        else:
+            click.echo(f"NOT A DIRECTORY: {path}")
+            ctx.exit(1)
+    except Exception as e:
+        click.echo(f"Error checking '{path}': {e}", err=True)
+        ctx.exit(1)
