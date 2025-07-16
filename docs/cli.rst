@@ -44,9 +44,21 @@ Upload content to storage system
 
 .. command-output:: oceanum storage put --help
 
-Remove content from storage system (not implemented yet)
+Remove content from storage system
 
 .. command-output:: oceanum storage rm --help
+
+Check if path exists in storage system
+
+.. command-output:: oceanum storage exists --help
+
+Check if path is a file in storage system
+
+.. command-output:: oceanum storage isfile --help
+
+Check if path is a directory in storage system
+
+.. command-output:: oceanum storage isdir --help
 
 Oceanum PRAX commands
 ---------------------
