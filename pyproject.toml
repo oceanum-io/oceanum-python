@@ -9,10 +9,10 @@ readme = "README.rst"
 license = { file = "LICENSE" }
 keywords = ["oceanum", "datamesh", "oceanum.io"]
 authors = [
-  { name = "Oceanum Developers", email="developers@oceanum.science" },
+    { name = "Oceanum Developers", email = "developers@oceanum.science" },
 ]
 maintainers = [
-  {name = "Oceanum Developers", email = "developers@oceanum.science"},
+    { name = "Oceanum Developers", email = "developers@oceanum.science" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -29,57 +29,47 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-  "aiohttp",
-  "click",
-  "cftime",
-  "dask",
-  "decorator",
-  "fsspec",
-  "geojson-pydantic",
-  "geopandas",
-  "h5netcdf",
-  "numpy",
-  "orjson",
-  "pandas",
-  "platformdirs",
-  "pyarrow",
-  "pydantic[email]",
-  "shapely",
-  "tabulate",
-  "xarray",
-  "rioxarray",
-  "zarr<3",
-  "numcodecs<0.16.0",
-  "dask[dataframe,distributed]",
-  "msgpack",
-  "cftime",
-  "python-jsonpath",
-  "requests",
-  "pip-system-certs"
+    "aiohttp",
+    "click",
+    "cftime",
+    "dask",
+    "decorator",
+    "fsspec",
+    "geojson-pydantic",
+    "geopandas",
+    "h5netcdf",
+    "numpy",
+    "orjson",
+    "pandas",
+    "platformdirs",
+    "pyarrow",
+    "pydantic[email]",
+    "shapely",
+    "tabulate",
+    "xarray",
+    "rioxarray",
+    "zarr<3",
+    "numcodecs<0.16.0",
+    "dask[dataframe,distributed]",
+    "msgpack",
+    "cftime",
+    "python-jsonpath",
+    "requests",
+    "pip-system-certs",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = [
-  "pytest",
-  "pytest-env",
-  "pytest-asyncio"
-]
-video = [
-    "xarray_video",
-]
-eidos= [
-    "oceanum.eidos",
-]
+test = ["pytest", "pytest-env", "pytest-asyncio"]
+video = ["xarray_video"]
+eidos = ["oceanum.eidos"]
 docs = [
-  "autodoc-pydantic",
-  "pydata-sphinx-theme",
-  "sphinx",
-  "sphinxcontrib-programoutput",
+    "autodoc-pydantic",
+    "pydata-sphinx-theme",
+    "sphinx",
+    "sphinxcontrib-programoutput",
 ]
-prax = [
-  "oceanum-prax",
-]
+prax = ["oceanum-prax"]
 
 [project.urls]
 "Homepage" = "https://oceanum.io/"
@@ -98,30 +88,21 @@ oceanum = "oceanum.__main__:main"
 "datamesh" = "oceanum.cli.datamesh"
 "storage" = "oceanum.cli.storage"
 
-[project.entry-points."oceanum.cli.prax"]
-"main" = "oceanum.cli.prax.main"
-"project" = "oceanum.cli.prax.project"
-"workflows" = "oceanum.cli.prax.workflows"
-"stage" = "oceanum.cli.prax.stage"
-"log" = "oceanum.cli.prax.log"
-"route" = "oceanum.cli.prax.route"
-"user" = "oceanum.cli.prax.user"
-"client" = "oceanum.cli.prax.client"
 
 [tool.setuptools.dynamic]
-version = {attr = "oceanum.__version__"}
+version = { attr = "oceanum.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src/"]
 include = [
-  "oceanum",
-  "oceanum.datamesh",
-  "oceanum.storage",
-  "oceanum.cli.main",
-  "oceanum.cli.common",
-  "oceanum.cli.auth",
-  "oceanum.cli.datamesh",
-  "oceanum.cli.storage",
+    "oceanum",
+    "oceanum.datamesh",
+    "oceanum.storage",
+    "oceanum.cli.main",
+    "oceanum.cli.common",
+    "oceanum.cli.auth",
+    "oceanum.cli.datamesh",
+    "oceanum.cli.storage",
 ]
 exclude = ["tests", "docs"]
 
@@ -130,6 +111,4 @@ universal = true
 
 [tool.pytest.ini_options]
 required_plugins = "pytest-env"
-env = [
-  "STORAGE_SERVICE = https://storage.oceanum.io",
-]
+env = ["STORAGE_SERVICE = https://storage.oceanum.io"]
