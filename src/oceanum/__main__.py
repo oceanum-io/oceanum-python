@@ -4,15 +4,18 @@ import click
 
 from importlib.metadata import entry_points
 
-from oceanum.cli.main import main
+from oceanum.cli.main.__init__ import main
 from oceanum.cli import auth, datamesh, storage
 
 # Load CLI plugins from entry points
 for cli_ep in entry_points(group='oceanum.cli'):
     try:
         plugin_module = cli_ep.load()
+        # Handle case where entry point directly returns a click.Group
+        if isinstance(plugin_module, click.core.Group):
+            main.add_command(plugin_module, name=cli_ep.name)
         # Look for the command with the same name as the entry point
-        if hasattr(plugin_module, cli_ep.name):
+        elif hasattr(plugin_module, cli_ep.name):
             command = getattr(plugin_module, cli_ep.name)
             if hasattr(command, '__call__') and hasattr(command, 'name'):
                 main.add_command(command, name=cli_ep.name)
