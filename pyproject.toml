@@ -94,17 +94,11 @@ version = { attr = "oceanum.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src/"]
-include = [
-    "oceanum",
-    "oceanum.datamesh",
-    "oceanum.storage",
-    "oceanum.cli.main",
-    "oceanum.cli.common",
-    "oceanum.cli.auth",
-    "oceanum.cli.datamesh",
-    "oceanum.cli.storage",
-]
-exclude = ["tests", "docs"]
+include = ["oceanum*"]
+exclude = ["tests*", "docs*"]
+
+[tool.setuptools.package-dir]
+"" = "src"
 
 [tool.distutils.bdist_wheel]
 universal = true
