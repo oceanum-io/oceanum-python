@@ -105,4 +105,5 @@ universal = true
 
 [tool.pytest.ini_options]
 required_plugins = "pytest-env"
+pythonpath = ["src"]
 env = ["STORAGE_SERVICE = https://storage.oceanum.io"]
