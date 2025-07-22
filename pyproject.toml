@@ -93,20 +93,10 @@ oceanum = "oceanum.__main__:main"
 [project.entry-points."fsspec.specs"]
 "oceanum" = "oceanum.storage:FileSystem"
 
-[project.entry-points."oceanum.cli"]
+[project.entry-points."oceanum.cli.extensions"]
 "auth" = "oceanum.cli.auth"
 "datamesh" = "oceanum.cli.datamesh"
 "storage" = "oceanum.cli.storage"
-
-[project.entry-points."oceanum.cli.prax"]
-"main" = "oceanum.cli.prax.main"
-"project" = "oceanum.cli.prax.project"
-"workflows" = "oceanum.cli.prax.workflows"
-"stage" = "oceanum.cli.prax.stage"
-"log" = "oceanum.cli.prax.log"
-"route" = "oceanum.cli.prax.route"
-"user" = "oceanum.cli.prax.user"
-"client" = "oceanum.cli.prax.client"
 
 [tool.setuptools.dynamic]
 version = {attr = "oceanum.__version__"}
@@ -117,11 +107,7 @@ include = [
   "oceanum",
   "oceanum.datamesh",
   "oceanum.storage",
-  "oceanum.cli.main",
-  "oceanum.cli.common",
-  "oceanum.cli.auth",
-  "oceanum.cli.datamesh",
-  "oceanum.cli.storage",
+  "oceanum.cli",
 ]
 exclude = ["tests", "docs"]
 

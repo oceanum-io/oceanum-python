@@ -187,7 +187,6 @@ def test_cli_rm_file_force(fs):
 
     # Verify file exists
     assert fs.exists(test_path)
-
     # Remove with force flag
     result = run_cli_command(["storage", "rm", "-f", test_path])
     assert result.returncode == 0

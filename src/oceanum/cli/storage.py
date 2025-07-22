@@ -1,11 +1,11 @@
 
 import click
 
-from ...storage import filesystem
+from ..storage import filesystem
 
-from ..main import main
-from ..common.utils import bytes_to_human, item_to_long
-from ..auth import login_required
+from . import main
+from .utils import bytes_to_human, item_to_long
+from .auth import login_required
 
 # =====================================================================================
 # Storage CLI
