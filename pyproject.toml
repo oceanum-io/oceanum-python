@@ -108,6 +108,7 @@ include = [
   "oceanum.datamesh",
   "oceanum.storage",
   "oceanum.cli",
+  "oceanum.cli.models",
 ]
 exclude = ["tests", "docs"]
 
