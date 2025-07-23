@@ -1,6 +1,5 @@
 import os
 import sys
-import importlib
 from importlib.metadata import entry_points
 from oceanum.cli import main
 
