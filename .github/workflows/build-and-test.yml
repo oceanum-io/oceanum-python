@@ -8,7 +8,7 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     env:
-      DATAMESH_TOKEN: ${{ secrets.DATAMESH_TOKEN }}
+      OCEANUM_TEST_DATAMESH_TOKEN: ${{ secrets.DATAMESH_TOKEN }}
     steps:
     -
       name: Checkout repo
