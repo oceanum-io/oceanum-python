@@ -4,6 +4,19 @@ from platformdirs import user_data_dir
 
 USER_DATA_DIR = Path(user_data_dir('oceanum',  'Oceanum LTD.'))
 
+def get_bearer_token(ctx):
+    """
+    Get the Bearer access token from the context or service token if provided.
+    
+    Args:
+        ctx: Click context object.
+    
+    Returns:
+        str: Access token or service token.
+    """
+    if ctx.obj and ctx.obj.token and ctx.obj.token.access_token:
+        return f"Bearer {ctx.obj.token.access_token}"
+
 def bytes_to_human(size):
     """Convert bytes to human-readable format."""
     if size < 1024:

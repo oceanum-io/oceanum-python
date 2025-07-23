@@ -4,7 +4,7 @@ import click
 from ..storage import filesystem
 
 from . import main
-from .utils import bytes_to_human, item_to_long
+from .utils import bytes_to_human, item_to_long, get_bearer_token
 from .auth import login_required
 
 # =====================================================================================
@@ -34,7 +34,7 @@ def ls(
         path=path,
         recursive=recursive,
         detail=long,
-        token=f"Bearer {ctx.obj.token.access_token}",
+        token=get_bearer_token(ctx),
         service=f"https://storage.{ctx.obj.domain}/",
     )
     if long:
@@ -66,7 +66,7 @@ def get(
         source=source,
         dest=dest,
         recursive=recursive,
-        token=f"Bearer {ctx.obj.token.access_token}",
+        token=get_bearer_token(ctx),
         service=f"https://storage.{ctx.obj.domain}/",
     )
 
@@ -88,7 +88,7 @@ def put(
         source=source,
         dest=dest,
         recursive=recursive,
-        token=f"Bearer {ctx.obj.token.access_token}",
+        token=get_bearer_token(ctx),
         service=f"https://storage.{ctx.obj.domain}/",
     )
 
@@ -115,7 +115,7 @@ def rm(ctx: click.Context, recursive: bool, force: bool, path: str):
         filesystem.rm(
             path=path,
             recursive=recursive,
-            token=f"Bearer {ctx.obj.token.access_token}",
+            token=get_bearer_token(ctx),
             service=f"https://storage.{ctx.obj.domain}/",
         )
         click.echo(f"Successfully removed: {path}")
@@ -142,7 +142,7 @@ def exists(ctx: click.Context, path: str):
     try:
         result = filesystem.exists(
             path=path,
-            token=f"Bearer {ctx.obj.token.access_token}",
+            token=get_bearer_token(ctx),
             service=f"https://storage.{ctx.obj.domain}/",
         )
         if result:
@@ -164,7 +164,7 @@ def isfile(ctx: click.Context, path: str):
     try:
         result = filesystem.isfile(
             path=path,
-            token=f"Bearer {ctx.obj.token.access_token}",
+            token=get_bearer_token(ctx),
             service=f"https://storage.{ctx.obj.domain}/",
         )
         if result:
@@ -186,7 +186,7 @@ def isdir(ctx: click.Context, path: str):
     try:
         result = filesystem.isdir(
             path=path,
-            token=f"Bearer {ctx.obj.token.access_token}",
+            token=get_bearer_token(ctx),
             service=f"https://storage.{ctx.obj.domain}/",
         )
         if result:
