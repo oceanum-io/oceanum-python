@@ -60,7 +60,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-env", "pytest-asyncio"]
+test = ["pytest", "pytest-env", "pytest-asyncio", "dotenv",]
 video = ["xarray_video"]
 eidos = ["oceanum.eidos"]
 docs = [
