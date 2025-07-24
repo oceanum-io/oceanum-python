@@ -2,9 +2,11 @@
 
 import click
 
-from ..main import main
-from ..auth import login_required
-from ...datamesh.connection import Connector
+from . import main
+from .utils import get_bearer_token
+from .auth import login_required
+from ..datamesh.connection import Connector
+
 
 @main.group(help='Datamesh Datasources commands')
 def datamesh():
@@ -18,7 +20,7 @@ class DatameshClient:
     def __init__(self, ctx: click.Context) -> None:
         service_url = f'https://datamesh.{ctx.obj.domain}/'
         self.connector = Connector(
-            token= f'Bearer {ctx.obj.token.access_token}', 
+            token=get_bearer_token(ctx),
             service=service_url
         )
 

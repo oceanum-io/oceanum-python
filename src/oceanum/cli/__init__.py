@@ -1,9 +1,7 @@
-"""Console script for oceanum library."""
-
 import click
 import os
 
-from ..common.models import ContextObject, TokenResponse, Auth0Config
+from .models import ContextObject, TokenResponse, Auth0Config
 
 @click.group()
 @click.pass_context
@@ -25,4 +23,3 @@ def main(ctx: click.Context):
         auth0=auth0_config
     )
     click.help_option('-h', '--help')
-

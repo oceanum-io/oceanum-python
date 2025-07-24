@@ -60,7 +60,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-env", "pytest-asyncio"]
+test = ["pytest", "pytest-env", "pytest-asyncio", "python-dotenv",]
 video = ["xarray_video"]
 eidos = ["oceanum.eidos"]
 docs = [
@@ -83,22 +83,24 @@ oceanum = "oceanum.__main__:main"
 [project.entry-points."fsspec.specs"]
 "oceanum" = "oceanum.storage:FileSystem"
 
-[project.entry-points."oceanum.cli"]
+[project.entry-points."oceanum.cli.extensions"]
 "auth" = "oceanum.cli.auth"
 "datamesh" = "oceanum.cli.datamesh"
 "storage" = "oceanum.cli.storage"
-
 
 [tool.setuptools.dynamic]
 version = { attr = "oceanum.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src/"]
-include = ["oceanum*"]
-exclude = ["tests*", "docs*"]
-
-[tool.setuptools.package-dir]
-"" = "src"
+include = [
+  "oceanum",
+  "oceanum.datamesh",
+  "oceanum.storage",
+  "oceanum.cli",
+  "oceanum.cli.models",
+]
+exclude = ["tests", "docs"]
 
 [tool.distutils.bdist_wheel]
 universal = true

@@ -6,9 +6,9 @@ import requests
 
 from functools import update_wrapper
 
-from ..main import main
-from ..common.symbols import spin, err
-from ..common.models import DeviceCodeResponse, TokenResponse, Auth0Config
+from . import main
+from .symbols import spin, err
+from .models import DeviceCodeResponse, TokenResponse, Auth0Config
 
 
 class Auth0Client:
