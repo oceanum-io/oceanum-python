@@ -29,12 +29,16 @@ jobs:
           username: ${{ vars.GCP_AR_DOCKER_USERNAME }}
           password: ${{ secrets.GCP_AR_DOCKER_PASSWORD }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
+          platforms: linux/amd64,linux/arm64
           context: .
           file: Dockerfile
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}-cache
