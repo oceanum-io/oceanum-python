@@ -37,8 +37,8 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}-cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}-cache
           build-args: |
             PYTHON_VER=${{ matrix.python-version }}
             DEBIAN_VER=${{ matrix.debian-version }}
