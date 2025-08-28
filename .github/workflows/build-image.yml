@@ -17,9 +17,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -27,8 +24,11 @@ jobs:
           username: ${{ vars.GCP_AR_DOCKER_USERNAME }}
           password: ${{ secrets.GCP_AR_DOCKER_PASSWORD }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -36,7 +36,7 @@ jobs:
             ${{ runner.os }}-buildx-
 
       - name: Build Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         env:
           DOCKER_BUILDKIT: ${{ env.DOCKER_BUILDKIT }}
           REGISTRY: ${{ env.REGISTRY }}
@@ -46,6 +46,8 @@ jobs:
         with:
           context: .
           file: Dockerfile
+          cache-from: type=repo,src=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
+          cache-to: type=repo,dest=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
           build-args: |
             PYTHON_VER=${{ env.PYTHON_VER }}
             DEBIAN_VER=${{ env.DEBIAN_VER }}
