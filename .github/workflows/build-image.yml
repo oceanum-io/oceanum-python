@@ -27,14 +27,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
       - name: Build Docker image
         uses: docker/build-push-action@v6
         env:
@@ -52,4 +44,4 @@ jobs:
             PYTHON_VER=${{ env.PYTHON_VER }}
             DEBIAN_VER=${{ env.DEBIAN_VER }}
           push: true
-          tags: $REGISTRY/$REPOSITORY/$IMAGE_NAME:$IMAGE_TAG
+          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
