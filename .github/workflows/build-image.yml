@@ -36,10 +36,10 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          cache-from: type=repo,src=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
-          cache-to: type=repo,dest=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
+          cache-from: type=registry,src=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
+          cache-to: type=registry,dest=${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}
           build-args: |
-            PYTHON_VER=${{ env.PYTHON_VER }}
-            DEBIAN_VER=${{ env.DEBIAN_VER }}
+            PYTHON_VER=${{ matrix.python-version }}
+            DEBIAN_VER=${{ matrix.debian-version }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ matrix.python-version }}-${{ matrix.debian-version }}-${{ github.ref_name }}
