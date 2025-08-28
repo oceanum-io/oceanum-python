@@ -33,12 +33,6 @@ jobs:
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
-        env:
-          DOCKER_BUILDKIT: ${{ env.DOCKER_BUILDKIT }}
-          REGISTRY: ${{ env.REGISTRY }}
-          PYTHON_VER: ${{ matrix.python-version }}
-          DEBIAN_VER: ${{ matrix.debian-version }}
-          IMAGE_TAG: ${{ env.PYTHON_VER }}-${{ env.DEBIAN_VER }}-${{ github.ref_name }}
         with:
           context: .
           file: Dockerfile
@@ -48,4 +42,4 @@ jobs:
             PYTHON_VER=${{ env.PYTHON_VER }}
             DEBIAN_VER=${{ env.DEBIAN_VER }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ matrix.python-version }}-${{ matrix.debian-version }}-${{ github.ref_name }}
