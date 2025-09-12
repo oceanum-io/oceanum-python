@@ -32,7 +32,7 @@ from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
-from .utils import retried_request, DATAMESH_READ_TIMEOUT, DATAMESH_WRITE_TIMEOUT
+from .utils import retried_request, DATAMESH_WRITE_TIMEOUT, DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT
 from ..__init__ import __version__
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
@@ -256,7 +256,7 @@ class Connector(object):
         resp = retried_request(
             f"{self._gateway}/data/{datasource_id}",
             headers={"Accept": data_format, **self._auth_headers},
-            timeout=(DATAMESH_READ_TIMEOUT, 1800),
+            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
             verify=self._verify,
         )
         self._validate_response(resp)
@@ -272,6 +272,8 @@ class Connector(object):
         append=None,
         overwrite=False,
     ):
+        # Connection timeout does not act in the same way in write and read contexts
+        # and using a short connection timeout in write contexts leads to closed connections
         if overwrite:
             resp = retried_request(
                 f"{self._gateway}/data/{datasource_id}",
@@ -306,7 +308,8 @@ class Connector(object):
             method="POST",
             headers=session.add_header(self._auth_headers),
             data=query.model_dump_json(warnings=False),
-            timeout=(DATAMESH_READ_TIMEOUT, 300),
+            timeout=(DATAMESH_CONNECT_TIMEOUT,
+                     DATAMESH_STAGE_READ_TIMEOUT),
             verify=self._verify,
         )
         if resp.status_code >= 400:
@@ -370,7 +373,7 @@ class Connector(object):
                     method="POST",
                     headers=headers,
                     data=query.model_dump_json(warnings=False),
-                    timeout=(DATAMESH_READ_TIMEOUT, 900),
+                    timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
                     verify=self._verify,
                 )
                 if resp.status_code >= 500:

@@ -4,17 +4,51 @@ import numpy as np
 from .exceptions import DatameshConnectError
 import os
 
-DATAMESH_READ_TIMEOUT = os.getenv("DATAMESH_READ_TIMEOUT", 10)
-DATAMESH_READ_TIMEOUT = (
-    None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
-)
+
+# Timeouts in seconds to establish connection to datamesh services
+# for read types of operations
 DATAMESH_CONNECT_TIMEOUT = os.getenv("DATAMESH_CONNECT_TIMEOUT", 3.05)
 DATAMESH_CONNECT_TIMEOUT = (
     None if DATAMESH_CONNECT_TIMEOUT == "None" else float(DATAMESH_CONNECT_TIMEOUT)
 )
+
+# Timeout in seconds to read data from datamesh services
+# for small json payloads type of operations
+DATAMESH_READ_TIMEOUT = os.getenv("DATAMESH_READ_TIMEOUT", 10)
+DATAMESH_READ_TIMEOUT = (
+    None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
+)
+
+# Timeout in seconds for staging endpoint
+DATAMESH_STAGE_READ_TIMEOUT = os.getenv("DATAMESH_STAGE_READ_TIMEOUT", 300)
+DATAMESH_STAGE_READ_TIMEOUT = (
+    None if DATAMESH_STAGE_READ_TIMEOUT == "None" else float(DATAMESH_STAGE_READ_TIMEOUT)
+)
+
+# Timeout in seconds for bulk download operations
+DATAMESH_DOWNLOAD_TIMEOUT = os.getenv("DATAMESH_DOWNLOAD_TIMEOUT", 900)
+DATAMESH_DOWNLOAD_TIMEOUT = (
+    None if DATAMESH_DOWNLOAD_TIMEOUT == "None" else float(DATAMESH_DOWNLOAD_TIMEOUT)
+)
+
+# Timeout in seconds for bulk write operations
 DATAMESH_WRITE_TIMEOUT = os.getenv("DATAMESH_WRITE_TIMEOUT", "None")
 DATAMESH_WRITE_TIMEOUT = (
     None if DATAMESH_WRITE_TIMEOUT == "None" else float(DATAMESH_WRITE_TIMEOUT)
+)
+
+# Timeout in seconds for zarr chunk read operations
+DATAMESH_CHUNK_READ_TIMEOUT = os.getenv("DATAMESH_CHUNK_READ_TIMEOUT", 60)
+DATAMESH_CHUNK_READ_TIMEOUT = (
+    None if DATAMESH_CHUNK_READ_TIMEOUT == "None" else float(DATAMESH_CHUNK_READ_TIMEOUT)
+)
+
+# Timeout in seconds for zarr chunk write operations
+# much larger than for read seems to be required possibly because write acknowledgement
+# occurs after the chunk has been fully written
+DATAMESH_CHUNK_WRITE_TIMEOUT = os.getenv("DATAMESH_CHUNK_WRITE_TIMEOUT", 600)
+DATAMESH_CHUNK_WRITE_TIMEOUT = (
+    None if DATAMESH_CHUNK_WRITE_TIMEOUT == "None" else float(DATAMESH_CHUNK_WRITE_TIMEOUT)
 )
 
 

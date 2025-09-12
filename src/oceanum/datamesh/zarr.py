@@ -10,7 +10,7 @@ import fsspec
 
 from .exceptions import DatameshConnectError, DatameshWriteError
 from .session import Session
-from .utils import retried_request, DATAMESH_CONNECT_TIMEOUT
+from .utils import retried_request, DATAMESH_CONNECT_TIMEOUT, DATAMESH_CHUNK_READ_TIMEOUT, DATAMESH_CHUNK_WRITE_TIMEOUT
 
 try:
     import xarray_video as xv
@@ -18,20 +18,6 @@ try:
     _VIDEO_SUPPORT = True
 except:
     _VIDEO_SUPPORT = False
-
-# Different default for zarr client
-DATAMESH_READ_TIMEOUT = os.getenv("DATAMESH_READ_TIMEOUT", 60)
-DATAMESH_READ_TIMEOUT = (
-    None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
-)
-DATAMESH_CONNECT_TIMEOUT = os.getenv("DATAMESH_CONNECT_TIMEOUT", 3.05)
-DATAMESH_CONNECT_TIMEOUT = (
-    None if DATAMESH_CONNECT_TIMEOUT == "None" else float(DATAMESH_CONNECT_TIMEOUT)
-)
-DATAMESH_WRITE_TIMEOUT = os.getenv("DATAMESH_WRITE_TIMEOUT", 600)
-DATAMESH_WRITE_TIMEOUT = (
-    None if DATAMESH_WRITE_TIMEOUT == "None" else float(DATAMESH_WRITE_TIMEOUT)
-)
 
 
 def json_serial(obj):
@@ -65,9 +51,9 @@ class ZarrClient(MutableMapping):
         parameters={},
         method="post",
         retries=10,
-        read_timeout=DATAMESH_READ_TIMEOUT,
+        read_timeout=DATAMESH_CHUNK_READ_TIMEOUT,
         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
-        write_timeout=DATAMESH_WRITE_TIMEOUT,
+        write_timeout=DATAMESH_CHUNK_WRITE_TIMEOUT,
         nocache=False,
         api="query",
         reference_id=None,
@@ -102,7 +88,7 @@ class ZarrClient(MutableMapping):
         method="GET",
         data=None,
         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
-        read_timeout=DATAMESH_READ_TIMEOUT,
+        read_timeout=DATAMESH_CHUNK_READ_TIMEOUT,
     ):
         resp = retried_request(
             url=path,
