@@ -58,6 +58,7 @@ class ZarrClient(MutableMapping):
         api="query",
         reference_id=None,
         verify=True,
+        storage_backend=None
     ):
         self.datasource = datasource
         self.session = session
@@ -81,6 +82,8 @@ class ZarrClient(MutableMapping):
         self.connect_timeout = connect_timeout
         self.write_timeout = write_timeout
         self.verify = verify
+        if storage_backend is not None:
+            self.headers["X-DATAMESH-STORAGE-BACKEND"] = storage_backend
 
     def _retried_request(
         self,
