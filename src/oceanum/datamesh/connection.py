@@ -82,9 +82,6 @@ class Connector(object):
 
         Args:
             token (string): Your datamesh access token. Defaults to os.environ.get("DATAMESH_TOKEN", None).
-            service (string, optional): URL of datamesh service. Defaults to os.environ.get("DATAMESH_SERVICE", "https://datamesh.oceanum.io").
-            gateway (string, optional): URL of gateway service. Defaults to os.environ.get("DATAMESH_GATEWAY", "https://gateway.<datamesh_service_domain>").
-            user (string, optional): Organisation user name for the datamesh connection. Defaults to None.
             session_duration (float, optional): The desired length of time for acquired datamesh sessions in seconds. Will be 3600 seconds by default.
             verify (bool, optional): Whether to verify the datamesh server certificate. Defaults to True.
         Raises:

@@ -54,8 +54,7 @@ dependencies = [
   "msgpack",
   "cftime",
   "python-jsonpath",
-  "requests",
-  "pip-system-certs"
+  "requests"
 ]
 dynamic = ["version"]
 
