@@ -20,7 +20,12 @@ from fsspec.exceptions import FSTimeoutError
 from fsspec.utils import isfilelike, nullcontext, tokenize
 from fsspec.implementations.memory import MemoryFile
 
-DEFAULT_CONFIG = {"STORAGE_SERVICE": "https://storage.oceanum.io"}
+DEFAULT_CONFIG = {"OCEANUM_DOMAIN": "oceanum.io"}
+
+def _get_storage_service_url(domain: str) -> str:
+    """Construct storage service URL from domain."""
+    return f"https://storage.{domain}/"
+
 _DEFAULT_BATCH_SIZE = 16
 _NOFILES_DEFAULT_BATCH_SIZE = 16
 logger = logging.getLogger("fsspec.oceanum")
@@ -66,7 +71,7 @@ class FileSystem(AsyncFileSystem):
     def __init__(
         self,
         token:str|None=None,
-        service:str=os.environ.get("STORAGE_SERVICE", DEFAULT_CONFIG["STORAGE_SERVICE"]),
+        service:str|None=None,
         asynchronous:bool=False,
         loop:asyncio.AbstractEventLoop|None=None,
         timeout:int=3600,
@@ -76,12 +81,16 @@ class FileSystem(AsyncFileSystem):
 
         Args:
             token (string): Your datamesh access token. Defaults to os.environ.get("DATAMESH_TOKEN", None).
-            service (string, optional): URL of datamesh service. Defaults to os.environ.get("STORAGE_SERVICE", "https://storage.oceanum.io").
+            service (string, optional): URL of datamesh service. If not provided, constructed from OCEANUM_DOMAIN environment variable (defaults to "oceanum.io").
             timeout (int, optional): Timeout for requests in seconds. Defaults to 3600.
             batch_size (int, optional): Number of concurrent requests. Defaults to 16.
         Raises:
             ValueError: Missing or invalid arguments
         """
+        if service is None:
+            domain = os.environ.get("OCEANUM_DOMAIN", DEFAULT_CONFIG["OCEANUM_DOMAIN"])
+            service = _get_storage_service_url(domain)
+        self._service = service
         self._token = token or os.environ.get("DATAMESH_TOKEN", None)
         url = urlparse(service)
         self._proto = url.scheme
@@ -153,7 +162,7 @@ class FileSystem(AsyncFileSystem):
             params["file_prefix"] = file_prefix
         if match_glob:
             params["match_glob"] = match_glob
-        
+
         async with session.get(self._base_url + spath, params=params or None) as r:
             try:
                 self._raise_not_found_for_status(r, path)
@@ -285,7 +294,14 @@ class FileSystem(AsyncFileSystem):
             session = await self.set_session()
             r = await session.get(self._base_url + path.lstrip("/"))
             async with r:
-                return r.status < 400
+                if r.status < 400:
+                    return True
+                # The storage endpoint enforces trailing slash for directories, so test for that
+                if not path.endswith("/"):
+                    r2 = await session.get(self._base_url + path.lstrip("/") + "/")
+                    async with r2:
+                        return r2.status < 400
+                return False
         except (requests.HTTPError, aiohttp.ClientError):
             return False
 
@@ -373,6 +389,63 @@ class FileSystem(AsyncFileSystem):
             self._raise_not_found_for_status(r, path1)
             return r.status == 201
 
+    async def _rm(self, path, recursive=True, **kwargs):
+        """Remove file or directory.
+
+        Parameters
+        ----------
+        path : str
+            Path to remove
+        recursive : bool
+            If True, remove directories and their contents recursively.
+            If False, only remove empty directories.
+        """
+        logger.debug(f"Removing {path}, recursive={recursive}")
+
+        # Check if path exists first
+        if not await self._exists(path):
+            raise FileNotFoundError(f"Path {path} not found")
+
+        # Check if it's a directory
+        is_dir = await self._isdir(path)
+
+        if is_dir:
+            # Check directory contents
+            try:
+                contents = await self._ls(path, detail=True)
+                has_contents = len(contents) > 0
+            except FileNotFoundError:
+                # Directory is empty or already deleted
+                has_contents = False
+
+            if has_contents and not recursive:
+                # Non-recursive deletion of non-empty directory should fail
+                raise OSError(f"Directory not empty: {path}")
+
+            if recursive and has_contents:
+                # For recursive directory deletion, remove contents first
+                for item in contents:
+                    item_path = item["name"]
+                    if item["type"] == "directory":
+                        await self._rm(item_path, recursive=True)
+                    else:
+                        await self._rm(item_path, recursive=False)
+
+        # Remove the file or empty directory
+        session = await self.set_session()
+        clean_path = path.lstrip("/")
+
+        # For directories, ensure trailing slash
+        if is_dir and not clean_path.endswith("/"):
+            clean_path += "/"
+
+        async with session.delete(self._base_url + clean_path) as r:
+            if r.status == 404:
+                # Already deleted or doesn't exist
+                return
+            elif r.status >= 400:
+                self._raise_not_found_for_status(r, path)
+
     def ukey(self, path):
         """Unique identifier"""
         return tokenize(path)
@@ -383,7 +456,7 @@ def ls(
     recursive: bool,
     detail: bool = False,
     token: str | None = None,
-    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    service: str | None = None,
     **kwargs,
 ):
     """List contents in the oceanum storage (the root directory by default).
@@ -410,7 +483,7 @@ def ls(
     fs = FileSystem(token=token, service=service)
     try:
         maxdepth = None if recursive else 1
-        paths = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=detail, 
+        paths = fs.find(path, maxdepth=maxdepth, withdirs=True, detail=detail,
                         **kwargs)
         if not paths:
             raise FileNotFoundError(f"Path {path} not found")
@@ -426,7 +499,7 @@ def get(
     dest: str,
     recursive: bool = False,
     token: str | None = None,
-    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    service: str | None = None,
 ):
     """Copy remote source to local dest, or multiple sources to directory.
 
@@ -484,7 +557,7 @@ def put(
     dest: str,
     recursive: bool = False,
     token: str | None = None,
-    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    service: str | None = None,
 ):
     """Copy local source to remote dest, or multiple sources to directory.
 
@@ -525,7 +598,7 @@ def rm(
     path: str,
     recursive: bool = False,
     token: str | None = None,
-    service: str = DEFAULT_CONFIG["STORAGE_SERVICE"],
+    service: str | None = None,
 ):
     """Remove path file or directory.
 
@@ -541,4 +614,103 @@ def rm(
         Oceanum storage service URL.
 
     """
-    raise NotImplementedError("rm not implemented yet")
+    fs = FileSystem(token=token, service=service)
+    try:
+        return fs.rm(path, recursive=recursive)
+    except aiohttp.client_exceptions.ClientError as err:
+        raise aiohttp.client_exceptions.ClientError(
+            f"Could not remove path {path} (check datamesh token)"
+        ) from err
+
+
+def exists(
+    path: str,
+    token: str | None = None,
+    service: str | None = None,
+) -> bool:
+    """Check if path exists in oceanum storage.
+
+    Parameters
+    ----------
+    path: str
+        Path to check.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    Returns
+    -------
+    bool
+        True if path exists, False otherwise.
+
+    """
+    fs = FileSystem(token=token, service=service)
+    try:
+        return fs.exists(path)
+    except aiohttp.client_exceptions.ClientError as err:
+        raise aiohttp.client_exceptions.ClientError(
+            f"Could not check if path {path} exists (check datamesh token)"
+        ) from err
+
+
+def isfile(
+    path: str,
+    token: str | None = None,
+    service: str | None = None,
+) -> bool:
+    """Check if path is a file in oceanum storage.
+
+    Parameters
+    ----------
+    path: str
+        Path to check.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    Returns
+    -------
+    bool
+        True if path is a file, False otherwise.
+
+    """
+    fs = FileSystem(token=token, service=service)
+    try:
+        return fs.isfile(path)
+    except aiohttp.client_exceptions.ClientError as err:
+        raise aiohttp.client_exceptions.ClientError(
+            f"Could not check if path {path} is a file (check datamesh token)"
+        ) from err
+
+
+def isdir(
+    path: str,
+    token: str | None = None,
+    service: str | None = None,
+) -> bool:
+    """Check if path is a directory in oceanum storage.
+
+    Parameters
+    ----------
+    path: str
+        Path to check.
+    token: str
+        Oceanum datamesh token.
+    service: str
+        Oceanum storage service URL.
+
+    Returns
+    -------
+    bool
+        True if path is a directory, False otherwise.
+
+    """
+    fs = FileSystem(token=token, service=service)
+    try:
+        return fs.isdir(path)
+    except aiohttp.client_exceptions.ClientError as err:
+        raise aiohttp.client_exceptions.ClientError(
+            f"Could not check if path {path} is a directory (check datamesh token)"
+        ) from err

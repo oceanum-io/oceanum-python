@@ -2,7 +2,7 @@ from unittest import TestCase
 import json
 import yaml
 
-from oceanum.cli.common.renderer import Renderer, RenderField
+from oceanum.cli.renderer import Renderer, RenderField
 
 class RendererTests(TestCase):
     

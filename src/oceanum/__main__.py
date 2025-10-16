@@ -1,19 +1,20 @@
+import os
 import sys
-
-import click
-
-# When adding a new module, must be imported here
-
 from importlib.metadata import entry_points
+from oceanum.cli import main
 
-from oceanum.cli.main import main
-from oceanum.cli import auth, datamesh, storage
+CLI_DEBUG = bool(os.getenv('OCEANUM_CLI_DEBUG'))
 
-# for cli_ep in entry_points(group='oceanum.cli'):
-#     cli_ep.load()
-
-for run_ep in entry_points(group='oceanum.cli.prax'):
+for run_ep in entry_points(group='oceanum.cli.extensions'):
     try:
-        run_ep.load()
+        if CLI_DEBUG:
+            print(f"Loading entry point: {run_ep.name}...")
+        ep_module = run_ep.load()  
+        if CLI_DEBUG:
+            print(f"Imported module '{ep_module.__name__}' successfully.")
     except ModuleNotFoundError as e:
+        print(f"Error loading entry point {run_ep.name}: {e}", file=sys.stderr)
         pass
+
+if __name__ == "__main__":
+    main()

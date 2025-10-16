@@ -1,1 +1,1 @@
-from .filesystem import FileSystem
+from .filesystem import FileSystem, exists, isfile, isdir, rm, get, put, ls

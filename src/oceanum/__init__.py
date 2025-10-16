@@ -4,7 +4,9 @@
 
 __author__ = """Oceanum Developers"""
 __email__ = "developers@oceanum.science"
-__version__ = "1.0.7"
+__version__ = "1.0.12"
+
+
 
 
 # Suppress tracebacks in an ipython environment
