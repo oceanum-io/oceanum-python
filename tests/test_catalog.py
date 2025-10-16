@@ -63,6 +63,9 @@ def test_catalog_ignore_broken(conn, dataset):
         cat = conn.get_catalog(search=datasource_id)
         assert None in list(cat)
     finally:
+        # Need to put it right before delete otherwise the gateway part
+        # of the delete won't succeed as it won't be able to parse the metadata
+        # due to it failing pydantic checks
         data = json.loads(
             ds.model_dump_json(by_alias=True, warnings=False).encode("utf-8", "ignore")
         )
