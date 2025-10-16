@@ -63,6 +63,17 @@ def test_catalog_ignore_broken(conn, dataset):
         cat = conn.get_catalog(search=datasource_id)
         assert None in list(cat)
     finally:
+        data = json.loads(
+            ds.model_dump_json(by_alias=True, warnings=False).encode("utf-8", "ignore")
+        )
+        data["coordinates"] = {}
+        data = json.dumps(data).encode("utf-8", "ignore")
+        resp = retried_request(
+            f"{conn._proto}://{conn._host}/datasource/{datasource_id}/",
+            method="PATCH",
+            data=data,
+            headers=headers,
+        )
         conn.delete_datasource(datasource_id)
 
 

@@ -36,8 +36,8 @@ def test_query_features_cache(conn):
     ds0 = conn.query(q, cache_timeout=600)
     assert os.path.exists(cached_file)
     ds1 = conn.query(q, use_dask=False, cache_timeout=600)
-    #assert isinstance(ds1, geopandas.GeoDataFrame)
-    pandas.testing.assert_frame_equal(ds0.to_dataframe(), ds1.to_dataframe())
+    assert isinstance(ds1, geopandas.GeoDataFrame)
+    pandas.testing.assert_frame_equal(ds0, ds1)
 
 
 def test_query_table(conn):
@@ -48,7 +48,8 @@ def test_query_table(conn):
 def test_query_table_cache(conn):
     q = Query(**{"datasource": "oceanum-sea-level-rise"})
     cache = LocalCache(cache_timeout=600)
-    cached_file = cache._cachepath(q) + ".pq"
+    #cached_file = cache._cachepath(q) + ".pq"
+    cached_file = cache._cachepath(q) + ".nc"
     if os.path.exists(cached_file):
         os.remove(cached_file)
     ds0 = conn.query(q, cache_timeout=600)
