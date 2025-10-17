@@ -5,6 +5,10 @@ import hashlib
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
+import threading
+
+nc_lock = threading.Lock()
+
 
 from .query import Query
 
@@ -17,7 +21,7 @@ class LocalCache:
             os.makedirs(cache_dir, exist_ok=True)
         self.cache_dir = cache_dir
         self.cache_timeout = cache_timeout
-        self.lock_timeout=lock_timeout
+        self.lock_timeout = lock_timeout
 
     def _cachepath(self, query):
         if not isinstance(query, Query):
@@ -27,15 +31,17 @@ class LocalCache:
             hashlib.sha224(query.model_dump_json(warnings=False).encode()).hexdigest(),
         )
 
-    def _locked(self,query):
-        lockfile=self._cachepath(query) + ".lock"
-        return os.path.exists(lockfile) and (os.path.getmtime(lockfile) + self.lock_timeout > time.time())
+    def _locked(self, query):
+        lockfile = self._cachepath(query) + ".lock"
+        return os.path.exists(lockfile) and (
+            os.path.getmtime(lockfile) + self.lock_timeout > time.time()
+        )
 
-    def lock(self,query):
+    def lock(self, query):
         with open(self._cachepath(query) + ".lock", "w") as f:
             f.write("")
 
-    def unlock(self,query):
+    def unlock(self, query):
         if self._locked(query):
             os.remove(self._cachepath(query) + ".lock")
 
@@ -49,7 +55,7 @@ class LocalCache:
                 ):
                     os.remove(cache_file + ".nc")
                     return None
-                return xr.open_dataset(cache_file + ".nc")
+                return xr.open_dataset(cache_file + ".nc", lock=nc_lock)
             elif os.path.exists(cache_file + ".gpq"):
                 if (
                     os.path.getmtime(cache_file + ".gpq") + self.cache_timeout
@@ -69,15 +75,14 @@ class LocalCache:
         except:
             return None
 
-    def get(self,query):
-        item=self._get(query)
+    def get(self, query):
+        item = self._get(query)
         if item is None and self._locked(query):
             time.sleep(1.0)
             return self.get(query)
         else:
             self.unlock(query)
         return item
-            
 
     def copy(self, query, fname, ext):
         os.rename(fname, self._cachepath(query) + ext)
