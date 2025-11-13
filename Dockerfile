@@ -29,5 +29,5 @@ RUN pip install -U pip pip-tools &&\
 COPY --chown=oceanum:oceanum . /home/oceanum/oceanum-python/
 WORKDIR /home/oceanum/oceanum-python
 # Install the package (virtual environment is automatically activated via ENV variables)
-RUN pip install -e .
+RUN pip install .
 CMD ["oceanum"]
