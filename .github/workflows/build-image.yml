@@ -6,11 +6,9 @@ on:
       - build_image
 
 env:
-  REGISTRY: us-central1-docker.pkg.dev
-  PROJECT: oceanum-registry
-  REPOSITORY: public
+  REGISTRY: ghcr.io
+  NAMESPACE: oceanum-io
   IMAGE_NAME: oceanum-python
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,12 +20,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Login to GCP Artifact Registry
+      - name: Login to Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ vars.GCP_AR_DOCKER_USERNAME }}
-          password: ${{ secrets.GCP_AR_DOCKER_PASSWORD }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -38,13 +36,13 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           context: .
           file: Dockerfile
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}-cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}-cache
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}-cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}/${{ env.IMAGE_NAME }}-cache
           build-args: |
             PYTHON_VER=${{ matrix.python-version }}
             DEBIAN_VER=${{ matrix.debian-version }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.PROJECT }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ matrix.python-version }}-${{ matrix.debian-version }}-${{ github.ref_name }}
+          tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ matrix.python-version }}-${{ matrix.debian-version }}
