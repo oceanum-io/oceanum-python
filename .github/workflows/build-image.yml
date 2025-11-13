@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.12]
+        python-version: [3.12, 3.13]
         debian-version: [trixie]
     steps:
       - name: Checkout code
@@ -40,9 +40,9 @@ jobs:
           context: .
           file: Dockerfile
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}-cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}/${{ env.IMAGE_NAME }}-cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}-cache
           build-args: |
             PYTHON_VER=${{ matrix.python-version }}
             DEBIAN_VER=${{ matrix.debian-version }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ matrix.python-version }}-${{ matrix.debian-version }}
+          tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ matrix.python-version }}-${{ matrix.debian-version }}
