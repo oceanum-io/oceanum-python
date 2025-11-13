@@ -56,6 +56,7 @@ jobs:
             DEBIAN_VER=${{ matrix.debian-version }}
           push: true
           tags: |
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:py${{ matrix.python-version }}-${{ matrix.debian-version }}
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ env.MINOR_VERSION }}-py${{ matrix.python-version }}-${{ matrix.debian-version }}
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ env.MINOR_VERSION }}.${{ env.MAJOR_VERSION }}-py${{ matrix.python-version }}-${{ matrix.debian-version }}
