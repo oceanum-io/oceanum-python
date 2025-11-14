@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*.*.*'
-    branches:
-      - build_image
 
 env:
   GH_REGISTRY: ghcr.io
