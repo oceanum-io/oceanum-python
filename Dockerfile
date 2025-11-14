@@ -18,7 +18,7 @@ RUN useradd -u 1001 -p oceanum --create-home --shell=/bin/bash oceanum
 
 USER oceanum
 WORKDIR /home/oceanum
-ENV PIP_NO_CACHE_DIR=false
+ENV PIP_NO_CACHE_DIR=1
 RUN python -m venv .venv/oceanum
 
 # Set environment variables to activate the virtual environment globally
@@ -36,5 +36,5 @@ RUN pip install -U pip pip-tools &&\
 COPY --chown=oceanum:oceanum . /home/oceanum/oceanum-python/
 WORKDIR /home/oceanum/oceanum-python
 # Install the package (virtual environment is automatically activated via ENV variables)
-RUN pip install .
-CMD ["oceanum"]
+RUN pip install -e .
+ENTRYPOINT ["oceanum"]
