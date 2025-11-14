@@ -19,7 +19,8 @@ class Session(BaseModel):
     @classmethod
     def acquire(cls,
                 connection,
-                allow_multiwrite: Optional[bool]=False,):
+                allow_multiwrite: Optional[bool]=False,
+                duration: Optional[int]=None):
         """
         Acquire a session from the connection.
 
@@ -31,6 +32,9 @@ class Session(BaseModel):
             Whether to allow other sessions to write to datasource
             already being written to by this session.
             Default is False.
+        duration: int
+            The duration of the session in seconds. Will default to
+            the connection session duration if set or 3600 (1 hour)
         """
 
         # Back-compatibility with beta version (returning dummy session object)
@@ -51,6 +55,8 @@ class Session(BaseModel):
             headers["Cache-Control"] = "no-store"
             params = connection._session_params.copy()
             params["allow_multiwrite"] = allow_multiwrite
+            if duration is not None:
+                params["duration"] = duration
             res = retried_request(f"{connection._gateway}/session/",
                                   params=params,
                                   headers=headers)

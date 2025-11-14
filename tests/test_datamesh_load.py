@@ -44,13 +44,13 @@ async def test_load_dataset_async(conn):
 
 def test_load_table(conn):
     ds = conn.load_datasource("oceanum-sea-level-rise")
-    assert isinstance(ds, pandas.DataFrame)
+    assert isinstance(ds, xarray.Dataset)
 
 
 @pytest.mark.asyncio
 async def test_load_table_async(conn):
     ds = await conn.load_datasource_async("oceanum-sea-level-rise")
-    assert isinstance(ds, pandas.DataFrame)
+    assert isinstance(ds, xarray.Dataset)
 
 
 def _test_command_line_interface():

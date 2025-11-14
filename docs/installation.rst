@@ -53,3 +53,13 @@ Once you have a copy of the source, you can install it with:
 
 .. _Github repo: https://github.com/oceanum/oceanum-python
 .. _tarball: https://github.com/oceanum/oceanum-python/tarball/master
+
+
+SSL certificate errors on Windows
+--------------------------------
+
+If you get SSL certificate errors on Windows when using the library, you can install the 'pip-system-certs' package with the following command:
+
+.. code-block:: console
+
+    $ pip install pip-system-certs

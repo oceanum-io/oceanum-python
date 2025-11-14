@@ -32,7 +32,7 @@ from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
-from .utils import retried_request, DATAMESH_READ_TIMEOUT, DATAMESH_WRITE_TIMEOUT
+from .utils import retried_request, DATAMESH_WRITE_TIMEOUT, DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT
 from ..__init__ import __version__
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
@@ -82,9 +82,6 @@ class Connector(object):
 
         Args:
             token (string): Your datamesh access token. Defaults to os.environ.get("DATAMESH_TOKEN", None).
-            service (string, optional): URL of datamesh service. Defaults to os.environ.get("DATAMESH_SERVICE", "https://datamesh.oceanum.io").
-            gateway (string, optional): URL of gateway service. Defaults to os.environ.get("DATAMESH_GATEWAY", "https://gateway.<datamesh_service_domain>").
-            user (string, optional): Organisation user name for the datamesh connection. Defaults to None.
             session_duration (float, optional): The desired length of time for acquired datamesh sessions in seconds. Will be 3600 seconds by default.
             verify (bool, optional): Whether to verify the datamesh server certificate. Defaults to True.
         Raises:
@@ -256,7 +253,7 @@ class Connector(object):
         resp = retried_request(
             f"{self._gateway}/data/{datasource_id}",
             headers={"Accept": data_format, **self._auth_headers},
-            timeout=(DATAMESH_READ_TIMEOUT, 1800),
+            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
             verify=self._verify,
         )
         self._validate_response(resp)
@@ -272,6 +269,8 @@ class Connector(object):
         append=None,
         overwrite=False,
     ):
+        # Connection timeout does not act in the same way in write and read contexts
+        # and using a short connection timeout in write contexts leads to closed connections
         if overwrite:
             resp = retried_request(
                 f"{self._gateway}/data/{datasource_id}",
@@ -306,7 +305,8 @@ class Connector(object):
             method="POST",
             headers=session.add_header(self._auth_headers),
             data=query.model_dump_json(warnings=False),
-            timeout=(DATAMESH_READ_TIMEOUT, 300),
+            timeout=(DATAMESH_CONNECT_TIMEOUT,
+                     DATAMESH_STAGE_READ_TIMEOUT),
             verify=self._verify,
         )
         if resp.status_code >= 400:
@@ -370,7 +370,7 @@ class Connector(object):
                     method="POST",
                     headers=headers,
                     data=query.model_dump_json(warnings=False),
-                    timeout=(DATAMESH_READ_TIMEOUT, 900),
+                    timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
                     verify=self._verify,
                 )
                 if resp.status_code >= 500:
@@ -674,6 +674,9 @@ class Connector(object):
         if ds._exists and overwrite:
             try:
                 self._delete(datasource_id)
+                # Datasources has been deleted, the rest of is similar to writing a new
+                # datasource
+                overwrite = False
             except Exception as e:
                 raise DatameshWriteError(f"Cannot delete existing datasource")
 
