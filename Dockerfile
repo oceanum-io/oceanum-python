@@ -2,6 +2,9 @@ ARG PYTHON_VER=3.12
 ARG DEBIAN_VER=trixie
 FROM python:${PYTHON_VER}-slim-${DEBIAN_VER}
 
+LABEL org.opencontainers.image.description="oceanum-python: A Python library and CLI for Oceanum.io services."
+LABEL org.opencontainers.image.source="https://github.com
+
 RUN apt-get update &&\
     apt-get install -y --no-install-recommends build-essential gcc gdal-bin gdal-data libgdal-dev &&\
     apt-get clean &&\

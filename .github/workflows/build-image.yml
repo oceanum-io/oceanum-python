@@ -11,6 +11,7 @@ env:
   GH_REGISTRY: ghcr.io
   GH_NAMESPACE: oceanum-io
   GAR_REGISTRY: us-central1-docker.pkg.dev
+  GAR_PROJECT: oceanum-registry
   GAR_REPOSITORY: public
   IMAGE_NAME: oceanum-python
 jobs:
