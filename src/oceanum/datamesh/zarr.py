@@ -105,6 +105,12 @@ class ZarrClient(MutableMapping):
         )
         if resp.status_code == 401:
             raise DatameshConnectError(f"Not Authorized {resp.text}")
+        if resp.status_code == 410:
+            raise DatameshConnectError(f"Datasource no longer exists or was deleted within your session")
+        if resp.status_code >= 500:
+            raise DatameshConnectError(
+                f"Server error {resp.status_code}: {resp.text}"
+            )
         return resp
 
     def __getitem__(self, item):
