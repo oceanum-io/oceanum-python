@@ -7,6 +7,7 @@ import os
 import numpy
 import xarray
 import fsspec
+import urllib.parse
 
 from .exceptions import DatameshConnectError, DatameshWriteError
 from .session import Session
@@ -107,8 +108,9 @@ class ZarrClient(MutableMapping):
         return resp
 
     def __getitem__(self, item):
+        encoded_item = urllib.parse.quote(item, safe='/')
         resp = self._retried_request(
-            f"{self._proxy}/{self.datasource}/{item}",
+            f"{self._proxy}/{self.datasource}/{encoded_item}",
             connect_timeout=self.connect_timeout,
             read_timeout=self.read_timeout,
         )
@@ -117,8 +119,9 @@ class ZarrClient(MutableMapping):
         return resp.content
 
     def __contains__(self, item):
+        encoded_item = urllib.parse.quote(item, safe='/')
         resp = self._retried_request(
-            f"{self._proxy}/{self.datasource}/{item}",
+            f"{self._proxy}/{self.datasource}/{encoded_item}",
             method="HEAD" if self._is_v1 else "GET",
             connect_timeout=self.connect_timeout,
             read_timeout=self.read_timeout,
@@ -130,8 +133,9 @@ class ZarrClient(MutableMapping):
     def __setitem__(self, item, value):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support write operations")
+        encoded_item = urllib.parse.quote(item, safe='/')
         res = self._retried_request(
-            f"{self._proxy}/{self.datasource}/{item}",
+            f"{self._proxy}/{self.datasource}/{encoded_item}",
             method=self.method,
             data=value,
             connect_timeout=self.write_timeout,
@@ -145,8 +149,9 @@ class ZarrClient(MutableMapping):
     def __delitem__(self, item):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support delete operations")
+        encoded_item = urllib.parse.quote(item, safe='/')
         self._retried_request(
-            f"{self._proxy}/{self.datasource}/{item}",
+            f"{self._proxy}/{self.datasource}/{encoded_item}",
             method="DELETE",
             connect_timeout=self.connect_timeout,
             read_timeout=10,
