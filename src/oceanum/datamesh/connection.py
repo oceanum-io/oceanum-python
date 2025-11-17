@@ -373,7 +373,7 @@ class Connector(object):
                     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
                     verify=self._verify,
                 )
-                if resp.status_code >= 500:
+                if resp.status_code > 500:
                     if cache_timeout:
                         localcache.unlock(query)
                     if retry < 5:
