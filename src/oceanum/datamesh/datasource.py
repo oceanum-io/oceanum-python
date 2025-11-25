@@ -334,7 +334,7 @@ class Datasource(BaseModel):
             Extent: {None if self.geom is None else self.bounds}
             Timerange: {self.tstart} to {self.tend}
             {len(self.attributes)} attributes
-            {len(self.variables)} {"properties" if "g" in self.coordinates else "variables"}
+            {len(self.variables)} variables
         """
         else:
             return f"""
@@ -353,7 +353,7 @@ class Datasource(BaseModel):
 
     @property
     def variables(self):
-        """Datasource variables (or properties). Note that these are None (undefined) for a summary dataset."""
+        """Datasource variables. Note that these are None (undefined) for a summary dataset."""
         return self.dataschema.data_vars if self._detail else None
 
     @property
