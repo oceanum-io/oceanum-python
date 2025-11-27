@@ -486,7 +486,10 @@ class Connector(object):
             "geom": meta_dict["geometry"],
             **meta_dict["properties"],
         }
-        ds = Datasource(**props)
+        try:
+            ds = Datasource(**props)
+        except ValidationError as e:
+            warnings.warn(f"Failed to instantiate Datasource object. Database metadata are not consistent with the present Datasource pydantic model: {e}:")
         ds._exists = True
         ds._detail = True
         return ds
@@ -677,7 +680,7 @@ class Connector(object):
                 # This allows to carry over all metadata properties
                 # while wipping the existing stored data cleanly
                 ds._exists = False
-                ds = Datasource(**ds.model_dump())
+                ds = Datasource(**ds.model_dump(by_alias=True))
                 self._metadata_write(ds)
             except Exception as e:
                 raise DatameshWriteError(f"Cannot delete existing datasource")
