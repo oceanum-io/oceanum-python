@@ -24,6 +24,7 @@ from contextlib import contextmanager
 import pyproj
 import numbers
 import urllib3
+from pydantic import ValidationError
 
 from .datasource import Datasource
 from .catalog import Catalog
@@ -467,6 +468,25 @@ class Connector(object):
         """
         return self.get_catalog(search, timefilter, geofilter)
 
+    def _get_datasource_metadata(self, datasource_id):
+        """Get the metadata dictionary for a given datasource id from the datamesh.
+
+        Args:
+            datasource_id (string): Unique datasource id
+
+        Returns:
+            dict: Metadata dictionary for the given datasource id
+
+        """
+        meta = self._metadata_request(datasource_id)
+        meta_dict = meta.json()
+        props = {
+            "id": datasource_id,
+            "geom": meta_dict["geometry"],
+            **meta_dict["properties"],
+        }
+        return props
+
     def get_datasource(self, datasource_id):
         """Get a Datasource instance from the datamesh. This does not load the actual data.
 
@@ -479,17 +499,17 @@ class Connector(object):
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
-        meta = self._metadata_request(datasource_id)
-        meta_dict = meta.json()
-        props = {
-            "id": datasource_id,
-            "geom": meta_dict["geometry"],
-            **meta_dict["properties"],
-        }
+        props = self._get_datasource_metadata(datasource_id)
         try:
             ds = Datasource(**props)
         except ValidationError as e:
-            warnings.warn(f"Failed to instantiate Datasource object. Database metadata are not consistent with the present Datasource pydantic model: {e}:")
+            raise DatameshConnectError(
+                "\n"
+                "\nPydantic ValidationError raised in function get_datasource.\n"
+                "The metadata held in the database for the Datasource object are (old?) not consistent with the present Datasource pydantic model. Please fix\n"
+                "The present metadata can be retrieved using the _get_datasource_metadata method.\n\n"
+                f"{e}\n\n"
+            ) from None
         ds._exists = True
         ds._detail = True
         return ds
