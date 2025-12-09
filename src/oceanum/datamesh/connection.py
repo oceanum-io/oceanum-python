@@ -24,6 +24,7 @@ from contextlib import contextmanager
 import pyproj
 import numbers
 import urllib3
+from pydantic import ValidationError
 
 from .datasource import Datasource
 from .catalog import Catalog
@@ -373,7 +374,7 @@ class Connector(object):
                     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
                     verify=self._verify,
                 )
-                if resp.status_code >= 500:
+                if resp.status_code > 500:
                     if cache_timeout:
                         localcache.unlock(query)
                     if retry < 5:
@@ -467,6 +468,25 @@ class Connector(object):
         """
         return self.get_catalog(search, timefilter, geofilter)
 
+    def _get_datasource_metadata(self, datasource_id):
+        """Get the metadata dictionary for a given datasource id from the datamesh.
+
+        Args:
+            datasource_id (string): Unique datasource id
+
+        Returns:
+            dict: Metadata dictionary for the given datasource id
+
+        """
+        meta = self._metadata_request(datasource_id)
+        meta_dict = meta.json()
+        props = {
+            "id": datasource_id,
+            "geom": meta_dict["geometry"],
+            **meta_dict["properties"],
+        }
+        return props
+
     def get_datasource(self, datasource_id):
         """Get a Datasource instance from the datamesh. This does not load the actual data.
 
@@ -479,14 +499,17 @@ class Connector(object):
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
-        meta = self._metadata_request(datasource_id)
-        meta_dict = meta.json()
-        props = {
-            "id": datasource_id,
-            "geom": meta_dict["geometry"],
-            **meta_dict["properties"],
-        }
-        ds = Datasource(**props)
+        props = self._get_datasource_metadata(datasource_id)
+        try:
+            ds = Datasource(**props)
+        except ValidationError as e:
+            raise DatameshConnectError(
+                "\n"
+                "\nPydantic ValidationError raised in function get_datasource.\n"
+                "The metadata held in the database for the Datasource object are (old?) not consistent with the present Datasource pydantic model. Please fix\n"
+                "The present metadata can be retrieved using the _get_datasource_metadata method.\n\n"
+                f"{e}\n\n"
+            ) from None
         ds._exists = True
         ds._detail = True
         return ds
@@ -674,9 +697,11 @@ class Connector(object):
         if ds._exists and overwrite:
             try:
                 self._delete(datasource_id)
-                # Datasources has been deleted, the rest of is similar to writing a new
-                # datasource
-                overwrite = False
+                # This allows to carry over all metadata properties
+                # while wipping the existing stored data cleanly
+                ds._exists = False
+                ds = Datasource(**ds.model_dump(by_alias=True))
+                self._metadata_write(ds)
             except Exception as e:
                 raise DatameshWriteError(f"Cannot delete existing datasource")
 
