@@ -4,7 +4,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-test_token = os.getenv('OCEANUM_TEST_DATAMESH_TOKEN', None)
+test_token = os.getenv("OCEANUM_TEST_DATAMESH_TOKEN", None)
 
 if not test_token:
     raise ValueError(
@@ -12,4 +12,4 @@ if not test_token:
         "Please set it to a valid token for testing."
     )
 
-os.environ['DATAMESH_TOKEN'] = test_token
+os.environ["DATAMESH_TOKEN"] = test_token
