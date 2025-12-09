@@ -104,7 +104,9 @@ class _GeometryAnnotation:
             ):
                 return geometry
             else:
-                raise BaseException(f"Geometry must be Point, MultiPoint or Polygon: {geometry}")
+                raise BaseException(
+                    f"Geometry must be Point, MultiPoint or Polygon: {geometry}"
+                )
 
         from_geometry_schema = core_schema.no_info_plain_validator_function(validate)
 
@@ -328,11 +330,24 @@ class Datasource(BaseModel):
         return v.lower().strip()
 
     def __str__(self):
+        if self.tstart is not None:
+            tstart = self.tstart
+        elif self.parchive is not None:
+            tstart = f"{self.parchive} before now"
+        else:
+            tstart = None
+        if self.tend is not None:
+            tend = self.tend
+        elif self.pforecast is not None:
+            tend = f"{self.pforecast} from now"
+        else:
+            tend = "Now"
+
         if self._detail:
             return f"""
         {self.name} [{self.id}]
             Extent: {None if self.geom is None else self.bounds}
-            Timerange: {self.tstart} to {self.tend}
+            Timerange: {tstart} to {tend}
             {len(self.attributes)} attributes
             {len(self.variables)} {"properties" if "g" in self.coordinates else "variables"}
         """
@@ -340,7 +355,7 @@ class Datasource(BaseModel):
             return f"""
         {self.name} [{self.id}]
             Extent: {None if self.geom is None else self.bounds}
-            Timerange: {self.tstart} to {self.tend}
+            Timerange: {tstart} to {tend}
         """
 
     def __repr__(self):

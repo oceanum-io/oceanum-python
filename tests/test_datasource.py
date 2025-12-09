@@ -25,7 +25,7 @@ def dataframe():
 def test_get_catalog(conn):
     cat = conn.get_catalog()
     for datasrc in cat:
-        datasrc.json()
+        datasrc.model_dump_json()
         break
 
 
@@ -65,10 +65,32 @@ def test_all_properties(dataframe):
         tstart=datetime.datetime(2000, 1, 1),
         tend=datetime.datetime(2020, 1, 1),
         tags=["test1", "test2"],
-        parchive="P7DT",
+        parchive=None,
         driver="dum",
     )
     ds.json()
+    print(ds)
+
+
+def test_all_properties_fc(dataframe):
+    ds = Datasource(
+        id="test123fc",
+        name="Test forecast datasource",
+        geom=shapely.geometry.shape({"type": "Point", "coordinates": [174, -40]}),
+        schema=dataframe.to_xarray().to_dict(data=False),
+        coordinates={"t": "time"},
+        info={"some": "info"},
+        labels=["test_label"],
+        last_modified=datetime.datetime.utcnow(),
+        tstart=datetime.datetime(2000, 1, 1),
+        tend=datetime.datetime(2020, 1, 1),
+        tags=["test1", "test2"],
+        parchive="P14D",
+        pforecast="P7D",
+        driver="dum",
+    )
+    ds.json()
+    print(ds)
 
 
 def test_fail_id(dataframe):
