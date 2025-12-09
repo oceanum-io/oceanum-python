@@ -49,7 +49,7 @@ dependencies = [
     "xarray",
     "rioxarray",
     "zarr<3",
-    "numcodecs<0.16.0",
+    "numcodecs",
     "dask[dataframe,distributed]",
     "msgpack",
     "cftime",
