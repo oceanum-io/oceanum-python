@@ -4,9 +4,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-test_token = os.getenv("OCEANUM_TEST_DATAMESH_TOKEN", None) or os.getenv(
-    "DATAMESH_TOKEN", None
-)
+test_token = os.getenv("OCEANUM_TEST_DATAMESH_TOKEN", None)
 
 if not test_token:
     raise ValueError(
