@@ -9,64 +9,64 @@ readme = "README.rst"
 license = { file = "LICENSE" }
 keywords = ["oceanum", "datamesh", "oceanum.io"]
 authors = [
-    { name = "Oceanum Developers", email = "developers@oceanum.science" },
+  { name = "Oceanum Developers", email = "developers@oceanum.science" },
 ]
 maintainers = [
-    { name = "Oceanum Developers", email = "developers@oceanum.science" },
+  { name = "Oceanum Developers", email = "developers@oceanum.science" },
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Physics",
-    "Topic :: Scientific/Engineering :: Visualization",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Visualization",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "aiohttp",
-    "click",
-    "cftime",
-    "dask",
-    "decorator",
-    "fsspec",
-    "geojson-pydantic",
-    "geopandas",
-    "h5netcdf",
-    "numpy",
-    "orjson",
-    "pandas",
-    "platformdirs",
-    "pyarrow",
-    "pydantic[email]",
-    "shapely",
-    "tabulate",
-    "xarray",
-    "rioxarray",
-    "zarr<3",
-    "numcodecs<0.16.0",
-    "dask[dataframe,distributed]",
-    "msgpack",
-    "cftime",
-    "python-jsonpath",
-    "requests"
+  "aiohttp",
+  "click",
+  "cftime",
+  "dask",
+  "decorator",
+  "fsspec",
+  "geojson-pydantic",
+  "geopandas",
+  "h5netcdf",
+  "numpy",
+  "orjson",
+  "pandas",
+  "platformdirs",
+  "pyarrow",
+  "pydantic[email]",
+  "shapely",
+  "tabulate",
+  "xarray",
+  "rioxarray",
+  "zarr<3",
+  "numcodecs",
+  "dask[dataframe,distributed]",
+  "msgpack",
+  "cftime",
+  "python-jsonpath",
+  "requests",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-env", "pytest-asyncio", "python-dotenv",]
+test = ["pytest", "pytest-env", "pytest-asyncio", "python-dotenv"]
 video = ["xarray_video"]
 eidos = ["oceanum.eidos"]
 docs = [
-    "autodoc-pydantic",
-    "pydata-sphinx-theme",
-    "sphinx",
-    "sphinxcontrib-programoutput",
+  "autodoc-pydantic",
+  "pydata-sphinx-theme",
+  "sphinx",
+  "sphinxcontrib-programoutput",
 ]
 
 
