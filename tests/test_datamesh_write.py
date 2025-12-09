@@ -49,8 +49,27 @@ def geotiff():
     return ds
 
 
-def test_write_dataframe(conn, dataframe):
-    datasource_id = "test-write-dataframe"
+@pytest.fixture
+def mark_for_cleanup():
+    """Fixture to track and cleanup datasources created during tests."""
+    created_datasources = []
+    
+    def register_datasource(datasource_id, conn):
+        created_datasources.append((datasource_id, conn))
+        return datasource_id
+    
+    yield register_datasource
+    
+    # Cleanup all registered datasources
+    for datasource_id, conn in created_datasources:
+        try:
+            conn.delete_datasource(datasource_id)
+        except Exception as e:
+            pass
+
+
+def test_write_dataframe(conn, dataframe, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataframe", conn)
     conn.write_datasource(
         datasource_id,
         dataframe,
@@ -62,8 +81,8 @@ def test_write_dataframe(conn, dataframe):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_dask_dataframe(conn, dataframe):
-    datasource_id = "test-write-dask-dataframe"
+def test_write_dask_dataframe(conn, dataframe, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dask-dataframe", conn)
     conn.write_datasource(
         datasource_id,
         dask.dataframe.from_pandas(dataframe, npartitions=1),
@@ -77,16 +96,16 @@ def test_write_dask_dataframe(conn, dataframe):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_dataset(conn, dataset):
-    datasource_id = "test-write-dataset"
+def test_write_dataset(conn, dataset, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataset", conn)
     conn.write_datasource(datasource_id, dataset, overwrite=True)
     ds = conn.load_datasource(datasource_id)
     assert (ds == dataset).all()["u10"]
     conn.delete_datasource(datasource_id)
 
 
-def test_write_dataset_guess(conn, dataset):
-    datasource_id = "test-write-dataset-guess"
+def test_write_dataset_guess(conn, dataset, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataset-guess", conn)
     conn.write_datasource(
         datasource_id,
         dataset,
@@ -98,8 +117,8 @@ def test_write_dataset_guess(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_dataset_crs(conn, dataset):
-    datasource_id = "test-write-dataset-crs"
+def test_write_dataset_crs(conn, dataset, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataset-crs", conn)
     dataset_2193 = dataset.copy().rename(
         {"longitude": "easting", "latitude": "northing"}
     )
@@ -120,8 +139,8 @@ def test_write_dataset_crs(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
-def test_bad_coordinates_fail(conn, dataset):
-    datasource_id = "test-write-dataset-coord-fail"
+def test_bad_coordinates_fail(conn, dataset, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataset-coord-fail", conn)
     with pytest.raises(DatameshWriteError):
         conn.write_datasource(
             datasource_id,
@@ -137,8 +156,8 @@ def test_bad_coordinates_fail(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
-def test_append_dataset(conn, dataset):
-    datasource_id = "test-write-dataset-append"
+def test_append_dataset(conn, dataset, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataset-append", conn)
     dataset2 = dataset.copy()
     dataset2["time"] = dataset["time"] + numpy.timedelta64(1, "D")
     conn.write_datasource(datasource_id, dataset, overwrite=True)
@@ -149,8 +168,8 @@ def test_append_dataset(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_region_dataset(conn, dataset):
-    datasource_id = "test-write-dataset-region"
+def test_write_region_dataset(conn, dataset, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataset-region", conn)
     dataset2 = dataset.isel(time=slice(10,-10))+2
     conn.write_datasource(datasource_id, dataset, overwrite=True)
     conn.write_datasource(datasource_id, dataset2, append="time")
@@ -164,8 +183,8 @@ def test_write_region_dataset(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_region_chunked_dataset(conn, dataset):
-    datasource_id = "test-write-dataset-region-chunked"
+def test_write_region_chunked_dataset(conn, dataset, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataset-region-chunked", conn)
     dataset2 = dataset.isel(time=slice(10,-10))+2
     conn.write_datasource(datasource_id, dataset.chunk({"time": 7}), overwrite=True)
     conn.write_datasource(datasource_id, dataset2, append="time")
@@ -179,8 +198,8 @@ def test_write_region_chunked_dataset(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
-def test_append_dataset_fail(conn, dataset):
-    datasource_id = "test-write-dataset-fail"
+def test_append_dataset_fail(conn, dataset, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-dataset-fail", conn)
     dataset2 = dataset.copy()
     dataset2["time"] = pandas.date_range(
         dataset["time"][10].values, dataset["time"][20].values, 49
@@ -191,8 +210,8 @@ def test_append_dataset_fail(conn, dataset):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_metadata(conn, dataframe):
-    datasource_id = "test-write-metadata"
+def test_write_metadata(conn, dataframe, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-metadata", conn)
     conn.write_datasource(
         datasource_id,
         None,
@@ -208,8 +227,8 @@ def test_write_metadata(conn, dataframe):
     conn.delete_datasource(datasource_id)
 
 
-def test_update_metadata(conn, dataframe):
-    datasource_id = "test-write-update-metadata"
+def test_update_metadata(conn, dataframe, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-update-metadata", conn)
     conn.write_datasource(
         datasource_id, dataframe, {"type": "Point", "coordinates": [174, -39]}
     )
@@ -223,8 +242,8 @@ def test_update_metadata(conn, dataframe):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_metadata_with_crs(conn, dataframe):
-    datasource_id = "test-write-metadata-crs"
+def test_write_metadata_with_crs(conn, dataframe, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-metadata-crs", conn)
     conn.write_datasource(
         datasource_id,
         None,
@@ -241,8 +260,8 @@ def test_write_metadata_with_crs(conn, dataframe):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_metadata_with_label(conn, dataframe):
-    datasource_id = "test-write-metadata-label"
+def test_write_metadata_with_label(conn, dataframe, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-metadata-label", conn)
     conn.write_datasource(
         datasource_id,
         None,
@@ -259,8 +278,8 @@ def test_write_metadata_with_label(conn, dataframe):
     conn.delete_datasource(datasource_id)
 
 
-def test_write_metadata_with_bad_crs(conn, dataframe):
-    datasource_id = "test-write-metadata-bad-crs"
+def test_write_metadata_with_bad_crs(conn, dataframe, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-metadata-bad-crs", conn)
     with pytest.raises(DatameshWriteError):
         conn.write_datasource(
             datasource_id,
@@ -273,8 +292,8 @@ def test_write_metadata_with_bad_crs(conn, dataframe):
         )
 
 
-def test_write_raster(conn, geotiff):
-    datasource_id = "test-write-raster"
+def test_write_raster(conn, geotiff, mark_for_cleanup):
+    datasource_id = mark_for_cleanup("test-write-raster", conn)
     conn.write_datasource(datasource_id, geotiff, overwrite=True)
     ds = conn.load_datasource(datasource_id)
     assert ds["band"]
