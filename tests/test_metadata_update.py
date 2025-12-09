@@ -50,7 +50,7 @@ def test_update_metadata(conn, dataframe):
 
 
 def test_fail_driverargs(conn, dataframe):
-    datasource_id = "test-write-dataframe"
+    datasource_id = "test-write-dataframe-fail"
     conn.write_datasource(
         datasource_id, dataframe, geom={"type": "Point", "coordinates": [174, -39]}
     )
