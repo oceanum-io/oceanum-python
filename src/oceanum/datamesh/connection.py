@@ -674,6 +674,9 @@ class Connector(object):
         if ds._exists and overwrite:
             try:
                 self._delete(datasource_id)
+                # Datasources has been deleted, the rest of is similar to writing a new
+                # datasource
+                overwrite = False
             except Exception as e:
                 raise DatameshWriteError(f"Cannot delete existing datasource")
 
