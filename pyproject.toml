@@ -38,6 +38,7 @@ dependencies = [
     "geojson-pydantic",
     "geopandas",
     "h5netcdf[h5py]",
+    "netcdf4",
     "numpy",
     "orjson",
     "pandas",
