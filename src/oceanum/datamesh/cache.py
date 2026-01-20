@@ -9,6 +9,11 @@ import geopandas as gpd
 from .query import Query
 
 CACHE_DIR = os.path.join(tempfile.gettempdir(), "oceanum-io-cache")
+LOCK_TIMEOUT = 60
+
+
+class CacheError(Exception):
+    pass
 
 
 class LocalCache:
@@ -17,7 +22,7 @@ class LocalCache:
             os.makedirs(cache_dir, exist_ok=True)
         self.cache_dir = cache_dir
         self.cache_timeout = cache_timeout
-        self.lock_timeout=lock_timeout
+        self.lock_timeout = lock_timeout
 
     def _cachepath(self, query):
         if not isinstance(query, Query):
@@ -27,15 +32,19 @@ class LocalCache:
             hashlib.sha224(query.model_dump_json(warnings=False).encode()).hexdigest(),
         )
 
-    def _locked(self,query):
-        lockfile=self._cachepath(query) + ".lock"
-        return os.path.exists(lockfile) and (os.path.getmtime(lockfile) + self.lock_timeout > time.time())
+    def _locked(self, query):
+        lockfile = self._cachepath(query) + ".lock"
+        return os.path.exists(lockfile) and (
+            os.path.getmtime(lockfile) + self.lock_timeout > time.time()
+        )
 
-    def lock(self,query):
-        with open(self._cachepath(query) + ".lock", "w") as f:
-            f.write("")
+    def lock(self, query):
+        lockfile = self._cachepath(query) + ".lock"
+        if not os.path.exists(lockfile):
+            with open(lockfile, "w") as f:
+                f.write("")
 
-    def unlock(self,query):
+    def unlock(self, query):
         if self._locked(query):
             os.remove(self._cachepath(query) + ".lock")
 
@@ -69,15 +78,16 @@ class LocalCache:
         except:
             return None
 
-    def get(self,query):
-        item=self._get(query)
-        if item is None and self._locked(query):
-            time.sleep(1.0)
-            return self.get(query)
-        else:
-            self.unlock(query)
+    def get(self, query, timeout=None):
+        if timeout is None:
+            timeout = self.lock_timeout
+        if self._locked(query):
+            if timeout <= 0:
+                return None
+            time.sleep(0.1)
+            return self.get(query, timeout=timeout - 0.1)
+        item = self._get(query)
         return item
-            
 
     def copy(self, query, fname, ext):
         os.rename(fname, self._cachepath(query) + ext)

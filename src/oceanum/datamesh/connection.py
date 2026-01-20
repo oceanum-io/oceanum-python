@@ -33,7 +33,13 @@ from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
-from .utils import retried_request, DATAMESH_WRITE_TIMEOUT, DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT
+from .utils import (
+    retried_request,
+    DATAMESH_WRITE_TIMEOUT,
+    DATAMESH_CONNECT_TIMEOUT,
+    DATAMESH_DOWNLOAD_TIMEOUT,
+    DATAMESH_STAGE_READ_TIMEOUT,
+)
 from ..__init__ import __version__
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
@@ -306,8 +312,7 @@ class Connector(object):
             method="POST",
             headers=session.add_header(self._auth_headers),
             data=query.model_dump_json(warnings=False),
-            timeout=(DATAMESH_CONNECT_TIMEOUT,
-                     DATAMESH_STAGE_READ_TIMEOUT),
+            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT),
             verify=self._verify,
         )
         if resp.status_code >= 400:
