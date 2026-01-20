@@ -83,7 +83,7 @@ class LocalCache:
             timeout = self.lock_timeout
         if self._locked(query):
             if timeout <= 0:
-                raise CacheError("Cache lock timeout")
+                return None
             time.sleep(0.1)
             return self.get(query, timeout=timeout - 0.1)
         item = self._get(query)
