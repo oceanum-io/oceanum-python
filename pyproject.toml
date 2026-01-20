@@ -37,7 +37,7 @@ dependencies = [
     "fsspec",
     "geojson-pydantic",
     "geopandas",
-    "h5netcdf",
+    "h5netcdf[h5py]",
     "numpy",
     "orjson",
     "pandas",
