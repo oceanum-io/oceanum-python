@@ -9,6 +9,7 @@ import geopandas as gpd
 from .query import Query
 
 CACHE_DIR = os.path.join(tempfile.gettempdir(), "oceanum-io-cache")
+LOCK_TIMEOUT = 60
 
 
 class CacheError(Exception):
@@ -77,7 +78,9 @@ class LocalCache:
         except:
             return None
 
-    def get(self, query, timeout=120):
+    def get(self, query, timeout=None):
+        if timeout is None:
+            timeout = self.lock_timeout
         if self._locked(query):
             if timeout <= 0:
                 raise CacheError("Cache lock timeout")
