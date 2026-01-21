@@ -338,3 +338,178 @@ class TestCacheIntegration:
         result = cache.get(sample_query)
         assert result is not None
         pd.testing.assert_frame_equal(result, sample_dataframe)
+
+
+class TestThreadLock:
+    """Test thread lock mechanism for concurrent access."""
+
+    def test_get_thread_lock_returns_lock(self, cache, sample_query):
+        """Test that _get_thread_lock returns a threading lock."""
+        import threading
+
+        lock = cache._get_thread_lock(sample_query)
+        assert isinstance(lock, type(threading.RLock()))
+
+    def test_get_thread_lock_same_query_returns_same_lock(self, cache, sample_query):
+        """Test that same query returns the same lock instance."""
+        lock1 = cache._get_thread_lock(sample_query)
+        lock2 = cache._get_thread_lock(sample_query)
+        assert lock1 is lock2
+
+    def test_get_thread_lock_different_queries_return_different_locks(self, cache):
+        """Test that different queries return different locks."""
+        query1 = Query(datasource="datasource1")
+        query2 = Query(datasource="datasource2")
+        lock1 = cache._get_thread_lock(query1)
+        lock2 = cache._get_thread_lock(query2)
+        assert lock1 is not lock2
+
+    def test_concurrent_get_same_query(self, cache, sample_query, sample_dataframe):
+        """Test that concurrent gets on same query are serialized."""
+        import threading
+        import queue
+
+        cache.put(sample_query, sample_dataframe)
+        results = queue.Queue()
+        errors = queue.Queue()
+
+        def get_cache():
+            try:
+                result = cache.get(sample_query)
+                results.put(result is not None)
+            except Exception as e:
+                errors.put(e)
+
+        threads = [threading.Thread(target=get_cache) for _ in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors.empty()
+        assert results.qsize() == 10
+        while not results.empty():
+            assert results.get() is True
+
+    def test_concurrent_put_same_query(self, cache, sample_query):
+        """Test that concurrent puts on same query are serialized."""
+        import threading
+        import queue
+
+        errors = queue.Queue()
+
+        def put_cache(value):
+            try:
+                df = pd.DataFrame({"col": [value]})
+                cache.put(sample_query, df)
+            except Exception as e:
+                errors.put(e)
+
+        threads = [threading.Thread(target=put_cache, args=(i,)) for i in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors.empty()
+        # Should have one of the values
+        result = cache.get(sample_query)
+        assert result is not None
+        assert len(result) == 1
+
+    def test_concurrent_get_different_queries(self, cache):
+        """Test that concurrent gets on different queries can proceed in parallel."""
+        import threading
+        import queue
+
+        queries = [Query(datasource=f"datasource{i}") for i in range(5)]
+        for q in queries:
+            cache.put(q, pd.DataFrame({"col": [1]}))
+
+        results = queue.Queue()
+        errors = queue.Queue()
+
+        def get_cache(query):
+            try:
+                result = cache.get(query)
+                results.put(result is not None)
+            except Exception as e:
+                errors.put(e)
+
+        threads = [threading.Thread(target=get_cache, args=(q,)) for q in queries]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors.empty()
+        assert results.qsize() == 5
+
+    def test_concurrent_put_and_get_same_query(self, cache, sample_query):
+        """Test concurrent put and get operations on the same query."""
+        import threading
+        import queue
+
+        errors = queue.Queue()
+        get_results = queue.Queue()
+
+        def put_cache():
+            try:
+                df = pd.DataFrame({"col": [1, 2, 3]})
+                cache.put(sample_query, df)
+            except Exception as e:
+                errors.put(("put", e))
+
+        def get_cache():
+            try:
+                result = cache.get(sample_query)
+                get_results.put(result)
+            except Exception as e:
+                errors.put(("get", e))
+
+        # Start multiple put and get threads
+        threads = []
+        for _ in range(5):
+            threads.append(threading.Thread(target=put_cache))
+            threads.append(threading.Thread(target=get_cache))
+
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors.empty()
+
+    def test_thread_lock_timeout(self, temp_cache_dir):
+        """Test that thread lock respects timeout."""
+        import threading
+
+        cache = LocalCache(cache_timeout=2, cache_dir=temp_cache_dir, lock_timeout=0.5)
+        query = Query(datasource="test")
+
+        # Acquire the lock in another thread and hold it
+        lock = cache._get_thread_lock(query)
+        lock_acquired = threading.Event()
+        release_lock = threading.Event()
+
+        def hold_lock():
+            with lock:
+                lock_acquired.set()
+                release_lock.wait(timeout=5)
+
+        holder_thread = threading.Thread(target=hold_lock)
+        holder_thread.start()
+        lock_acquired.wait()
+
+        # Try to get - should timeout and return None
+        start = time.time()
+        result = cache.get(query, timeout=0.3)
+        elapsed = time.time() - start
+
+        # Release the holder
+        release_lock.set()
+        holder_thread.join()
+
+        assert result is None
+        assert elapsed >= 0.3
+        assert elapsed < 1.0  # Should not wait too long
