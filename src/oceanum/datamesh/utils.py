@@ -1,5 +1,6 @@
 from time import sleep
 import requests
+from requests.adapters import HTTPAdapter
 import numpy as np
 from .exceptions import DatameshConnectError
 import os
@@ -52,6 +53,58 @@ DATAMESH_CHUNK_WRITE_TIMEOUT = (
 )
 
 
+class HTTPSession:
+    """
+    A requests.Session wrapper that is safe to use across forked processes
+    Attributes
+    ----------
+    pool_size : int, optional
+        The size of the connection pool, by default None
+    Methods
+    -------
+    session : requests.Session
+        Returns a requests.Session object that is safe to use in the current process
+    __getstate__ : dict
+        Returns the state of the object for pickling
+    __setstate__ : None
+        Restores the state of the object from pickling
+    """
+
+    def __init__(self, pool_size=os.environ.get("DATAMESH_CONNECTION_POOL_SIZE", 100)):
+        self._session = None
+        self._pid = None
+        self._pool_size = int(pool_size)
+
+    def _create_session(self):
+        session = requests.Session()
+        adapter = HTTPAdapter(
+            pool_connections=self._pool_size,
+            pool_maxsize=self._pool_size
+        )
+        session.mount('https://', adapter)
+        session.mount('http://', adapter)
+        return session
+
+    @property
+    def session(self):
+        if self._session is None or self._pid != os.getpid():
+            self._pid = os.getpid()
+            self._session = self._create_session()
+        return self._session
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["_session"] = None
+        state["_pid"] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def request(self, method, url, *args, **kwargs):
+        return self.session.request(method, url, *args, **kwargs)
+
+
 def retried_request(
     url,
     method="GET",
@@ -61,6 +114,7 @@ def retried_request(
     retries=8,
     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_READ_TIMEOUT),
     verify=True,
+    http_session: HTTPSession = None,
 ):
     """
     Retried request function with exponential backoff
@@ -79,6 +133,8 @@ def retried_request(
         Number of retries, by default 8
     timeout : tupe(float, float), optional
         Request connect and read timeout in seconds, by default (3.05, 10)
+    http_session : HTTPSession, optional
+        Session object to use for request
 
     Returns
     -------
@@ -91,10 +147,11 @@ def retried_request(
         If request fails
 
     """
+    requester = http_session if http_session else requests
     retried = 0
     while retried < retries:
         try:
-            resp = requests.request(
+            resp = requester.request(
                 method=method,
                 url=url,
                 data=data,

@@ -35,12 +35,14 @@ from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteE
 from .session import Session
 from .utils import (
     retried_request,
+    HTTPSession,
     DATAMESH_WRITE_TIMEOUT,
     DATAMESH_CONNECT_TIMEOUT,
     DATAMESH_DOWNLOAD_TIMEOUT,
     DATAMESH_STAGE_READ_TIMEOUT,
 )
 from ..__init__ import __version__
+
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
@@ -114,9 +116,12 @@ class Connector(object):
         if not verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+        self.http_session = HTTPSession()
+
         self._check_info()
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
+
 
     def _init_auth_headers(self, token: str | None, user: str | None = None):
         if token is not None:
@@ -149,6 +154,7 @@ class Connector(object):
             f"{self._proto}://{self._host}",
             headers=self._auth_headers,
             verify=self._verify,
+            http_session=self.http_session,
         )
         return resp.status_code == 200
 
@@ -166,6 +172,7 @@ class Connector(object):
                 headers=self._auth_headers,
                 retries=1,
                 verify=self._verify,
+                http_session=self.http_session,
             )
             if resp.status_code == 200:
                 r = resp.json()
@@ -178,7 +185,7 @@ class Connector(object):
             raise DatameshConnectError(
                 f"Failed to reach datamesh: {resp.status_code}-{resp.text}"
             )
-        except:
+        except Exception as e:
             _gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
             self._gateway = _gateway
             self._is_v1 = False
@@ -212,6 +219,7 @@ class Connector(object):
             params=params,
             headers=self._auth_headers,
             verify=self._verify,
+            http_session=self.http_session,
         )
         if resp.status_code == 404:
             raise DatameshConnectError(f"Datasource {datasource_id} not found")
@@ -232,6 +240,7 @@ class Connector(object):
                 data=data,
                 headers=headers,
                 verify=self._verify,
+                http_session=self.http_session,
             )
 
         else:
@@ -241,6 +250,7 @@ class Connector(object):
                 data=data,
                 headers=headers,
                 verify=self._verify,
+                http_session=self.http_session,
             )
         self._validate_response(resp)
         return resp
@@ -251,6 +261,7 @@ class Connector(object):
             method="DELETE",
             headers=self._auth_headers,
             verify=self._verify,
+            http_session=self.http_session,
         )
         self._validate_response(resp)
         return True
@@ -262,6 +273,7 @@ class Connector(object):
             headers={"Accept": data_format, **self._auth_headers},
             timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
             verify=self._verify,
+            http_session=self.http_session,
         )
         self._validate_response(resp)
         with open(tmpfile, "wb") as f:
@@ -286,6 +298,7 @@ class Connector(object):
                 headers={"Content-Type": data_format, **self._auth_headers},
                 timeout=(DATAMESH_WRITE_TIMEOUT, DATAMESH_WRITE_TIMEOUT),
                 verify=self._verify,
+                http_session=self.http_session,
             )
         else:
             headers = {"Content-Type": data_format, **self._auth_headers}
@@ -298,6 +311,7 @@ class Connector(object):
                 headers=headers,
                 timeout=(DATAMESH_WRITE_TIMEOUT, DATAMESH_WRITE_TIMEOUT),
                 verify=self._verify,
+                http_session=self.http_session,
             )
         self._validate_response(resp)
         return Datasource(**resp.json())
@@ -314,6 +328,7 @@ class Connector(object):
             data=query.model_dump_json(warnings=False),
             timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT),
             verify=self._verify,
+            http_session=self.http_session,
         )
         if resp.status_code >= 400:
             try:
