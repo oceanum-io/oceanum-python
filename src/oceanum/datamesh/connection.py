@@ -170,41 +170,31 @@ class Connector(object):
         Typically will ask to update the client if the version is outdated.
         Also will try to guess gateway address if not provided.
         """
-
         _gateway = self._gateway or f"{self._proto}://{self._host}"
+        self._is_v1 = True
         try:
             resp = self._retried_request(
                 f"{_gateway}/info/oceanum_python/{__version__}",
-                retries=1,
+                retries=5,
             )
             if resp.status_code == 200:
                 r = resp.json()
                 if "message" in r:
                     print(r["message"])
-                print("Using datamesh API version 1")
                 self._gateway = _gateway
-                self._is_v1 = True
+                return
+            elif resp.status_code == 404:
+                print("Using datamesh API version 0")
+                self._is_v1 = False
+                self._gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
                 return
             raise DatameshConnectError(
                 f"Failed to reach datamesh: {resp.status_code}-{resp.text}"
             )
         except Exception as e:
-            _gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
+            warnings.warn(f"Failed to reach datamesh gateway at {_gateway}: {e}")
+            warnings.warn("Assuming datamesh API version 1")
             self._gateway = _gateway
-            self._is_v1 = False
-            print("Using datamesh API version 0")
-            try:
-                resp = self._retried_request(
-                    f"https://datamesh-v1.oceanum.io/info/oceanum_python/{__version__}",
-                    retries=1,
-                )
-                if resp.status_code == 200:
-                    r = resp.json()
-                    if "message" in r:
-                        print(r["message"])
-            except:
-                pass
-        return
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:
