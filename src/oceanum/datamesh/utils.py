@@ -60,6 +60,8 @@ class HTTPSession:
     ----------
     pool_size : int, optional
         The size of the connection pool, by default None
+    headers : dict, optional
+        Default headers to include in each request, by default None
     Methods
     -------
     session : requests.Session
@@ -70,10 +72,11 @@ class HTTPSession:
         Restores the state of the object from pickling
     """
 
-    def __init__(self, pool_size=os.environ.get("DATAMESH_CONNECTION_POOL_SIZE", 100)):
+    def __init__(self, pool_size=os.environ.get("DATAMESH_CONNECTION_POOL_SIZE", 100), headers=None):
         self._session = None
         self._pid = None
         self._pool_size = int(pool_size)
+        self._headers = headers
 
     def _create_session(self):
         session = requests.Session()
@@ -83,6 +86,8 @@ class HTTPSession:
         )
         session.mount('https://', adapter)
         session.mount('http://', adapter)
+        if self._headers:
+            session.headers.update(self._headers)
         return session
 
     @property

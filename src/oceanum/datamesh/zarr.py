@@ -92,7 +92,7 @@ class ZarrClient(MutableMapping):
         self.verify = verify
         if storage_backend is not None:
             self.headers["X-DATAMESH-STORAGE-BACKEND"] = storage_backend
-        self.http_session = HTTPSession()
+        self.http_session = HTTPSession(headers=self.headers)
 
     def _retried_request(
         self,
@@ -107,7 +107,6 @@ class ZarrClient(MutableMapping):
                 url=path,
                 method=method,
                 data=data,
-                headers=self.headers,
                 retries=self.retries,
                 timeout=(connect_timeout, read_timeout),
                 verify=self.verify,
