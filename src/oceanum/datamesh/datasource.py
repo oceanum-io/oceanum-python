@@ -267,20 +267,23 @@ class Datasource(BaseModel):
         title="Coordinate keys",
         description="""
         Coordinates in datasource, referenced by standard coordinate keys. The dictionary keys map to coordinates variables in the datasource.
-            Ensemble: "e"
-            Rasterband: "b"
-            Category: "c"
-            Quantile: "q"
-            Season: "s"
-            Month: "m"
-            Time: "t"
-            Vertical: "z"
-            Northing: "y"
-            Easting: "x"
-            Station: "s"  (Locations assumed stationary, datasource with a multigeometry indexed by station coordinate)
-            Geometry: "g"  (Abstract coordinate - a 2 or 3D geometry that defines a feature location)
-            Frequency: "f"
-            Direction:"d"
+            - Ensemble: "e"
+            - Rasterband: "b"
+            - Category: "c"
+            - Quantile: "q"
+            - Season: "s"
+            - Month: "m"
+            - Time: "t"
+            - Vertical: "z"
+            - Northing: "y"
+            - Easting: "x"
+            - Station: "s"  (Locations assumed stationary, datasource with a multigeometry indexed by station coordinate)
+            - Geometry: "g"  (Abstract coordinate - a 2 or 3D geometry that defines a feature location)
+            - Frequency: "f"
+            - Direction: "d"
+            - Other 1: "i" (any other arbitrary coordinate)
+            - Other 2: "j" (any other arbitrary coordinate)
+            - Other 3: "k" (any other arbitrary coordinate)
 
         Example {"t":"time","x":"longitude","y":"latitude"}
         """,
