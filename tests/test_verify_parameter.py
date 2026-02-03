@@ -12,8 +12,8 @@ from oceanum.datamesh.zarr import ZarrClient
 
 @pytest.fixture
 def mock_request():
-    """Mock the requests.request function to check verify parameter"""
-    with patch("requests.request") as mock_req:
+    """Mock the requests.Session.request function to check verify parameter"""
+    with patch("requests.Session.request") as mock_req:
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"id": "test-id", "name": "test"}
