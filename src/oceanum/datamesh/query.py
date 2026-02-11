@@ -289,6 +289,16 @@ class TimeFilter(BaseModel):
         description="Resampling method applied when reducing tempral resolution. Only valid with range type",
     )
 
+    @field_validator("times")
+    @classmethod
+    def validate_times(cls, v, info):
+        if info.data.get("type") == TimeFilterType.range:
+            if len(v) != 2:
+                raise ValueError(
+                    "For TimeFilters of type='range', times must contain exactly 2 values: [timestart, timeend] which must be of type Timestamp, Timedelta or None"
+                )
+        return v
+
 
 class AggregateOps(str, Enum):
     mean = "mean"
