@@ -10,6 +10,8 @@ import fsspec
 import urllib.parse
 import requests
 
+from typing import Optional
+
 from .exceptions import DatameshConnectError, DatameshWriteError
 from .session import Session
 from .utils import (
@@ -66,7 +68,7 @@ class ZarrClient(MutableMapping):
         api="query",
         reference_id=None,
         verify=True,
-        storage_backend=None
+        storage_backend=None,
     ):
         self.datasource = datasource
         self.session = session
@@ -118,15 +120,15 @@ class ZarrClient(MutableMapping):
         if resp.status_code == 401:
             raise DatameshConnectError(f"Not Authorized {resp.text}")
         if resp.status_code == 410:
-            raise DatameshConnectError(f"Datasource no longer exists or was deleted within your session")
-        if resp.status_code >= 500:
             raise DatameshConnectError(
-                f"Server error {resp.status_code}: {resp.text}"
+                f"Datasource no longer exists or was deleted within your session"
             )
+        if resp.status_code >= 500:
+            raise DatameshConnectError(f"Server error {resp.status_code}: {resp.text}")
         return resp
 
     def __getitem__(self, item):
-        encoded_item = urllib.parse.quote(item, safe='/')
+        encoded_item = urllib.parse.quote(item, safe="/")
         resp = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
             connect_timeout=self.connect_timeout,
@@ -137,7 +139,7 @@ class ZarrClient(MutableMapping):
         return resp.content
 
     def __contains__(self, item):
-        encoded_item = urllib.parse.quote(item, safe='/')
+        encoded_item = urllib.parse.quote(item, safe="/")
         resp = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
             method="HEAD" if self._is_v1 else "GET",
@@ -151,7 +153,7 @@ class ZarrClient(MutableMapping):
     def __setitem__(self, item, value):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support write operations")
-        encoded_item = urllib.parse.quote(item, safe='/')
+        encoded_item = urllib.parse.quote(item, safe="/")
         res = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
             method=self.method,
@@ -167,7 +169,7 @@ class ZarrClient(MutableMapping):
     def __delitem__(self, item):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support delete operations")
-        encoded_item = urllib.parse.quote(item, safe='/')
+        encoded_item = urllib.parse.quote(item, safe="/")
         self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
             method="DELETE",
@@ -202,7 +204,14 @@ def _to_zarr(data, store, **kwargs):
         data.to_zarr(store, **kwargs)
 
 
-def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
+def zarr_write(
+    connection,
+    datasource_id,
+    data,
+    append=None,
+    overwrite=False,
+    group: Optional[str] = None,
+):
     with Session.acquire(connection) as session:
         store = ZarrClient(connection, datasource_id, session, api="zarr", nocache=True)
         if overwrite is True:
@@ -252,6 +261,7 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
                         store,
                         mode="a",
                         region={append_dim: replace_slice},
+                        group=group,
                     )
                 if len(data[append]) > len(replace_range):
                     append_chunk = data.isel(
@@ -263,9 +273,10 @@ def zarr_write(connection, datasource_id, data, append=None, overwrite=False):
                         mode="a",
                         append_dim=append_dim,
                         consolidated=True,
+                        group=group,
                     )
         else:
-            _to_zarr(data, store, mode="w", consolidated=True)
+            _to_zarr(data, store, mode="w", consolidated=True, group=group)
             ds = connection.get_datasource(datasource_id)
             ds.dataschema = data.to_dict(data=False)
         return ds
