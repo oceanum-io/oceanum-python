@@ -8,6 +8,7 @@ import numpy
 import xarray
 import fsspec
 import urllib.parse
+import requests
 
 from typing import Optional
 
@@ -15,6 +16,7 @@ from .exceptions import DatameshConnectError, DatameshWriteError
 from .session import Session
 from .utils import (
     retried_request,
+    HTTPSession,
     DATAMESH_CONNECT_TIMEOUT,
     DATAMESH_CHUNK_READ_TIMEOUT,
     DATAMESH_CHUNK_WRITE_TIMEOUT,
@@ -92,6 +94,7 @@ class ZarrClient(MutableMapping):
         self.verify = verify
         if storage_backend is not None:
             self.headers["X-DATAMESH-STORAGE-BACKEND"] = storage_backend
+        self.http_session = HTTPSession(headers=self.headers)
 
     def _retried_request(
         self,
@@ -101,15 +104,19 @@ class ZarrClient(MutableMapping):
         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
         read_timeout=DATAMESH_CHUNK_READ_TIMEOUT,
     ):
-        resp = retried_request(
-            url=path,
-            method=method,
-            data=data,
-            headers=self.headers,
-            retries=self.retries,
-            timeout=(connect_timeout, read_timeout),
-            verify=self.verify,
-        )
+        try:
+            resp = retried_request(
+                url=path,
+                method=method,
+                data=data,
+                retries=self.retries,
+                timeout=(connect_timeout, read_timeout),
+                verify=self.verify,
+                http_session=self.http_session,
+            )
+        except requests.RequestException as e:
+            raise DatameshConnectError(str(e))
+
         if resp.status_code == 401:
             raise DatameshConnectError(f"Not Authorized {resp.text}")
         if resp.status_code == 410:
