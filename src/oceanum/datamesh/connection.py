@@ -25,6 +25,7 @@ import pyproj
 import numbers
 import urllib3
 from pydantic import ValidationError
+from zarr.storage import ZipStore
 
 from .datasource import Datasource
 from .catalog import Catalog
@@ -354,7 +355,7 @@ class Connector(object):
                 if cache_timeout:
                     localcache.lock(query)
                 transfer_format = (
-                    "application/x-netcdf4"
+                    "application/zarr+zip"
                     if stage.container == Container.Dataset
                     else "application/parquet"
                 )
@@ -392,10 +393,13 @@ class Connector(object):
                         f.write(resp.content)
                         f.seek(0)
                         if stage.container == Container.Dataset:
-                            ds = xarray.load_dataset(
-                                f.name, decode_coords="all", mask_and_scale=True
-                            )
-                            ext = ".nc"
+                            with ZipStore(f.name) as store:
+                                ds = xarray.open_zarr(
+                                    store,
+                                    decode_coords="all",
+                                    mask_and_scale=True,
+                                ).load()
+                            ext = ".zarr.zip"
                         elif stage.container == Container.GeoDataFrame:
                             ds = geopandas.read_parquet(f.name)
                             ext = ".gpq"
