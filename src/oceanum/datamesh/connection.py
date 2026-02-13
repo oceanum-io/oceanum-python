@@ -122,7 +122,6 @@ class Connector(object):
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
 
-
     def _init_auth_headers(self, token: str | None, user: str | None = None):
         if token is not None:
             if token.startswith("Bearer "):
@@ -358,8 +357,7 @@ class Connector(object):
                     if stage.container == Container.Dataset
                     else "application/parquet"
                 )
-                headers = {"Accept": transfer_format,
-                           **session.header}
+                headers = {"Accept": transfer_format, **session.header}
                 resp = self._retried_request(
                     f"{self._gateway}/oceanql/",
                     method="POST",
@@ -431,7 +429,7 @@ class Connector(object):
         if timefilter:
             times = timefilter.times
             query["in_trange"] = (
-                f"{times[0] or datetime.datetime(1,1,1)}Z,{times[1] or datetime.datetime(2500,1,1)}Z"
+                f"{times[0] or datetime.datetime(1, 1, 1)}Z,{times[1] or datetime.datetime(2500, 1, 1)}Z"
             )
         if geofilter:
             if isinstance(geofilter, GeoFilter):
@@ -524,7 +522,7 @@ class Connector(object):
         """
         return self.get_datasource(datasource_id)
 
-    def load_datasource(self, datasource_id, parameters={}, use_dask=False):
+    def load_datasource(self, datasource_id, parameters={}, use_dask=False, group=None):
         """Load a datasource into the work environment.
         For datasources which load into DataFrames or GeoDataFrames, this returns an in memory instance of the DataFrame.
         For datasources which load into an xarray Dataset, an open zarr backed dataset is returned.
@@ -533,6 +531,7 @@ class Connector(object):
             datasource_id (string): Unique datasource id
             parameters (dict): Additional datasource parameters
             use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
+            group (str, optional): Zarr group path to read from. Defaults to None (root group).
 
         Returns:
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
@@ -554,7 +553,11 @@ class Connector(object):
                 verify=self._verify,
             )
             return xarray.open_zarr(
-                mapper, consolidated=True, decode_coords="all", mask_and_scale=True
+                mapper,
+                consolidated=True,
+                decode_coords="all",
+                mask_and_scale=True,
+                group=group,
             )
         elif stage.container == Container.GeoDataFrame:
             tmpfile = self._data_request(datasource_id, "application/parquet")
@@ -564,12 +567,15 @@ class Connector(object):
             return pandas.read_parquet(tmpfile)
 
     @asyncwrapper
-    def load_datasource_async(self, datasource_id, parameters={}, use_dask=False):
+    def load_datasource_async(
+        self, datasource_id, parameters={}, use_dask=False, group=None
+    ):
         """Load a datasource asynchronously into the work environment
 
         Args:
             datasource_id (string): Unique datasource id
             use_dask (bool, optional): Load datasource as a dask enabled datasource if possible. Defaults to False.
+            group (str, optional): Zarr group path to read from. Defaults to None (root group).
             loop: event loop. default=None will use :obj:`asyncio.get_running_loop()`
             executor: :obj:`concurrent.futures.Executor` instance. default=None will use the default executor
 
@@ -577,7 +583,7 @@ class Connector(object):
         Returns:
             coroutine<Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]>: The datasource container
         """
-        return self.load_datasource(datasource_id, parameters, use_dask)
+        return self.load_datasource(datasource_id, parameters, use_dask, group)
 
     def query(self, query=None, *, use_dask=False, cache_timeout=0, **query_keys):
         """Make a datamesh query
