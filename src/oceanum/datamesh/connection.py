@@ -33,8 +33,16 @@ from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
-from .utils import retried_request, DATAMESH_WRITE_TIMEOUT, DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT
+from .utils import (
+    retried_request,
+    HTTPSession,
+    DATAMESH_WRITE_TIMEOUT,
+    DATAMESH_CONNECT_TIMEOUT,
+    DATAMESH_DOWNLOAD_TIMEOUT,
+    DATAMESH_STAGE_READ_TIMEOUT,
+)
 from ..__init__ import __version__
+
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
@@ -108,9 +116,12 @@ class Connector(object):
         if not verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+        self.http_session = HTTPSession(headers=self._auth_headers)
+
         self._check_info()
         if self._host.split(".")[-1] != self._gateway.split(".")[-1]:
             warnings.warn("Gateway and service domain do not match")
+
 
     def _init_auth_headers(self, token: str | None, user: str | None = None):
         if token is not None:
@@ -128,6 +139,15 @@ class Connector(object):
                 "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
             )
 
+    def _retried_request(self, *args, **kwargs):
+        """Wrapper around retried_request to use connection settings"""
+        return retried_request(
+            *args,
+            verify=self._verify,
+            http_session=self.http_session,
+            **kwargs,
+        )
+
     @property
     def host(self):
         """Datamesh host
@@ -139,10 +159,8 @@ class Connector(object):
 
     # Check the status of the metadata server
     def _status(self):
-        resp = retried_request(
+        resp = self._retried_request(
             f"{self._proto}://{self._host}",
-            headers=self._auth_headers,
-            verify=self._verify,
         )
         return resp.status_code == 200
 
@@ -152,45 +170,31 @@ class Connector(object):
         Typically will ask to update the client if the version is outdated.
         Also will try to guess gateway address if not provided.
         """
-
         _gateway = self._gateway or f"{self._proto}://{self._host}"
+        self._is_v1 = True
         try:
-            resp = retried_request(
+            resp = self._retried_request(
                 f"{_gateway}/info/oceanum_python/{__version__}",
-                headers=self._auth_headers,
-                retries=1,
-                verify=self._verify,
+                retries=5,
             )
             if resp.status_code == 200:
                 r = resp.json()
                 if "message" in r:
                     print(r["message"])
-                print("Using datamesh API version 1")
                 self._gateway = _gateway
-                self._is_v1 = True
+                return
+            elif resp.status_code == 404:
+                print("Using datamesh API version 0")
+                self._is_v1 = False
+                self._gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
                 return
             raise DatameshConnectError(
                 f"Failed to reach datamesh: {resp.status_code}-{resp.text}"
             )
-        except:
-            _gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
+        except Exception as e:
+            warnings.warn(f"Failed to reach datamesh gateway at {_gateway}: {e}")
+            warnings.warn("Assuming datamesh API version 1")
             self._gateway = _gateway
-            self._is_v1 = False
-            print("Using datamesh API version 0")
-            try:
-                resp = retried_request(
-                    f"https://datamesh-v1.oceanum.io/info/oceanum_python/{__version__}",
-                    headers=self._auth_headers,
-                    retries=1,
-                    verify=self._verify,
-                )
-                if resp.status_code == 200:
-                    r = resp.json()
-                    if "message" in r:
-                        print(r["message"])
-            except:
-                pass
-        return
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:
@@ -201,11 +205,9 @@ class Connector(object):
             raise DatameshConnectError(msg)
 
     def _metadata_request(self, datasource_id="", params={}):
-        resp = retried_request(
+        resp = self._retried_request(
             f"{self._proto}://{self._host}/datasource/{datasource_id}",
             params=params,
-            headers=self._auth_headers,
-            verify=self._verify,
         )
         if resp.status_code == 404:
             raise DatameshConnectError(f"Datasource {datasource_id} not found")
@@ -218,44 +220,39 @@ class Connector(object):
         data = datasource.model_dump_json(by_alias=True, warnings=False).encode(
             "utf-8", "ignore"
         )
-        headers = {**self._auth_headers, "Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json"}
         if datasource._exists:
-            resp = retried_request(
+            resp = self._retried_request(
                 f"{self._proto}://{self._host}/datasource/{datasource.id}/",
                 method="PATCH",
                 data=data,
                 headers=headers,
-                verify=self._verify,
             )
 
         else:
-            resp = retried_request(
+            resp = self._retried_request(
                 f"{self._proto}://{self._host}/datasource/",
                 method="POST",
                 data=data,
                 headers=headers,
-                verify=self._verify,
             )
         self._validate_response(resp)
         return resp
 
     def _delete(self, datasource_id):
-        resp = retried_request(
+        resp = self._retried_request(
             f"{self._gateway}/data/{datasource_id}",
             method="DELETE",
-            headers=self._auth_headers,
-            verify=self._verify,
         )
         self._validate_response(resp)
         return True
 
     def _data_request(self, datasource_id, data_format="application/json", cache=False):
         tmpfile = os.path.join(self._cachedir.name, datasource_id)
-        resp = retried_request(
+        resp = self._retried_request(
             f"{self._gateway}/data/{datasource_id}",
-            headers={"Accept": data_format, **self._auth_headers},
+            headers={"Accept": data_format},
             timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
-            verify=self._verify,
         )
         self._validate_response(resp)
         with open(tmpfile, "wb") as f:
@@ -272,26 +269,24 @@ class Connector(object):
     ):
         # Connection timeout does not act in the same way in write and read contexts
         # and using a short connection timeout in write contexts leads to closed connections
+        headers = {"Content-Type": data_format}
         if overwrite:
-            resp = retried_request(
+            resp = self._retried_request(
                 f"{self._gateway}/data/{datasource_id}",
                 method="PUT",
                 data=data,
-                headers={"Content-Type": data_format, **self._auth_headers},
+                headers=headers,
                 timeout=(DATAMESH_WRITE_TIMEOUT, DATAMESH_WRITE_TIMEOUT),
-                verify=self._verify,
             )
         else:
-            headers = {"Content-Type": data_format, **self._auth_headers}
             if append:
                 headers["X-Append"] = str(append)
-            resp = retried_request(
+            resp = self._retried_request(
                 f"{self._gateway}/data/{datasource_id}",
                 method="PATCH",
                 data=data,
                 headers=headers,
                 timeout=(DATAMESH_WRITE_TIMEOUT, DATAMESH_WRITE_TIMEOUT),
-                verify=self._verify,
             )
         self._validate_response(resp)
         return Datasource(**resp.json())
@@ -301,14 +296,12 @@ class Connector(object):
             query.model_dump_json(warnings=False).encode()
         ).hexdigest()
 
-        resp = retried_request(
+        resp = self._retried_request(
             f"{self._gateway}/oceanql/stage/",
             method="POST",
-            headers=session.add_header(self._auth_headers),
+            headers=session.header,
             data=query.model_dump_json(warnings=False),
-            timeout=(DATAMESH_CONNECT_TIMEOUT,
-                     DATAMESH_STAGE_READ_TIMEOUT),
-            verify=self._verify,
+            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT),
         )
         if resp.status_code >= 400:
             try:
@@ -365,14 +358,14 @@ class Connector(object):
                     if stage.container == Container.Dataset
                     else "application/parquet"
                 )
-                headers = {"Accept": transfer_format, **self._auth_headers}
-                resp = retried_request(
+                headers = {"Accept": transfer_format,
+                           **session.header}
+                resp = self._retried_request(
                     f"{self._gateway}/oceanql/",
                     method="POST",
                     headers=headers,
                     data=query.model_dump_json(warnings=False),
                     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
-                    verify=self._verify,
                 )
                 if resp.status_code > 500:
                     if cache_timeout:

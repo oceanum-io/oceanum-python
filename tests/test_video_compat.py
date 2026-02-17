@@ -1,13 +1,9 @@
 """Tests for `oceanum` package."""
+
 import os
 import pytest
-import pandas
-import geopandas
-import xarray
 
-from click.testing import CliRunner
-
-from oceanum.datamesh import Connector, Datasource
+from oceanum.datamesh import Connector
 
 
 HERE = os.path.dirname(__file__)
