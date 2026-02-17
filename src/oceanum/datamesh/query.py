@@ -62,7 +62,6 @@ def parse_time(v):
 Timestamp = Annotated[
     datetime.datetime,
     Field(
-        default=None,
         title="Timestamp",
         description="Timestamp as python datetime, numpy datetime64 or pandas Timestamp",
     ),
@@ -93,7 +92,6 @@ def parse_timedelta(v):
 Timedelta = Annotated[
     datetime.timedelta,
     Field(
-        default=None,
         title="Timedelta",
         description="Timedelta as python timedelta, numpy timedelta64 or pandas Timedelta",
     ),
