@@ -17,6 +17,7 @@ import click
 from tabulate import tabulate
 
 from pydantic import BaseModel
+from oceanum._base import StrictBaseModel
 
 _sty = click.style
 
@@ -27,7 +28,7 @@ output_format_option = click.option(
     help='Output format'
 )
 
-class RenderField(BaseModel):
+class RenderField(StrictBaseModel):
     default: Any|None = None
     label: str = 'Name'
     path: str = '$.name'

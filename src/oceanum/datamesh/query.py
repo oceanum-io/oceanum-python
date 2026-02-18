@@ -6,11 +6,11 @@ import geojson_pydantic
 from pydantic import (
     field_validator,
     ConfigDict,
-    BaseModel,
     Field,
     BeforeValidator,
     WithJsonSchema,
 )
+from oceanum._base import StrictBaseModel
 from typing import Optional, Dict, Union, List, Any
 from typing_extensions import Annotated
 from enum import Enum
@@ -160,14 +160,14 @@ class ResampleType(str, Enum):
     slinear = "linear"
 
 
-class FilterGeometry(BaseModel):
+class FilterGeometry(StrictBaseModel):
     id: str = Field(title="Datasource ID")
     parameters: Optional[Dict] = Field(
         title="Optional parameters to access datasource", default={}
     )
 
 
-class GeoFilter(BaseModel):
+class GeoFilter(StrictBaseModel):
     """GeoFilter class
     Describes a spatial subset or interpolation
     """
@@ -225,7 +225,7 @@ class GeoFilter(BaseModel):
         return v
 
 
-class LevelFilter(BaseModel):
+class LevelFilter(StrictBaseModel):
     """LevelFilter class
     Describes a vertical subset or interpolation
     """
@@ -253,7 +253,7 @@ class LevelFilter(BaseModel):
     )
 
 
-class TimeFilter(BaseModel):
+class TimeFilter(StrictBaseModel):
     """TimeFilter class
     Describes a temporal subset or interpolation
     """
@@ -306,7 +306,7 @@ class AggregateOps(str, Enum):
     sum = "sum"
 
 
-class Aggregate(BaseModel):
+class Aggregate(StrictBaseModel):
     operations: List[AggregateOps] = Field(
         title="Aggregate operations to perform",
         default=[AggregateOps.mean],
@@ -325,7 +325,7 @@ class Aggregate(BaseModel):
     )
 
 
-class Function(BaseModel):
+class Function(StrictBaseModel):
     id: str = Field(title="Function id")
     args: Dict[str, Any] = Field(title="function arguments")
     vselect: Optional[List[str]] = Field(
@@ -345,14 +345,14 @@ class Function(BaseModel):
 # df      ∩  features -> subset of df within (resolution) of features
 
 
-class CoordSelector(BaseModel):
+class CoordSelector(StrictBaseModel):
     coord: str = Field(title="Coordinate name")
     values: List[str | int | float] = Field(
         title="List of coordinate values to select by"
     )
 
 
-class Query(BaseModel):
+class Query(StrictBaseModel):
     """
     Datamesh query
     """
@@ -416,14 +416,7 @@ class Query(BaseModel):
         return hash(self.model_dump_json(warnings=False))
 
 
-class Workspace(BaseModel):
-    data: List[Query] = Field(title="Datamesh queries")
-    id: Optional[str] = Field(title="Unique ID of this package", default=None)
-    name: Optional[str] = Field(title="Package name", default="OceanQL package")
-    description: Optional[str] = Field(title="Package description", default="")
-
-
-class Workspace(BaseModel):
+class Workspace(StrictBaseModel):
     data: List[Query] = Field(title="Datamesh queries")
     id: Optional[str] = Field(title="Unique ID of this package", default=None)
     name: Optional[str] = Field(title="Package name", default="OceanQL package")
@@ -436,7 +429,7 @@ class Container(str, Enum):
     Dataset = "dataset"
 
 
-class Stage(BaseModel):
+class Stage(StrictBaseModel):
     query: Query = Field(title="OceanQL query")
     qhash: str = Field(title="Query hash")
     formats: List[str] = Field(title="Available download formats")
