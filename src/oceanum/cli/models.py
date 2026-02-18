@@ -8,12 +8,13 @@ from typing import ClassVar
 from typing_extensions import Self
 import json
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+from oceanum._base import StrictBaseModel
 
 from . import utils
 
 
-class DeviceCodeResponse(BaseModel):
+class DeviceCodeResponse(StrictBaseModel):
     device_code: str
     user_code: str
     verification_uri: str
@@ -21,7 +22,7 @@ class DeviceCodeResponse(BaseModel):
     interval: int
     verification_uri_complete: str
 
-class TokenResponse(BaseModel):
+class TokenResponse(StrictBaseModel):
     access_token: str
     id_token: str|None = None
     refresh_token: str|None = None
@@ -77,11 +78,11 @@ class TokenResponse(BaseModel):
             return True
         return False
 
-class Auth0Config(BaseModel):
+class Auth0Config(StrictBaseModel):
     domain: str
     client_id: str
 
-class ContextObject(BaseModel):
+class ContextObject(StrictBaseModel):
     domain: str
     token: TokenResponse|None=None
     auth0: Auth0Config|None=None

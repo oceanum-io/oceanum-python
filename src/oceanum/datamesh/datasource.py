@@ -11,7 +11,6 @@ import shapely
 import warnings
 from pydantic import (
     ConfigDict,
-    BaseModel,
     Field,
     AnyHttpUrl,
     PrivateAttr,
@@ -19,6 +18,7 @@ from pydantic import (
     BeforeValidator,
     field_validator,
 )
+from oceanum._base import StrictBaseModel
 from pydantic_core import core_schema
 from pydantic.json import timedelta_isoformat
 from typing_extensions import Annotated
@@ -138,7 +138,7 @@ Geometry = Annotated[
 ]
 
 
-class Schema(BaseModel):
+class Schema(StrictBaseModel):
     attrs: Optional[dict] = Field(title="Global attributes", default={})
     dims: Optional[dict] = Field(title="Dimensions", default={})
     coords: Optional[dict] = Field(title="Coordinates", default={})
@@ -191,7 +191,7 @@ COORD_MAPPING = {
 }
 
 
-class Datasource(BaseModel):
+class Datasource(StrictBaseModel):
     """Datasource"""
 
     id: str = Field(
@@ -325,7 +325,7 @@ class Datasource(BaseModel):
     _detail: bool = PrivateAttr(default=False)
     # TODO[pydantic]: The following keys were removed: `json_encoders`.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(use_enum_values=True, validate_assignment=True)
+    model_config = ConfigDict(extra="forbid", use_enum_values=True, validate_assignment=True)
 
     @field_validator("id")
     @classmethod

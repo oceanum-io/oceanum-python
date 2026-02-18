@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from oceanum._base import StrictBaseModel
 from typing import Optional
 from datetime import datetime, timedelta
 from .exceptions import DatameshConnectError, DatameshSessionError
@@ -7,7 +7,7 @@ import atexit
 import os
 
 
-class Session(BaseModel):
+class Session(StrictBaseModel):
     id: str
     user: str
     creation_time: datetime
