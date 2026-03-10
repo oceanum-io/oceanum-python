@@ -168,33 +168,24 @@ class Connector(object):
         """
         Check if there are any infos available that need to be displayed.
         Typically will ask to update the client if the version is outdated.
-        Also will try to guess gateway address if not provided.
+        Also will set gateway address to service address if not provided.
         """
-        _gateway = self._gateway or f"{self._proto}://{self._host}"
-        self._is_v1 = True
+        self._gateway = self._gateway or f"{self._proto}://{self._host}"
         try:
             resp = self._retried_request(
-                f"{_gateway}/info/oceanum_python/{__version__}",
+                f"{self._gateway}/info/oceanum_python/{__version__}",
                 retries=5,
             )
             if resp.status_code == 200:
                 r = resp.json()
                 if "message" in r:
                     print(r["message"])
-                self._gateway = _gateway
-                return
-            elif resp.status_code == 404:
-                print("Using datamesh API version 0")
-                self._is_v1 = False
-                self._gateway = self._gateway or f"{self._proto}://gateway.{self._host}"
                 return
             raise DatameshConnectError(
                 f"Failed to reach datamesh: {resp.status_code}-{resp.text}"
             )
         except Exception as e:
-            warnings.warn(f"Failed to reach datamesh gateway at {_gateway}: {e}")
-            warnings.warn("Assuming datamesh API version 1")
-            self._gateway = _gateway
+            warnings.warn(f"Failed to reach datamesh gateway at {self._gateway}: {e}")
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:

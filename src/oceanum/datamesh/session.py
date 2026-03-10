@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 from .exceptions import DatameshConnectError, DatameshSessionError
 from .utils import retried_request, HTTPSession
 import atexit
@@ -39,21 +39,6 @@ class Session(BaseModel):
             the connection session duration if set or 3600 (1 hour)
         """
 
-        # Back-compatibility with beta version (returning dummy session object)
-        if not connection._is_v1:
-            session = cls(
-                id="dummy_session",
-                user="dummy_user",
-                creation_time=datetime.now(),
-                end_time=datetime.now()
-                + timedelta(seconds=connection._session_params.get("duration", 3600)),
-                write=False,
-                verified=False,
-            )
-            session._connection = connection
-            atexit.register(session.close)
-            return session
-        # v1
         try:
             headers = {
                 "Cache-Control": "no-store"
@@ -120,7 +105,6 @@ class Session(BaseModel):
             session = cls(**res.json())
             session._connection = lambda: None
             session._connection._gateway = os.environ["DATAMESH_ZARR_PROXY"]
-            session._connection._is_v1 = True
             session._connection.http_session = http_session
             atexit.register(session.close)
             return session
@@ -142,12 +126,6 @@ class Session(BaseModel):
             Session id to acquire.
         """
 
-        # Back-compatibility with beta version (returning dummy session object)
-        if not connection._is_v1:
-            raise DatameshSessionError(
-                "Cannot acquire session from id when using datamesh v0"
-            )
-        # v1
         try:
             res = retried_request(
                 f"{connection._gateway}/session/{session_id}",
@@ -171,10 +149,6 @@ class Session(BaseModel):
         return {**headers, **self.header}
 
     def close(self, finalise_write: bool = False):
-        # Back-compatibility with beta version (ignoring)
-        if not self._connection._is_v1:
-            return
-        # datamesh v1
         try:
             atexit.unregister(self.close)
         except:

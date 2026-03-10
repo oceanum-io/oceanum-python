@@ -73,8 +73,7 @@ class ZarrClient(MutableMapping):
         self.datasource = datasource
         self.session = session
         self.method = method
-        self._is_v1 = connection._is_v1
-        self.api = api if connection._is_v1 else "zarr"
+        self.api = api
         self.headers = {**connection._auth_headers}
         self.headers = session.add_header(self.headers)
         if nocache:
@@ -142,7 +141,7 @@ class ZarrClient(MutableMapping):
         encoded_item = urllib.parse.quote(item, safe="/")
         resp = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
-            method="HEAD" if self._is_v1 else "GET",
+            method="HEAD",
             connect_timeout=self.connect_timeout,
             read_timeout=self.read_timeout,
         )
