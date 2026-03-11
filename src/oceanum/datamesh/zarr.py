@@ -211,6 +211,11 @@ def zarr_write(
     overwrite=False,
     group: Optional[str] = None,
 ):
+    def _is_monotonic_non_decreasing(values) -> bool:
+        if len(values) < 2:
+            return True
+        return bool(numpy.all(values[:-1] <= values[1:]))
+
     with Session.acquire(connection) as session:
         store = ZarrClient(connection, datasource_id, session, api="zarr", nocache=True)
         if overwrite is True:
@@ -229,11 +234,20 @@ def zarr_write(
                     raise DatameshWriteError(
                         f"Append coordinate {append} has more than one dimension"
                     )
+                cnew = data[append]
+                if not _is_monotonic_non_decreasing(cnew.values):
+                    raise DatameshWriteError(
+                        f"Append coordinate {append} in incoming data must be monotonic non-decreasing"
+                    )
                 append_dim = cexist.dims[0]
                 (replace_range,) = numpy.nonzero(
                     ((cexist >= data[append][0]) & (cexist <= data[append][-1])).values
                 )  # Get range in new data which overlaps - this just replaces everything >= first value in the new data
                 if len(replace_range):
+                    if not numpy.all(numpy.diff(replace_range) == 1):
+                        raise DatameshWriteError(
+                            f"Cannot append on coordinate {append}: overlapping indices in existing zarr are non-contiguous (existing coordinate likely non-monotonic)"
+                        )
                     # Fail if the replacement range is larger than incomign data
                     if len(replace_range) > len(data[append]):
                         raise DatameshWriteError(
@@ -246,8 +260,14 @@ def zarr_write(
                     ]
                     replace_section = data.isel(
                         **{append_dim: slice(0, len(replace_range))}
-                    ).drop(drop_coords + drop_vars)
+                    ).drop_vars(drop_coords + drop_vars, errors="ignore")
                     replace_slice = slice(replace_range[0], replace_range[-1] + 1)
+                    replace_coord = replace_section[append]
+                    existing_coord = cexist[replace_slice]
+                    if not numpy.array_equal(replace_coord.values, existing_coord.values):
+                        raise DatameshWriteError(
+                            f"Cannot append on coordinate {append}: overlap timestamps do not match existing archive values. Inserting new timestamps into an existing coordinate range is not supported"
+                        )
                     # Fail if we are replacing an internal section and ends of coordinates do not match
                     if replace_range[-1] + 1 < len(cexist) and not numpy.array_equal(
                         replace_section[append], cexist[replace_slice]
