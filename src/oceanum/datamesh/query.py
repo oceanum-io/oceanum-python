@@ -207,7 +207,8 @@ class GeoFilter(BaseModel):
     @field_validator("geom", mode="before")
     @classmethod
     def validate_geom(cls, v):
-        if isinstance(v, (list, tuple)):
+        if isinstance(v, (list, tuple, np.ndarray)):
+            v = list(v)
             if len(v) != 4:
                 raise ValueError(
                     "bbox must be a list of length 4: [x_min,y_min,x_max,y_max]"
