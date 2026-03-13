@@ -1,4 +1,5 @@
 import os
+import warnings
 import pytest
 import datetime
 import shapely
@@ -96,3 +97,32 @@ def test_stage_resp():
         container="dataset",
         sig="efg"
     )
+
+
+def test_query_unknown_param_close_match():
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        q = Query(datasource="test", tiemfilter=None)
+    assert len(w) == 1
+    assert "tiemfilter" in str(w[0].message)
+    assert "timefilter" in str(w[0].message)
+    assert "did you mean" in str(w[0].message).lower()
+    # Ensure the misspelled param is not in the serialized output
+    assert "tiemfilter" not in q.model_dump()
+
+
+def test_query_unknown_param_no_match():
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        q = Query(datasource="test", zzzzz="bar")
+    assert len(w) == 1
+    assert "zzzzz" in str(w[0].message)
+    assert "will be ignored" in str(w[0].message).lower()
+    assert "zzzzz" not in q.model_dump()
+
+
+def test_query_valid_params_no_warning():
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        q = Query(datasource="test", variables=["a", "b"])
+    assert len(w) == 0
