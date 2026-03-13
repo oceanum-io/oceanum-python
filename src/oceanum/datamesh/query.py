@@ -1,4 +1,6 @@
 import datetime
+import difflib
+import warnings
 import pandas as pd
 import numpy as np
 import shapely
@@ -357,6 +359,26 @@ class Query(BaseModel):
     """
     Datamesh query
     """
+
+    def __init__(self, **data):
+        field_names = set(Query.model_fields.keys())
+        extra_keys = set(data.keys()) - field_names
+        for key in extra_keys:
+            close = difflib.get_close_matches(key, field_names, n=1, cutoff=0.6)
+            if close:
+                warnings.warn(
+                    f"Query received unknown parameter '{key}' - did you mean '{close[0]}'?",
+                    UserWarning,
+                    stacklevel=2,
+                )
+            else:
+                warnings.warn(
+                    f"Query received unknown parameter '{key}' - it will be ignored. "
+                    f"Valid parameters: {', '.join(sorted(field_names))}",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        super().__init__(**data)
 
     datasource: str = Field(
         title="The id of the datasource",
