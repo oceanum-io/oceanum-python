@@ -234,6 +234,7 @@ class Connector(object):
         resp = self._retried_request(
             f"{self._gateway}/data/{datasource_id}",
             method="DELETE",
+            timeout=(DATAMESH_CONNECT_TIMEOUT, 600),
         )
         self._validate_response(resp)
         return True
