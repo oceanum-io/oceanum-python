@@ -82,7 +82,7 @@ class Connector(object):
         self,
         token=None,
         service=os.environ.get("DATAMESH_SERVICE", DEFAULT_CONFIG["DATAMESH_SERVICE"]),
-        gateway=os.environ.get("DATAMESH_GATEWAY", None),
+        _gateway=os.environ.get("DATAMESH_GATEWAY", None),
         user=None,
         session_duration=None,
         verify=True,
@@ -91,6 +91,8 @@ class Connector(object):
 
         Args:
             token (string): Your datamesh access token. Defaults to os.environ.get("DATAMESH_TOKEN", None).
+            service (string): The datamesh service url. Defaults to os.environ.get("DATAMESH_SERVICE", "https://datamesh.oceanum.io").
+            user (string, optional): Optional user identifier to be sent in the header for datamesh authentication. Defaults to None.
             session_duration (float, optional): The desired length of time for acquired datamesh sessions in seconds. Will be 3600 seconds by default.
             verify (bool, optional): Whether to verify the datamesh server certificate. Defaults to True.
         Raises:
@@ -108,7 +110,12 @@ class Connector(object):
         self._session_params = (
             {"duration": float(session_duration)} if session_duration else {}
         )
-        self._gateway = gateway
+        if _gateway and re.match(r"^https?://gateway\.datamesh(-v0)?\.oceanum\.(io|tech)", _gateway):
+            warnings.warn(
+                f"The gateway url {_gateway} is deprecated. Please use https://datamesh.oceanum.io or https://datamesh.oceanum.tech instead.",
+                DeprecationWarning,
+            )
+        self._gateway = _gateway or f"{self._proto}://{self._host}"
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         self._verify = verify
 
@@ -170,7 +177,6 @@ class Connector(object):
         Typically will ask to update the client if the version is outdated.
         Also will set gateway address to service address if not provided.
         """
-        self._gateway = self._gateway or f"{self._proto}://{self._host}"
         try:
             resp = self._retried_request(
                 f"{self._gateway}/info/oceanum_python/{__version__}",
@@ -185,7 +191,7 @@ class Connector(object):
                 f"Failed to reach datamesh: {resp.status_code}-{resp.text}"
             )
         except Exception as e:
-            warnings.warn(f"Failed to reach datamesh gateway at {self._gateway}: {e}")
+            warnings.warn(f"Failed to check status of datamesh gateway at {self._gateway}: {e}")
 
     def _validate_response(self, resp):
         if resp.status_code >= 400:
