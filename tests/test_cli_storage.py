@@ -29,6 +29,8 @@ from oceanum.storage import FileSystem
 
 REMOTE_PATH = "test_storage_cli"
 
+pytestmark = pytest.mark.requires_datamesh_token
+
 @pytest.fixture
 def fs():
     return FileSystem(os.environ["DATAMESH_TOKEN"])
