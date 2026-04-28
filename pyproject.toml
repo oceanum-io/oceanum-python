@@ -109,3 +109,4 @@ universal = true
 required_plugins = "pytest-env"
 pythonpath = ["src"]
 env = ["STORAGE_SERVICE = https://storage.oceanum.io"]
+markers = ["requires_datamesh_token: marks tests that need OCEANUM_TEST_DATAMESH_TOKEN"]
