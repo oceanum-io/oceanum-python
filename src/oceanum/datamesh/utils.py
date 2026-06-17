@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep, monotonic
 import requests
 from requests.adapters import HTTPAdapter
 import numpy as np
@@ -52,6 +52,14 @@ DATAMESH_CHUNK_WRITE_TIMEOUT = (
     None if DATAMESH_CHUNK_WRITE_TIMEOUT == "None" else float(DATAMESH_CHUNK_WRITE_TIMEOUT)
 )
 
+# Lifetime in seconds of a connection pool before it is recreated.
+# Useful to force periodic reconnection to pick up DNS changes or avoid stale connections.
+# Defaults to None (no expiry).
+DATAMESH_CONNECTION_POOL_LIFETIME = os.getenv("DATAMESH_CONNECTION_POOL_LIFETIME", "None")
+DATAMESH_CONNECTION_POOL_LIFETIME = (
+    None if DATAMESH_CONNECTION_POOL_LIFETIME == "None" else float(DATAMESH_CONNECTION_POOL_LIFETIME)
+)
+
 
 class HTTPSession:
     """
@@ -62,6 +70,8 @@ class HTTPSession:
         The size of the connection pool, by default None
     headers : dict, optional
         Default headers to include in each request, by default None
+    pool_lifetime : float, optional
+        Lifetime of the connection pool in seconds before it is recreated, by default None (no expiry)
     Methods
     -------
     session : requests.Session
@@ -72,11 +82,18 @@ class HTTPSession:
         Restores the state of the object from pickling
     """
 
-    def __init__(self, pool_size=os.environ.get("DATAMESH_CONNECTION_POOL_SIZE", 100), headers=None):
+    def __init__(
+        self,
+        pool_size=os.environ.get("DATAMESH_CONNECTION_POOL_SIZE", 100),
+        headers=None,
+        pool_lifetime=DATAMESH_CONNECTION_POOL_LIFETIME,
+    ):
         self._session = None
         self._pid = None
         self._pool_size = int(pool_size)
         self._headers = headers
+        self._pool_lifetime = pool_lifetime  # seconds, or None for no expiry
+        self._session_created_at = None
 
     def _create_session(self):
         session = requests.Session()
@@ -88,11 +105,17 @@ class HTTPSession:
         session.mount('http://', adapter)
         if self._headers:
             session.headers.update(self._headers)
+        self._session_created_at = monotonic()
         return session
+
+    def _is_session_expired(self):
+        if self._pool_lifetime is None or self._session_created_at is None:
+            return False
+        return (monotonic() - self._session_created_at) >= self._pool_lifetime
 
     @property
     def session(self):
-        if self._session is None or self._pid != os.getpid():
+        if self._session is None or self._pid != os.getpid() or self._is_session_expired():
             self._pid = os.getpid()
             self._session = self._create_session()
         return self._session
@@ -101,6 +124,7 @@ class HTTPSession:
         state = self.__dict__.copy()
         state["_session"] = None
         state["_pid"] = None
+        state["_session_created_at"] = None
         return state
 
     def __setstate__(self, state):

@@ -1,4 +1,6 @@
 import datetime
+import difflib
+import warnings
 import pandas as pd
 import numpy as np
 import shapely
@@ -62,7 +64,6 @@ def parse_time(v):
 Timestamp = Annotated[
     datetime.datetime,
     Field(
-        default=None,
         title="Timestamp",
         description="Timestamp as python datetime, numpy datetime64 or pandas Timestamp",
     ),
@@ -102,7 +103,6 @@ def parse_timedelta(v):
 Timedelta = Annotated[
     datetime.timedelta,
     Field(
-        default=None,
         title="Timedelta",
         description=(
             "Time period as a python timedelta, numpy timedelta64, pandas "
@@ -224,7 +224,8 @@ class GeoFilter(BaseModel):
     @field_validator("geom", mode="before")
     @classmethod
     def validate_geom(cls, v):
-        if isinstance(v, list):
+        if isinstance(v, (list, tuple, np.ndarray)):
+            v = list(v)
             if len(v) != 4:
                 raise ValueError(
                     "bbox must be a list of length 4: [x_min,y_min,x_max,y_max]"
@@ -385,6 +386,26 @@ class Query(BaseModel):
     """
     Datamesh query
     """
+
+    def __init__(self, **data):
+        field_names = set(Query.model_fields.keys())
+        extra_keys = set(data.keys()) - field_names
+        for key in extra_keys:
+            close = difflib.get_close_matches(key, field_names, n=1, cutoff=0.6)
+            if close:
+                warnings.warn(
+                    f"Query received unknown parameter '{key}' - did you mean '{close[0]}'?",
+                    UserWarning,
+                    stacklevel=2,
+                )
+            else:
+                warnings.warn(
+                    f"Query received unknown parameter '{key}' - it will be ignored. "
+                    f"Valid parameters: {', '.join(sorted(field_names))}",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        super().__init__(**data)
 
     datasource: str = Field(
         title="The id of the datasource",

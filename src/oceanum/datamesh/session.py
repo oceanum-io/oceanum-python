@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 from .exceptions import DatameshConnectError, DatameshSessionError
-from .utils import retried_request
+from .utils import retried_request, HTTPSession
 import atexit
 import os
 
@@ -39,30 +39,19 @@ class Session(BaseModel):
             the connection session duration if set or 3600 (1 hour)
         """
 
-        # Back-compatibility with beta version (returning dummy session object)
-        if not connection._is_v1:
-            session = cls(
-                id="dummy_session",
-                user="dummy_user",
-                creation_time=datetime.now(),
-                end_time=datetime.now()
-                + timedelta(seconds=connection._session_params.get("duration", 3600)),
-                write=False,
-                verified=False,
-            )
-            session._connection = connection
-            atexit.register(session.close)
-            return session
-        # v1
         try:
-            headers = connection._auth_headers.copy()
-            headers["Cache-Control"] = "no-store"
+            headers = {
+                "Cache-Control": "no-store"
+            }
             params = connection._session_params.copy()
             params["allow_multiwrite"] = allow_multiwrite
             if duration is not None:
                 params["duration"] = duration
             res = retried_request(
-                f"{connection._gateway}/session/", params=params, headers=headers
+                f"{connection._gateway}/session/",
+                params=params,
+                headers=headers,
+                http_session=connection.http_session
             )
             if res.status_code != 200:
                 raise DatameshConnectError(
@@ -96,6 +85,7 @@ class Session(BaseModel):
         """
 
         try:
+            http_session = HTTPSession(headers={"X-DATAMESH-TOKEN": os.environ["DATAMESH_TOKEN"]})
             res = retried_request(
                 f"{os.environ['DATAMESH_ZARR_PROXY']}/session/",
                 params={
@@ -103,10 +93,10 @@ class Session(BaseModel):
                     "allow_multiwrite": allow_multiwrite,
                 },
                 headers={
-                    "X-DATAMESH-TOKEN": os.environ["DATAMESH_TOKEN"],
                     "USER": os.environ["DATAMESH_USER"],
                     "Cache-Control": "no-cache",
                 },
+                http_session=http_session
             )
             if res.status_code != 200:
                 raise DatameshConnectError(
@@ -115,7 +105,7 @@ class Session(BaseModel):
             session = cls(**res.json())
             session._connection = lambda: None
             session._connection._gateway = os.environ["DATAMESH_ZARR_PROXY"]
-            session._connection._is_v1 = True
+            session._connection.http_session = http_session
             atexit.register(session.close)
             return session
         except Exception as e:
@@ -136,16 +126,10 @@ class Session(BaseModel):
             Session id to acquire.
         """
 
-        # Back-compatibility with beta version (returning dummy session object)
-        if not connection._is_v1:
-            raise DatameshSessionError(
-                "Cannot acquire session from id when using datamesh v0"
-            )
-        # v1
         try:
             res = retried_request(
                 f"{connection._gateway}/session/{session_id}",
-                headers=connection._auth_headers,
+                http_session=connection.http_session,
             )
             if res.status_code != 200:
                 raise DatameshConnectError(
@@ -165,10 +149,6 @@ class Session(BaseModel):
         return {**headers, **self.header}
 
     def close(self, finalise_write: bool = False):
-        # Back-compatibility with beta version (ignoring)
-        if not self._connection._is_v1:
-            return
-        # datamesh v1
         try:
             atexit.unregister(self.close)
         except:
@@ -178,6 +158,7 @@ class Session(BaseModel):
             method="DELETE",
             params={"finalise_write": finalise_write},
             headers=self.header,
+            http_session=self._connection.http_session,
         )
         if res.status_code != 204:
             if finalise_write:
