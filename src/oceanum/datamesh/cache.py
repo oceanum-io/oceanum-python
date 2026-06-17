@@ -5,6 +5,7 @@ import hashlib
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
+from zarr.storage import ZipStore
 
 from .query import Query
 
@@ -51,14 +52,15 @@ class LocalCache:
     def _get(self, query):
         cache_file = self._cachepath(query)
         try:
-            if os.path.exists(cache_file + ".nc"):
+            if os.path.exists(cache_file + ".zarr.zip"):
                 if (
-                    os.path.getmtime(cache_file + ".nc") + self.cache_timeout
+                    os.path.getmtime(cache_file + ".zarr.zip") + self.cache_timeout
                     < time.time()
                 ):
-                    os.remove(cache_file + ".nc")
+                    os.remove(cache_file + ".zarr.zip")
                     return None
-                return xr.open_dataset(cache_file + ".nc")
+                with ZipStore(cache_file + ".zarr.zip") as store:
+                    return xr.open_zarr(store, consolidated=True).load()
             elif os.path.exists(cache_file + ".gpq"):
                 if (
                     os.path.getmtime(cache_file + ".gpq") + self.cache_timeout
@@ -95,7 +97,8 @@ class LocalCache:
     def put(self, query, data):
         cache_file = self._cachepath(query)
         if isinstance(data, xr.Dataset):
-            data.to_netcdf(cache_file + ".nc")
+            with ZipStore(cache_file + ".zarr.zip") as store:
+                data.to_zarr(store, consolidated=True)
         elif isinstance(data, gpd.GeoDataFrame):
             data.to_parquet(cache_file + ".gpq")
         elif isinstance(data, pd.DataFrame):

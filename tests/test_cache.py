@@ -177,7 +177,7 @@ class TestPutAndGet:
     ):
         """Test storing and retrieving xarray Dataset."""
         cache.put(sample_query, sample_xarray_dataset)
-        cached_file = cache._cachepath(sample_query) + ".nc"
+        cached_file = cache._cachepath(sample_query) + ".zarr.zip"
         assert os.path.exists(cached_file)
 
         retrieved = cache.get(sample_query)
@@ -260,7 +260,7 @@ class TestPutAndGet:
 
     def test_get_corrupted_cache_returns_none(self, cache, sample_query):
         """Test that corrupted cache file returns None."""
-        cached_file = cache._cachepath(sample_query) + ".nc"
+        cached_file = cache._cachepath(sample_query) + ".zarr.zip"
 
         # Create a corrupted file
         with open(cached_file, "w") as f:
@@ -275,7 +275,7 @@ class TestCopy:
 
     def test_copy_moves_file(self, cache, sample_query, temp_cache_dir):
         """Test that copy moves file to cache location."""
-        source_file = os.path.join(temp_cache_dir, "source.nc")
+        source_file = os.path.join(temp_cache_dir, "source.zarr.zip")
 
         # Create a source file
         with open(source_file, "w") as f:
@@ -283,9 +283,9 @@ class TestCopy:
 
         assert os.path.exists(source_file)
 
-        cache.copy(sample_query, source_file, ".nc")
+        cache.copy(sample_query, source_file, ".zarr.zip")
 
-        cached_file = cache._cachepath(sample_query) + ".nc"
+        cached_file = cache._cachepath(sample_query) + ".zarr.zip"
         assert os.path.exists(cached_file)
         assert not os.path.exists(source_file)  # Original should be moved
 

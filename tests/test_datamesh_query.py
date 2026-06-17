@@ -48,7 +48,7 @@ def test_query_table(conn):
 def test_query_table_cache(conn):
     q = Query(**{"datasource": "oceanum-sea-level-rise"})
     cache = LocalCache(cache_timeout=600)
-    cached_file = cache._cachepath(q) + ".nc"
+    cached_file = cache._cachepath(q) + ".zarr.zip"
     if os.path.exists(cached_file):
         os.remove(cached_file)
     ds0 = conn.query(q, cache_timeout=600)
@@ -91,7 +91,7 @@ def test_query_dataset_cache(conn):
     )
 
     cache = LocalCache(cache_timeout=600)
-    cached_file = cache._cachepath(q) + ".nc"
+    cached_file = cache._cachepath(q) + ".zarr.zip"
     if os.path.exists(cached_file):
         os.remove(cached_file)
     ds0 = conn.query(q, use_dask=False, cache_timeout=600)
