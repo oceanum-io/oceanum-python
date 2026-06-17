@@ -1,8 +1,8 @@
 import datetime
 import json
 import re
-from collections.abc import MutableMapping
 import os
+from collections.abc import MutableMapping
 
 import numpy
 import xarray
@@ -153,6 +153,9 @@ class ZarrClient(MutableMapping):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support write operations")
         encoded_item = urllib.parse.quote(item, safe="/")
+        # Log metadata writes which may trigger session state changes
+        if item.endswith(('.zarray', '.zattrs', '.zmetadata', '.zgroup')):
+            print(f"[ZARR_CLIENT] Writing metadata file: {item} with session {self.session.id} to {self.datasource}")
         res = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
             method=self.method,
@@ -217,6 +220,12 @@ def zarr_write(
         return bool(numpy.all(values[:-1] <= values[1:]))
 
     with Session.acquire(connection) as session:
+        print(
+            f"[ZARR_WRITE] Acquired session {session.id} "
+            f"for datasource={datasource_id} "
+            f"append={append} overwrite={overwrite} "
+            f"pid={os.getpid()}"
+        )
         store = ZarrClient(connection, datasource_id, session, api="zarr", nocache=True)
         if overwrite is True:
             store.clear()
@@ -286,6 +295,10 @@ def zarr_write(
                     append_chunk = data.isel(
                         **{append_dim: slice(len(replace_range), None)}
                     )
+                    print(
+                        f"[ZARR_WRITE] Appending {len(append_chunk[append])} new records "
+                        f"to coordinate {append} on session {session.id}"
+                    )
                     _to_zarr(
                         append_chunk,
                         store,
@@ -293,6 +306,9 @@ def zarr_write(
                         append_dim=append_dim,
                         consolidated=True,
                         group=group,
+                    )
+                    print(
+                        f"[ZARR_WRITE] Successfully appended chunk on session {session.id}"
                     )
         else:
             _to_zarr(data, store, mode="w", consolidated=True, group=group)

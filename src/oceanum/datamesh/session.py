@@ -58,6 +58,11 @@ class Session(BaseModel):
                     "Failed to create session with error: " + res.text
                 )
             session = cls(**res.json())
+            print(
+                f"[SESSION] Acquired session {session.id} "
+                f"(allow_multiwrite={allow_multiwrite}, "
+                f"pid={os.getpid()})"
+            )
             session._connection = connection
             atexit.register(session.close)
             return session
@@ -149,6 +154,10 @@ class Session(BaseModel):
         return {**headers, **self.header}
 
     def close(self, finalise_write: bool = False):
+        print(
+            f"[SESSION] Closing session {self.id} "
+            f"(finalise_write={finalise_write}, pid={os.getpid()})"
+        )
         try:
             atexit.unregister(self.close)
         except:
