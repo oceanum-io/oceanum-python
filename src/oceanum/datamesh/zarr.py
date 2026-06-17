@@ -2,6 +2,7 @@ import datetime
 import json
 import re
 import os
+import threading
 from collections.abc import MutableMapping
 
 import numpy
@@ -155,7 +156,7 @@ class ZarrClient(MutableMapping):
         encoded_item = urllib.parse.quote(item, safe="/")
         # Log metadata writes which may trigger session state changes
         if item.endswith(('.zarray', '.zattrs', '.zmetadata', '.zgroup')):
-            print(f"[ZARR_CLIENT] Writing metadata file: {item} with session {self.session.id} to {self.datasource}")
+            print(f"[ZARR_CLIENT] [{datetime.datetime.now().isoformat()}] [pid={os.getpid()} tid={threading.get_ident()}] Writing metadata file: {item} with session {self.session.id} to {self.datasource}")
         res = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
             method=self.method,
@@ -221,10 +222,10 @@ def zarr_write(
 
     with Session.acquire(connection) as session:
         print(
-            f"[ZARR_WRITE] Acquired session {session.id} "
+            f"[ZARR_WRITE] [{datetime.datetime.now().isoformat()}] [pid={os.getpid()} tid={threading.get_ident()}] "
+            f"Acquired session {session.id} "
             f"for datasource={datasource_id} "
-            f"append={append} overwrite={overwrite} "
-            f"pid={os.getpid()}"
+            f"append={append} overwrite={overwrite}"
         )
         store = ZarrClient(connection, datasource_id, session, api="zarr", nocache=True)
         if overwrite is True:
@@ -296,7 +297,8 @@ def zarr_write(
                         **{append_dim: slice(len(replace_range), None)}
                     )
                     print(
-                        f"[ZARR_WRITE] Appending {len(append_chunk[append])} new records "
+                        f"[ZARR_WRITE] [{datetime.datetime.now().isoformat()}] [pid={os.getpid()} tid={threading.get_ident()}] "
+                        f"Appending {len(append_chunk[append])} new records "
                         f"to coordinate {append} on session {session.id}"
                     )
                     _to_zarr(
@@ -308,7 +310,8 @@ def zarr_write(
                         group=group,
                     )
                     print(
-                        f"[ZARR_WRITE] Successfully appended chunk on session {session.id}"
+                        f"[ZARR_WRITE] [{datetime.datetime.now().isoformat()}] [pid={os.getpid()} tid={threading.get_ident()}] "
+                        f"Successfully appended chunk on session {session.id}"
                     )
         else:
             _to_zarr(data, store, mode="w", consolidated=True, group=group)
