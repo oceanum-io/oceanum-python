@@ -1,4 +1,4 @@
-# Create a base class for renderering the output of the command line interface.
+# Create a base class for rendering the output of the command line interface.
 # The outputs are rendered in the following formats:
 # - Table
 # - JSON

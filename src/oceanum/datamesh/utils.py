@@ -160,7 +160,7 @@ def retried_request(
         Request headers, by default None
     retries : int, optional
         Number of retries, by default 8
-    timeout : tupe(float, float), optional
+    timeout : tuple(float, float), optional
         Request connect and read timeout in seconds, by default (3.05, 10)
     http_session : HTTPSession, optional
         Session object to use for request

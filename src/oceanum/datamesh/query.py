@@ -314,7 +314,7 @@ class TimeFilter(BaseModel):
     resample: Optional[ResampleType] = Field(
         title="Temporal resampling method",
         default=ResampleType.slinear,
-        description="Resampling method applied when reducing tempral resolution. Only valid with range type",
+        description="Resampling method applied when reducing temporal resolution. Only valid with range type",
     )
 
     @field_validator("times")
