@@ -48,7 +48,7 @@ Once you have a copy of the source, you can install it with:
 
 .. code-block:: console
 
-    $ pip install -e .
+    $ pip install .
 
 
 .. _Github repo: https://github.com/oceanum/oceanum-python
