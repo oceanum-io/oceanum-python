@@ -73,6 +73,15 @@ Timestamp = Annotated[
 
 
 def parse_timedelta(v):
+    """Parse a time period into a python timedelta.
+
+    Accepts a python ``timedelta``, numpy ``timedelta64``, pandas ``Timedelta``
+    or an ISO8601 duration string. Following the ISO8601-2 convention, a leading
+    minus sign denotes a negative period (e.g. ``"-P7D"``), and negative
+    ``timedelta``/``timedelta64`` values are likewise preserved. A period is
+    resolved relative to the current time: a positive period resolves to a time
+    *after* now and a negative period to a time *before* now.
+    """
     if v is None:
         return None
     if not (
@@ -95,7 +104,13 @@ Timedelta = Annotated[
     datetime.timedelta,
     Field(
         title="Timedelta",
-        description="Timedelta as python timedelta, numpy timedelta64 or pandas Timedelta",
+        description=(
+            "Time period as a python timedelta, numpy timedelta64, pandas "
+            "Timedelta or ISO8601 duration string. Negative periods are "
+            "supported following the ISO8601-2 convention (e.g. '-P7D'): a "
+            "positive period resolves to a time after the current time and a "
+            "negative period to a time before the current time."
+        ),
     ),
     BeforeValidator(parse_timedelta),
     WithJsonSchema({"type": "string", "format": "time-period"}),
@@ -258,7 +273,15 @@ class LevelFilter(BaseModel):
 
 class TimeFilter(BaseModel):
     """TimeFilter class
-    Describes a temporal subset or interpolation
+    Describes a temporal subset or interpolation.
+
+    Each value in ``times`` may be an absolute time (Timestamp) or a period
+    relative to the current time (Timedelta). Periods follow the ISO8601-2
+    convention where a leading minus sign denotes a negative period: a positive
+    period (e.g. ``"P7D"``) resolves to a time *after* now and a negative period
+    (e.g. ``"-P7D"``) to a time *before* now. This applies equally to the start
+    and end of a range, so e.g. ``times=["-P7D", "P1D"]`` selects from 7 days
+    before now to 1 day after now.
     """
 
     type: TimeFilterType = Field(
@@ -274,6 +297,10 @@ class TimeFilter(BaseModel):
     times: List[Union[Timestamp, Timedelta, None]] = Field(
         title="Selection times",
         description="""
+            Absolute times (Timestamp) or periods relative to the current time
+            (Timedelta). Periods use the ISO8601-2 convention: a positive period
+            (e.g. 'P7D') resolves after the current time, a negative period
+            (e.g. '-P7D') before it. This applies to both timestart and tend.
             - For type='range', [timestart, tend].
         """,
     )
@@ -430,7 +457,7 @@ class Query(BaseModel):
     id: Optional[str] = Field(title="Unique ID of this query", default=None)
 
     def __bool__(self):
-        for k,v in self.__dict__.items():
+        for k, v in self.__dict__.items():
             if not k in ["datasource", "description", "id"] and v:
                 return True
         return False
