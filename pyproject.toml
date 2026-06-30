@@ -32,37 +32,47 @@ dependencies = [
     "aiohttp",
     "click",
     "cftime",
-    "dask",
+    "dask[dataframe,distributed]",
     "decorator",
     "fsspec",
     "geojson-pydantic",
     "geopandas",
     "h5netcdf[h5py]",
+    "msgpack",
     "netcdf4",
     "numpy",
+    "numcodecs",
     "orjson",
     "pandas",
     "platformdirs",
     "pyarrow",
     "pydantic[email]",
+    "python-jsonpath",
+    "requests",
     "shapely",
     "tabulate",
     "xarray",
     "rioxarray",
     "zarr<3",
-    "numcodecs",
-    "dask[dataframe,distributed]",
-    "msgpack",
-    "cftime",
-    "python-jsonpath",
-    "requests"
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-env", "pytest-asyncio", "python-dotenv",]
-video = ["xarray_video"]
 eidos = ["oceanum.eidos"]
+video = ["xarray_video"]
+
+[dependency-groups]
+dev = [
+    "build",
+    "twine",
+    {include-group = "tests"},
+]
+tests = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-env",
+    "python-dotenv",
+]
 docs = [
     "autodoc-pydantic",
     "pydata-sphinx-theme",
