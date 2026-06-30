@@ -202,7 +202,7 @@ class FileSystem(AsyncFileSystem):
         if response.status == 429:
             try:
                 body = await response.json()
-                detail = body.get("detail", "Egress quota exceeded")
+                detail = body.get("detail") or "Egress quota exceeded"
             except Exception:
                 detail = "Egress quota exceeded"
             raise PermissionError(detail)
