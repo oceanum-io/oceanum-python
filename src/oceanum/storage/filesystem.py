@@ -46,6 +46,8 @@ async def retry_request(func, retries=6, *args, **kwargs):
             if isinstance(e, FileNotFoundError):
                 logger.debug("Request returned 404")
                 raise e
+            if isinstance(e, aiohttp.client_exceptions.ClientResponseError) and e.status == 429:
+                raise e
             if retry == retries - 1:
                 logger.exception(f"{func.__name__} out of retries on exception: {e}")
                 raise e
@@ -165,7 +167,7 @@ class FileSystem(AsyncFileSystem):
 
         async with session.get(self._base_url + spath, params=params or None) as r:
             try:
-                self._raise_not_found_for_status(r, path)
+                await self._raise_not_found_for_status(r, path)
             except FileNotFoundError:
                 # The storage endpoint enforces trailing slash for directories, so test for that
                 if path.endswith("/"):
@@ -194,20 +196,24 @@ class FileSystem(AsyncFileSystem):
 
     ls = sync_wrapper(_ls)
 
-    def _raise_not_found_for_status(self, response, url):
-        """
-        Raises FileNotFoundError for 404s, otherwise uses raise_for_status.
-        """
+    async def _raise_not_found_for_status(self, response, url):
         if response.status == 404:
             raise FileNotFoundError(url)
+        if response.status == 429:
+            try:
+                body = await response.json()
+                detail = body.get("detail") or "Egress quota exceeded"
+            except Exception:
+                detail = "Egress quota exceeded"
+            raise PermissionError(detail)
         response.raise_for_status()
 
     async def _cat_file(self, path, **kwargs):
         logger.debug(path)
         session = await self.set_session()
         async with session.get(self._base_url + path.strip("/")) as r:
+            await self._raise_not_found_for_status(r, path)
             out = await r.read()
-            self._raise_not_found_for_status(r, path)
         return out
 
     @retry_request
@@ -228,7 +234,7 @@ class FileSystem(AsyncFileSystem):
                 size = None
 
             callback.set_size(size)
-            self._raise_not_found_for_status(r, rpath)
+            await self._raise_not_found_for_status(r, rpath)
             if isfilelike(lpath):
                 outfile = lpath
             else:
@@ -286,7 +292,7 @@ class FileSystem(AsyncFileSystem):
 
         meth = getattr(session, method)
         async with meth(self._base_url + rpath.strip("/"), data=gen_chunks()) as resp:
-            self._raise_not_found_for_status(resp, rpath)
+            await self._raise_not_found_for_status(resp, rpath)
 
     async def _exists(self, path, **kwargs):
         try:
@@ -336,7 +342,7 @@ class FileSystem(AsyncFileSystem):
             except (ValueError, KeyError):
                 size = None
 
-            self._raise_not_found_for_status(r, path)
+            await self._raise_not_found_for_status(r, path)
             f = MemoryFile(None, None)
             try:
                 chunk = True
@@ -352,7 +358,7 @@ class FileSystem(AsyncFileSystem):
         info = {}
         session = await self.set_session()
         async with session.head(self._base_url + path.lstrip("/")) as r:
-            self._raise_not_found_for_status(r, path)
+            await self._raise_not_found_for_status(r, path)
         return {
             "name": path,
             "size": int(r.headers.get("content-length")),
@@ -378,7 +384,7 @@ class FileSystem(AsyncFileSystem):
                 raise FileExistsError(path)
         session = await self.set_session()
         async with session.put(self._base_url + path.strip("/") + "/_") as r:
-            self._raise_not_found_for_status(r, path)
+            await self._raise_not_found_for_status(r, path)
 
     async def _cp_file(self, path1, path2, **kwargs):
         logger.debug(f"{path1} -> {path2}")
@@ -386,7 +392,7 @@ class FileSystem(AsyncFileSystem):
         async with session.post(
             self._base_url + path2.lstrip("/"), headers={"x-copy-source": path1}
         ) as r:
-            self._raise_not_found_for_status(r, path1)
+            await self._raise_not_found_for_status(r, path1)
             return r.status == 201
 
     async def _rm(self, path, recursive=True, **kwargs):
@@ -444,7 +450,7 @@ class FileSystem(AsyncFileSystem):
                 # Already deleted or doesn't exist
                 return
             elif r.status >= 400:
-                self._raise_not_found_for_status(r, path)
+                await self._raise_not_found_for_status(r, path)
 
     def ukey(self, path):
         """Unique identifier"""
