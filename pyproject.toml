@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "oceanum"
 description = "Library for oceanum.io services"
 readme = "README.rst"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["AUTHORS.rst", "LICENSE"]
 keywords = ["oceanum", "datamesh", "oceanum.io"]
 authors = [
     { name = "Oceanum Developers", email = "developers@oceanum.science" },
@@ -17,7 +18,6 @@ maintainers = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering",
