@@ -9,6 +9,8 @@ import xarray
 import fsspec
 import urllib.parse
 import requests
+import time
+import hashlib
 
 from typing import Optional
 
@@ -94,6 +96,9 @@ class ZarrClient(MutableMapping):
         if storage_backend is not None:
             self.headers["X-DATAMESH-STORAGE-BACKEND"] = storage_backend
         self.http_session = HTTPSession(headers=self.headers)
+        if self.api == "zarr":
+            self._data_cache = {}
+            self._cache_ttl = 30
 
     def _retried_request(
         self,
@@ -102,12 +107,14 @@ class ZarrClient(MutableMapping):
         data=None,
         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
         read_timeout=DATAMESH_CHUNK_READ_TIMEOUT,
+        headers=None,
     ):
         try:
             resp = retried_request(
                 url=path,
                 method=method,
                 data=data,
+                headers=headers,
                 retries=self.retries,
                 timeout=(connect_timeout, read_timeout),
                 verify=self.verify,
@@ -126,7 +133,40 @@ class ZarrClient(MutableMapping):
             raise DatameshConnectError(f"Server error {resp.status_code}: {resp.text}")
         return resp
 
+    def _get_item(self, item):
+        encoded_item = urllib.parse.quote(item, safe="/")
+        resp = self._retried_request(
+            f"{self._proxy}/{self.datasource}/{encoded_item}",
+            connect_timeout=self.connect_timeout,
+            read_timeout=self.read_timeout,
+            headers={"prefer": "redirect"},
+        )
+        if resp.status_code == 404:
+            raise KeyError(item)
+        if resp.status_code >= 400:
+            raise DatameshConnectError(f"Failed to get item {item}: {resp.text}")
+        return resp.content
+
+    def _cache_get(self, item):
+        entry = self._data_cache.get(item)
+        if entry is None:
+            return None
+        if time.time() - entry["fetched_at"] > self._cache_ttl:
+            self._data_cache.pop(item, None)
+            return None
+        return entry["data"]
+
+    def _cache_set(self, item, data):
+        self._data_cache[item] = {"data": data, "fetched_at": time.time()}
+
     def __getitem__(self, item):
+        if self.api == "zarr":
+            data = self._cache_get(item)
+            if data is not None:
+                return data
+            data = self._get_item(item)
+            self._cache_set(item, data)
+            return data
         encoded_item = urllib.parse.quote(item, safe="/")
         resp = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
@@ -138,6 +178,15 @@ class ZarrClient(MutableMapping):
         return resp.content
 
     def __contains__(self, item):
+        if self.api == "zarr":
+            if self._cache_get(item) is not None:
+                return True
+            try:
+                data = self._get_item(item)
+                self._cache_set(item, data)
+                return True
+            except KeyError:
+                return False
         encoded_item = urllib.parse.quote(item, safe="/")
         resp = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
@@ -149,9 +198,78 @@ class ZarrClient(MutableMapping):
             return False
         return True
 
+    def _presigned_set_item(self, item, value):
+        encoded_item = urllib.parse.quote(item, safe="/")
+
+        resp = self._retried_request(
+            f"{self._proxy}/_presign_write/{self.datasource}/{encoded_item}",
+            method="POST",
+            connect_timeout=self.write_timeout,
+            read_timeout=self.write_timeout,
+        )
+        if resp.status_code >= 400:
+            raise DatameshWriteError(
+                f"Failed to get presigned write URL for {item}: {resp.status_code} - {resp.text}"
+            )
+        presigned = resp.json()
+        upload_url = presigned["url"]
+        physical_address = presigned.get("physical_address", upload_url)
+
+        checksum = hashlib.md5(value).hexdigest()
+        size_bytes = len(value)
+
+        try:
+            scheme = urllib.parse.urlparse(upload_url).scheme
+            if scheme in ("http", "https"):
+                upload_resp = retried_request(
+                    url=upload_url, method="PUT", data=value,
+                    timeout=(self.write_timeout, self.write_timeout),
+                    verify=self.verify, retries=self.retries,
+                )
+                if upload_resp.status_code >= 300:
+                    raise DatameshWriteError(
+                        f"Failed to upload {item}: upload returned {upload_resp.status_code}"
+                    )
+            else:
+                with fsspec.open(upload_url, "wb") as f:
+                    f.write(value)
+        except DatameshWriteError:
+            raise
+        except Exception as e:
+            raise DatameshWriteError(f"Failed to upload data to presigned URL: {e}")
+
+        confirm_body = {
+            "physical_address": physical_address,
+            "checksum": checksum,
+            "size_bytes": size_bytes,
+            "content_type": "application/octet-stream",
+            "user_metadata": {},
+            "force": False,
+        }
+        try:
+            confirm = retried_request(
+                url=f"{self._proxy}/_confirm_write/{self.datasource}/{encoded_item}",
+                method="POST",
+                data=json.dumps(confirm_body),
+                headers={**self.headers, "Content-Type": "application/json"},
+                timeout=(self.write_timeout, self.write_timeout),
+                verify=self.verify, retries=self.retries,
+                http_session=self.http_session,
+            )
+        except requests.RequestException as e:
+            raise DatameshWriteError(f"Failed to confirm write: {e}")
+        if confirm.status_code >= 400:
+            raise DatameshWriteError(
+                f"Failed to confirm write {item}: {confirm.status_code} - {confirm.text}"
+            )
+
+        self._data_cache.pop(item, None)
+
     def __setitem__(self, item, value):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support write operations")
+        if self.api == "zarr":
+            return self._presigned_set_item(item, value)
         encoded_item = urllib.parse.quote(item, safe="/")
         res = self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
@@ -175,8 +293,12 @@ class ZarrClient(MutableMapping):
             connect_timeout=self.connect_timeout,
             read_timeout=10,
         )
+        if self.api == "zarr":
+            self._data_cache.pop(item, None)
 
     def __iter__(self):
+        # Use the original zarr proxy endpoint (not presigned) for both APIs.
+        # The proxy path is already set in __init__ based on self.api.
         resp = self._retried_request(
             f"{self._proxy}/{self.datasource}/",
             connect_timeout=self.connect_timeout,
@@ -193,6 +315,8 @@ class ZarrClient(MutableMapping):
         return 0
 
     def clear(self):
+        if self.api == "zarr":
+            self._data_cache.clear()
         self.__delitem__("")
 
 
