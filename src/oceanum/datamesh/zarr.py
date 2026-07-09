@@ -247,8 +247,16 @@ class ZarrClient(MutableMapping):
         try:
             scheme = urllib.parse.urlparse(upload_url).scheme
             if scheme in ("http", "https"):
+                # self.http_session's underlying requests.Session has the
+                # Datamesh auth/session headers permanently baked in (for
+                # calls to the gateway). Passing those same keys as None
+                # here strips them for this request only (requests removes
+                # a header when the per-request value is None), so they
+                # aren't leaked to the presigned storage URL while still
+                # reusing the pooled connection.
                 upload_resp = retried_request(
                     url=upload_url, method="PUT", data=value,
+                    headers={k: None for k in self.headers},
                     timeout=(self.write_timeout, self.write_timeout),
                     verify=self.verify, retries=self.retries,
                     http_session=self.http_session,
