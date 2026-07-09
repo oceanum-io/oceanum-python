@@ -76,11 +76,20 @@ class ZarrClient(MutableMapping):
         reference_id=None,
         verify=True,
         storage_backend=None,
+        presigned_writes=False,
     ):
+        """
+        presigned_writes (bool, optional): Upload zarr chunks directly to
+            storage via a presigned URL instead of proxying the bytes
+            through the write endpoint. Opt-in and defaults to False:
+            presigned writes are serial per-key and currently slower than
+            the classic path until client-side write concurrency lands.
+        """
         self.datasource = datasource
         self.session = session
         self.method = method
         self.api = api
+        self.presigned_writes = presigned_writes
         self.headers = {**connection._auth_headers}
         self.headers = session.add_header(self.headers)
         if nocache:
@@ -286,7 +295,7 @@ class ZarrClient(MutableMapping):
     def __setitem__(self, item, value):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support write operations")
-        if self.api == "zarr":
+        if self.api == "zarr" and self.presigned_writes:
             return self._presigned_set_item(item, value)
         encoded_item = urllib.parse.quote(item, safe="/")
         res = self._retried_request(
@@ -359,7 +368,10 @@ def zarr_write(
         return bool(numpy.all(values[:-1] <= values[1:]))
 
     with Session.acquire(connection) as session:
-        store = ZarrClient(connection, datasource_id, session, api="zarr", nocache=True)
+        store = ZarrClient(
+            connection, datasource_id, session, api="zarr", nocache=True,
+            presigned_writes=connection._presigned_writes,
+        )
         if overwrite is True:
             store.clear()
             append = None

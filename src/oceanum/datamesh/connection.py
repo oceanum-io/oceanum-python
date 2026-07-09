@@ -86,6 +86,7 @@ class Connector(object):
         user=None,
         session_duration=None,
         verify=True,
+        presigned_writes=None,
     ):
         """Datamesh connector constructor
 
@@ -95,10 +96,18 @@ class Connector(object):
             user (string, optional): Optional user identifier to be sent in the header for datamesh authentication. Defaults to None.
             session_duration (float, optional): The desired length of time for acquired datamesh sessions in seconds. Will be 3600 seconds by default.
             verify (bool, optional): Whether to verify the datamesh server certificate. Defaults to True.
+            presigned_writes (bool, optional): Upload zarr chunks directly to storage via a
+                presigned URL instead of proxying bytes through the write endpoint. Opt-in;
+                defaults to os.environ.get("DATAMESH_PRESIGNED_WRITES", False). Presigned
+                writes are currently serial per-key and slower than the classic path until
+                client-side write concurrency lands.
         Raises:
             ValueError: Missing or invalid arguments
         """
         self._token = token or os.environ.get("DATAMESH_TOKEN")
+        if presigned_writes is None:
+            presigned_writes = os.environ.get("DATAMESH_PRESIGNED_WRITES", "false").lower() in ("1", "true", "yes")
+        self._presigned_writes = presigned_writes
         url = urlparse(service)
         self._proto = url.scheme
         self._host = url.netloc
