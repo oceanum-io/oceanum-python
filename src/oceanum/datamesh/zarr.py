@@ -1,6 +1,7 @@
 import datetime
 import json
 import re
+from collections import OrderedDict
 from collections.abc import MutableMapping
 import os
 
@@ -30,6 +31,9 @@ try:
     _VIDEO_SUPPORT = True
 except:
     _VIDEO_SUPPORT = False
+
+
+_CACHEABLE_ZARR_METADATA_KEYS = {".zgroup", ".zmetadata", ".zarray", ".zattrs"}
 
 
 def json_serial(obj):
@@ -97,7 +101,8 @@ class ZarrClient(MutableMapping):
             self.headers["X-DATAMESH-STORAGE-BACKEND"] = storage_backend
         self.http_session = HTTPSession(headers=self.headers)
         if self.api == "zarr":
-            self._data_cache = {}
+            self._data_cache = OrderedDict()
+            self._data_cache_maxsize = 64
             self._cache_ttl = 30
 
     def _retried_request(
@@ -147,6 +152,11 @@ class ZarrClient(MutableMapping):
             raise DatameshConnectError(f"Failed to get item {item}: {resp.text}")
         return resp.content
 
+    @staticmethod
+    def _is_cacheable_metadata_key(item):
+        basename = item.rsplit("/", 1)[-1]
+        return basename in _CACHEABLE_ZARR_METADATA_KEYS
+
     def _cache_get(self, item):
         entry = self._data_cache.get(item)
         if entry is None:
@@ -154,10 +164,16 @@ class ZarrClient(MutableMapping):
         if time.time() - entry["fetched_at"] > self._cache_ttl:
             self._data_cache.pop(item, None)
             return None
+        self._data_cache.move_to_end(item)
         return entry["data"]
 
     def _cache_set(self, item, data):
+        if not self._is_cacheable_metadata_key(item):
+            return
         self._data_cache[item] = {"data": data, "fetched_at": time.time()}
+        self._data_cache.move_to_end(item)
+        while len(self._data_cache) > self._data_cache_maxsize:
+            self._data_cache.popitem(last=False)
 
     def __getitem__(self, item):
         if self.api == "zarr":
