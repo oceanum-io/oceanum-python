@@ -21,6 +21,7 @@ from .utils import (
     retried_request,
     HTTPSession,
     DATAMESH_CONNECT_TIMEOUT,
+    DATAMESH_READ_TIMEOUT,
     DATAMESH_CHUNK_READ_TIMEOUT,
     DATAMESH_CHUNK_WRITE_TIMEOUT,
 )
@@ -220,8 +221,8 @@ class ZarrClient(MutableMapping):
         resp = self._retried_request(
             f"{self._proxy}/_presign_write/{self.datasource}/{encoded_item}",
             method="POST",
-            connect_timeout=self.write_timeout,
-            read_timeout=self.write_timeout,
+            connect_timeout=DATAMESH_CONNECT_TIMEOUT,
+            read_timeout=DATAMESH_READ_TIMEOUT,
         )
         if resp.status_code >= 400:
             raise DatameshWriteError(
@@ -241,6 +242,7 @@ class ZarrClient(MutableMapping):
                     url=upload_url, method="PUT", data=value,
                     timeout=(self.write_timeout, self.write_timeout),
                     verify=self.verify, retries=self.retries,
+                    http_session=self.http_session,
                 )
                 if upload_resp.status_code >= 300:
                     raise DatameshWriteError(
