@@ -123,6 +123,7 @@ class ZarrClient(MutableMapping):
         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
         read_timeout=DATAMESH_CHUNK_READ_TIMEOUT,
         headers=None,
+        allow_redirects=True,
     ):
         try:
             resp = retried_request(
@@ -134,6 +135,7 @@ class ZarrClient(MutableMapping):
                 timeout=(connect_timeout, read_timeout),
                 verify=self.verify,
                 http_session=self.http_session,
+                allow_redirects=allow_redirects,
             )
         except requests.RequestException as e:
             raise DatameshConnectError(str(e))
@@ -155,7 +157,34 @@ class ZarrClient(MutableMapping):
             connect_timeout=self.connect_timeout,
             read_timeout=self.read_timeout,
             headers={"prefer": "redirect"},
+            allow_redirects=False,
         )
+        if resp.status_code in (301, 302, 303, 307, 308):
+            location = resp.headers.get("location")
+            if not location:
+                raise DatameshConnectError(f"Redirect response for {item} missing Location header")
+            # Fetch the redirect target directly with a bare request, not
+            # self.http_session -- the Location here points at S3/GCS, not
+            # the datamesh gateway, and requests' session headers (baked-in
+            # Authorization/X-DATAMESH-TOKEN/X-DATAMESH-SESSIONID) would
+            # otherwise be sent to that third-party host if this were
+            # auto-followed. requests only auto-strips Authorization on a
+            # cross-host redirect, not the custom X-DATAMESH-* headers.
+            try:
+                redirect_resp = requests.get(
+                    location,
+                    timeout=(self.connect_timeout, self.read_timeout),
+                    verify=self.verify,
+                )
+            except requests.RequestException as e:
+                raise DatameshConnectError(str(e))
+            if redirect_resp.status_code == 404:
+                raise KeyError(item)
+            if redirect_resp.status_code >= 400:
+                raise DatameshConnectError(
+                    f"Failed to fetch redirected item {item}: {redirect_resp.text}"
+                )
+            return redirect_resp.content
         if resp.status_code == 404:
             raise KeyError(item)
         if resp.status_code >= 400:

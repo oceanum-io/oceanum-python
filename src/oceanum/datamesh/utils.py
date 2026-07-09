@@ -144,6 +144,7 @@ def retried_request(
     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_READ_TIMEOUT),
     verify=True,
     http_session: HTTPSession = None,
+    allow_redirects=True,
 ):
     """
     Retried request function with exponential backoff
@@ -164,6 +165,11 @@ def retried_request(
         Request connect and read timeout in seconds, by default (3.05, 10)
     http_session : HTTPSession, optional
         Session object to use for request
+    allow_redirects : bool, optional
+        Whether to auto-follow redirects using the same session/headers, by
+        default True. Set False when the caller needs to inspect a 3xx
+        response itself (e.g. to follow it without leaking session-level
+        headers to the redirect target's host).
 
     Returns
     -------
@@ -184,6 +190,7 @@ def retried_request(
                 method=method,
                 url=url,
                 data=data,
+                allow_redirects=allow_redirects,
                 params=params,
                 headers=headers,
                 timeout=timeout,
