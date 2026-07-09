@@ -163,21 +163,20 @@ class ZarrClient(MutableMapping):
             location = resp.headers.get("location")
             if not location:
                 raise DatameshConnectError(f"Redirect response for {item} missing Location header")
-            # Fetch the redirect target directly with a bare request, not
-            # self.http_session -- the Location here points at S3/GCS, not
-            # the datamesh gateway, and requests' session headers (baked-in
+            # Fetch the redirect target with retry/backoff but no
+            # http_session -- the Location here points at S3/GCS, not the
+            # datamesh gateway, and requests' session headers (baked-in
             # Authorization/X-DATAMESH-TOKEN/X-DATAMESH-SESSIONID) would
             # otherwise be sent to that third-party host if this were
             # auto-followed. requests only auto-strips Authorization on a
             # cross-host redirect, not the custom X-DATAMESH-* headers.
-            try:
-                redirect_resp = requests.get(
-                    location,
-                    timeout=(self.connect_timeout, self.read_timeout),
-                    verify=self.verify,
-                )
-            except requests.RequestException as e:
-                raise DatameshConnectError(str(e))
+            redirect_resp = retried_request(
+                url=location,
+                method="GET",
+                retries=self.retries,
+                timeout=(self.connect_timeout, self.read_timeout),
+                verify=self.verify,
+            )
             if redirect_resp.status_code == 404:
                 raise KeyError(item)
             if redirect_resp.status_code >= 400:
