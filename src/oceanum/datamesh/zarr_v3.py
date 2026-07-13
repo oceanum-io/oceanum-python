@@ -1,6 +1,6 @@
 """Zarr **v3** client for the Datamesh — the successor to `zarr.ZarrClient`.
 
-Talks to `datamesh-zarr-proxy-v3` using v3 conventions: per-node ``zarr.json``
+Talks to `datamesh-zarr-proxy-zarr3` using v3 conventions: per-node ``zarr.json``
 documents, ``c/``-prefixed chunk keys, HTTP Range requests, and the explicit
 write lifecycle (register → raw PUTs → finalise). Supports the ``izarr``
 (Icechunk, versioned) and ``onzarr`` (plain bucket, non-versioned) backends.
@@ -14,7 +14,7 @@ via importlib in the meantime).
 
 Example
 -------
-    client = ZarrClientV3(gateway="https://gateway...", proxy="https://proxy-v3...")
+    client = ZarrClientV3(gateway="https://gateway...", proxy="https://proxy-zarr3...")
     with client:
         client.write_dataset(ds, "my-datasource", driver="izarr",
                              driver_args={"repository": "s3://bucket/izarr/my-datasource"},
@@ -185,7 +185,7 @@ class ZarrClientV3:
         Datamesh gateway (query-engine) URL — used to create/close sessions.
         Default: ``$DATAMESH_GATEWAY``.
     proxy : str
-        v3 zarr proxy URL. Default: ``$DATAMESH_ZARR_PROXY_V3``.
+        v3 zarr proxy URL. Default: ``$DATAMESH_ZARR_PROXY_ZARR3``.
     token : str
         Datamesh token. Default: ``$DATAMESH_TOKEN``.
     """
@@ -199,12 +199,12 @@ class ZarrClientV3:
     ):
         _check_zarr3()
         self.gateway = (gateway or os.environ.get("DATAMESH_GATEWAY", "")).rstrip("/")
-        self.proxy = (proxy or os.environ.get("DATAMESH_ZARR_PROXY_V3", "")).rstrip("/")
+        self.proxy = (proxy or os.environ.get("DATAMESH_ZARR_PROXY_ZARR3", "")).rstrip("/")
         self.token = token or os.environ.get("DATAMESH_TOKEN")
         if not self.gateway or not self.proxy:
             raise DatameshZarrV3Error(
                 "gateway and proxy URLs are required (or set DATAMESH_GATEWAY "
-                "and DATAMESH_ZARR_PROXY_V3)"
+                "and DATAMESH_ZARR_PROXY_ZARR3)"
             )
         self._http = requests.Session()
         self._http.headers["X-DATAMESH-TOKEN"] = self.token or ""
