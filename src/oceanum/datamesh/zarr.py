@@ -14,6 +14,7 @@ from typing import Optional
 
 from .exceptions import DatameshConnectError, DatameshWriteError
 from .session import Session
+from .zarr_v2wire import make_v2wire_store
 from .utils import (
     retried_request,
     HTTPSession,
@@ -21,6 +22,13 @@ from .utils import (
     DATAMESH_CHUNK_READ_TIMEOUT,
     DATAMESH_CHUNK_WRITE_TIMEOUT,
 )
+
+
+def _sync_store_clear(store):
+    """Run the async ``Store.clear()`` from sync code via zarr's event loop."""
+    from zarr.core.sync import sync
+
+    sync(store.clear())
 
 try:
     import xarray_video as xv
@@ -197,6 +205,8 @@ class ZarrClient(MutableMapping):
 
 
 def _to_zarr(data, store, **kwargs):
+    # This branch always writes the v2 wire format under zarr-python 3.
+    kwargs.setdefault("zarr_format", 2)
     if _VIDEO_SUPPORT:
         data.video.to_zarr(store, **kwargs)
     else:
@@ -217,9 +227,11 @@ def zarr_write(
         return bool(numpy.all(values[:-1] <= values[1:]))
 
     with Session.acquire(connection) as session:
-        store = ZarrClient(connection, datasource_id, session, api="zarr", nocache=True)
+        store = make_v2wire_store(
+            connection, datasource_id, session, api="zarr", nocache=True
+        )
         if overwrite is True:
-            store.clear()
+            _sync_store_clear(store)
             append = None
         else:
             ds = connection.get_datasource(datasource_id)
@@ -228,7 +240,9 @@ def zarr_write(
                 raise DatameshWriteError(
                     f"Append coordinate {append} not in existing zarr"
                 )
-            with xarray.open_zarr(store) as dexist:
+            with xarray.open_zarr(
+                store, zarr_format=2, consolidated=True
+            ) as dexist:
                 cexist = dexist[append]
                 if len(cexist.dims) > 1:
                     raise DatameshWriteError(

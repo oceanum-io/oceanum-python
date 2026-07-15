@@ -30,6 +30,8 @@ from .datasource import Datasource
 from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter, GeoFilterType
 from .zarr import zarr_write, ZarrClient
+from .zarr_v2wire import make_v2wire_store
+from .zarr_v3 import ZarrClientV3
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
@@ -338,11 +340,13 @@ class Connector(object):
             )
             use_dask = True
         if use_dask and (stage.container == Container.Dataset):
-            mapper = ZarrClient(
-                self, stage.qhash, session=session, api="query", verify=self._verify
+            store = make_v2wire_store(
+                self, stage.qhash, session, api="query", verify=self._verify,
+                read_only=True,
             )
             return xarray.open_zarr(
-                mapper, consolidated=True, decode_coords="all", mask_and_scale=True
+                store, zarr_format=2, consolidated=True,
+                decode_coords="all", mask_and_scale=True,
             )
         else:
             # Try finally takes care of closing the session
@@ -543,16 +547,18 @@ class Connector(object):
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset or use_dask:
-            mapper = ZarrClient(
+            store = make_v2wire_store(
                 self,
                 datasource_id,
                 session,
                 parameters=parameters,
                 api="zarr",
                 verify=self._verify,
+                read_only=True,
             )
             return xarray.open_zarr(
-                mapper, consolidated=True, decode_coords="all", mask_and_scale=True
+                store, zarr_format=2, consolidated=True,
+                decode_coords="all", mask_and_scale=True,
             )
         elif stage.container == Container.GeoDataFrame:
             tmpfile = self._data_request(datasource_id, "application/parquet")
@@ -616,6 +622,47 @@ class Connector(object):
         if query is None:
             query = Query(**query_keys)
         return self._query(query, use_dask, cache_timeout)
+
+    def _resolve_zarr_write_driver(self, ds):
+        """Pick the driver to write a Dataset with (PINNED dispatch rule).
+
+        Existing datasources keep their own frozen ``driver`` (append/update
+        and overwrite alike — never an implicit driver conversion). A brand-new
+        datasource with no explicit driver falls back to
+        ``DATAMESH_DEFAULT_ZARR_DRIVER`` (default ``"onzarr"``; set to
+        ``"izarr"`` to opt new datasources into the v3 wire).
+        """
+        driver = getattr(ds, "driver", None)
+        if driver in (None, "", "_null"):
+            driver = os.environ.get("DATAMESH_DEFAULT_ZARR_DRIVER", "onzarr")
+        return driver
+
+    def _zarr_write_v3(self, datasource_id, data, append, overwrite, ds):
+        """Write an xarray Dataset over the v3 (izarr/Icechunk) wire.
+
+        Overwrite of an existing izarr datasource is handled upstream in
+        ``write_datasource`` as delete-then-recreate (Icechunk has no
+        overwrite-in-place), so by the time we get here the store is fresh and
+        we always write ``mode="w"`` unless appending.
+        """
+        append_dims = [append] if append else None
+        mode = "a" if (append and not overwrite) else "w"
+        driver_args = ds.driver_args or None
+        client = ZarrClientV3(connection=self)
+        try:
+            client.write_dataset(
+                data,
+                datasource_id,
+                driver="izarr",
+                driver_args=driver_args,
+                mode=mode,
+                append_dims=append_dims,
+                finalise=True,
+            )
+        finally:
+            client.close(finalise_write=False)
+        ds._exists = True
+        return ds
 
     def write_datasource(
         self,
@@ -700,13 +747,24 @@ class Connector(object):
         if data is not None:
             try:
                 if isinstance(data, xarray.Dataset):
-                    ds = zarr_write(
-                        self,
-                        datasource_id,
-                        data,
-                        append,
-                        overwrite,
-                    )
+                    # Per-datasource wire dispatch (PINNED):
+                    #  - existing datasource: keep its driver (never implicit
+                    #    conversion), overwrite via its own wire;
+                    #  - new datasource: driver from DATAMESH_DEFAULT_ZARR_DRIVER
+                    #    (default "onzarr" -> v2 wire; "izarr" -> v3 wire).
+                    target_driver = self._resolve_zarr_write_driver(ds)
+                    if target_driver == "izarr":
+                        ds = self._zarr_write_v3(
+                            datasource_id, data, append, overwrite, ds
+                        )
+                    else:
+                        ds = zarr_write(
+                            self,
+                            datasource_id,
+                            data,
+                            append,
+                            overwrite,
+                        )
                 elif isinstance(data, dask.dataframe.DataFrame):
                     for part in data.partitions:
                         with tempFile("w+b") as f:

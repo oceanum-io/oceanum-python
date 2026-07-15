@@ -25,10 +25,20 @@ Example
 """
 
 import asyncio
+import json
 import os
 from typing import Any, Dict, Iterable, List, Optional
 
 import requests
+
+from .session import Session
+from .utils import (
+    retried_request,
+    HTTPSession,
+    DATAMESH_CONNECT_TIMEOUT,
+    DATAMESH_CHUNK_READ_TIMEOUT,
+    DATAMESH_CHUNK_WRITE_TIMEOUT,
+)
 
 __all__ = ["ZarrClientV3", "DatameshZarrV3Error"]
 
@@ -177,60 +187,84 @@ def _make_store_class():
 
 
 class ZarrClientV3:
-    """Session-scoped client for the v3 zarr proxy.
+    """Session-scoped client for the v3 zarr proxy (izarr / onzarr backends).
+
+    Sessions come from :class:`oceanum.datamesh.session.Session` (the same
+    lifecycle used by the v2 client) and transport goes over the fork-safe
+    :class:`oceanum.datamesh.utils.HTTPSession` with
+    :func:`oceanum.datamesh.utils.retried_request` — not a bare
+    ``requests.Session``.
 
     Parameters
     ----------
-    gateway : str
-        Datamesh gateway (query-engine) URL — used to create/close sessions.
-        Default: ``$DATAMESH_GATEWAY``.
-    proxy : str
-        v3 zarr proxy URL. Default: ``$DATAMESH_ZARR_PROXY_ZARR3``.
-    token : str
-        Datamesh token. Default: ``$DATAMESH_TOKEN``.
+    connection : Connector, optional
+        Datamesh connection. When given, the client acquires its session and
+        transport from it, and can resolve ``driver_args`` from the datasource
+        metadata record. This is the primary (wired) entry point.
+    gateway, proxy, token : str, optional
+        Standalone overrides (used when no ``connection`` is supplied).
+        ``proxy`` defaults to ``$DATAMESH_ZARR_PROXY_ZARR3`` and, failing that,
+        the gateway itself (external clients hit the QE ``/zarr3`` endpoints;
+        ``DATAMESH_ZARR_PROXY_ZARR3`` opts into direct-to-proxy for internal
+        use).
+    session : Session, optional
+        Reuse an existing session instead of acquiring one.
     """
 
     def __init__(
         self,
+        connection=None,
+        *,
         gateway: Optional[str] = None,
         proxy: Optional[str] = None,
         token: Optional[str] = None,
+        session: Optional[Session] = None,
         session_duration: float = 3600,
     ):
         _check_zarr3()
-        self.gateway = (gateway or os.environ.get("DATAMESH_GATEWAY", "")).rstrip("/")
-        self.proxy = (proxy or os.environ.get("DATAMESH_ZARR_PROXY_ZARR3", "")).rstrip("/")
-        self.token = token or os.environ.get("DATAMESH_TOKEN")
-        if not self.gateway or not self.proxy:
-            raise DatameshZarrV3Error(
-                "gateway and proxy URLs are required (or set DATAMESH_GATEWAY "
-                "and DATAMESH_ZARR_PROXY_ZARR3)"
-            )
-        self._http = requests.Session()
-        self._http.headers["X-DATAMESH-TOKEN"] = self.token or ""
-        self._store_class = _make_store_class()
+        self._connection = connection
+        self._owns_session = session is None
 
-        response = self._http.get(
-            f"{self.gateway}/session/", params={"duration": session_duration},
-            timeout=30,
-        )
-        if response.status_code != 200:
-            raise DatameshZarrV3Error(
-                f"Failed to create session: {response.status_code} {response.text}"
+        if connection is not None:
+            self.gateway = connection._gateway.rstrip("/")
+            self._http = connection.http_session
+            if session is None:
+                session = Session.acquire(
+                    connection, duration=int(session_duration)
+                )
+        else:
+            self.gateway = (
+                gateway or os.environ.get("DATAMESH_GATEWAY", "")
+            ).rstrip("/")
+            self.token = token or os.environ.get("DATAMESH_TOKEN")
+            if not self.gateway:
+                raise DatameshZarrV3Error(
+                    "gateway URL or a connection is required (or set "
+                    "DATAMESH_GATEWAY)"
+                )
+            self._http = HTTPSession(
+                headers={"X-DATAMESH-TOKEN": self.token or ""}
             )
-        self.session = response.json()
-        self.session_id = self.session["id"]
+            if session is None:
+                session = Session.from_proxy(session_duration=session_duration)
+
+        self.session = session
+        self.session_id = session.id
+        self.proxy = (
+            proxy
+            or os.environ.get("DATAMESH_ZARR_PROXY_ZARR3")
+            or self.gateway
+        ).rstrip("/")
+        self._store_class = _make_store_class()
 
     # -- lifecycle -------------------------------------------------------------
 
-    def close(self):
-        try:
-            self._http.delete(
-                f"{self.gateway}/session/{self.session_id}",
-                headers={"X-DATAMESH-SESSIONID": self.session_id}, timeout=30,
-            )
-        except requests.RequestException:
-            pass
+    def close(self, finalise_write: bool = False):
+        if self._owns_session:
+            try:
+                self.session.close(finalise_write=finalise_write)
+            except Exception:
+                pass
 
     def __enter__(self):
         return self
@@ -238,12 +272,34 @@ class ZarrClientV3:
     def __exit__(self, *exc):
         self.close()
 
+    def _resolve_driver_args(
+        self, datasource: str, driver_args: Optional[dict]
+    ) -> dict:
+        """driver_args come from the caller or the datasource record (``args``)."""
+        if driver_args is not None:
+            return driver_args
+        if self._connection is not None:
+            ds = self._connection.get_datasource(datasource)
+            return ds.driver_args or {}
+        return {}
+
     def _proxy_request(self, method: str, path: str, **kwargs):
-        response = self._http.request(
-            method, f"{self.proxy}{path}",
-            headers={"X-DATAMESH-SESSIONID": self.session_id,
-                     **kwargs.pop("headers", {})},
-            timeout=300, **kwargs,
+        headers = {
+            "X-DATAMESH-SESSIONID": self.session_id,
+            **kwargs.pop("headers", {}),
+        }
+        data = kwargs.pop("data", None)
+        if "json" in kwargs:
+            data = json.dumps(kwargs.pop("json"))
+            headers["Content-Type"] = "application/json"
+        response = retried_request(
+            f"{self.proxy}{path}",
+            method=method,
+            data=data,
+            params=kwargs.pop("params", None),
+            headers=headers,
+            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_CHUNK_WRITE_TIMEOUT),
+            http_session=self._http,
         )
         if response.status_code >= 400:
             raise DatameshZarrV3Error(
@@ -261,7 +317,8 @@ class ZarrClientV3:
     ) -> dict:
         """Establish (or fetch) the read registration for this session.
         driver_args may be omitted when the datasource record in the metadata
-        server carries them (the proxy resolves them itself)."""
+        server carries them (resolved here from the record's ``args``)."""
+        driver_args = self._resolve_driver_args(datasource, driver_args)
         return self._proxy_request(
             "POST", f"/zarr/info/{datasource}",
             json={"driver": driver, "driver_args": driver_args or {}},
@@ -291,7 +348,7 @@ class ZarrClientV3:
             headers["X-DATAMESH-VARIABLES"] = ",".join(variables)
         return self._store_class(
             self.proxy, datasource, self.session_id,
-            read_only=read_only, headers=headers,
+            read_only=read_only, headers=headers, http_session=self._http,
         )
 
     def open_dataset(
@@ -316,12 +373,13 @@ class ZarrClientV3:
         self,
         datasource: str,
         driver: str,
-        driver_args: dict,
+        driver_args: Optional[dict] = None,
         *,
         append_dims: Optional[List[str]] = None,
         codec_profile: Optional[str] = None,
         allow_multiwrite: bool = False,
     ) -> dict:
+        driver_args = self._resolve_driver_args(datasource, driver_args)
         return self._proxy_request(
             "POST", f"/zarr/write/{datasource}",
             json={"driver": driver, "driver_args": driver_args,
@@ -344,7 +402,7 @@ class ZarrClientV3:
         dataset,
         datasource: str,
         driver: str,
-        driver_args: dict,
+        driver_args: Optional[dict] = None,
         *,
         mode: str = "w",
         append_dims: Optional[List[str]] = None,
