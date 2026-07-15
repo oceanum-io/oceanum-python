@@ -54,7 +54,7 @@ dependencies = [
     "tabulate",
     "xarray",
     "rioxarray",
-    "zarr<3",
+    "zarr>=3",
 ]
 dynamic = ["version"]
 
