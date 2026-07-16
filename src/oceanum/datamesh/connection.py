@@ -31,7 +31,7 @@ from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter, GeoFilterType
 from .zarr import zarr_write, ZarrClient
 from .zarr_v2wire import make_v2wire_store
-from .zarr_v3 import ZarrClientV3
+from .zarr_v3 import make_v3_store
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
@@ -644,37 +644,30 @@ class Connector(object):
         ``write_datasource`` as delete-then-recreate (Icechunk has no
         overwrite-in-place), so by the time we get here the store is fresh and
         we always write ``mode="w"`` unless appending.
+
+        The wire is data-plane only: the client never sends driver/driver_args.
+        The proxy auto-registers the write on the first ``PUT`` and resolves the
+        driver args server-side from the metadata record — which is why, for a
+        NEW datasource, the record is POSTed FIRST (before opening the store),
+        with the izarr driver + repository args. For an EXISTING datasource the
+        record already exists, so no metadata is written here and the
+        ``write_datasource`` tail PATCHes it afterwards, unchanged.
         """
         append_dims = [append] if append else None
         mode = "a" if (append and not overwrite) else "w"
         existed = ds._exists
-        driver_args = ds.driver_args or None
-        if not driver_args and not existed:
-            # NEW datasource: there is no metadata record yet to resolve
-            # driver_args from, so use the canonical bare-repository
-            # convention: repository == datasource id, resolved server-side
-            # against ICECHUNK_BUCKET/ICECHUNK_PREFIX.
-            driver_args = {"repository": datasource_id}
-        client = ZarrClientV3(connection=self)
-        try:
-            client.write_dataset(
-                data,
-                datasource_id,
-                driver="izarr",
-                driver_args=driver_args,
-                mode=mode,
-                append_dims=append_dims,
-                finalise=True,
-            )
-        finally:
-            client.close(finalise_write=False)
+
         if not existed:
-            # Unlike the v2 proxy, proxy-zarr3 does NOT register datasource
-            # metadata during the write session, so POST the record now with
-            # the izarr driver + repository args (frozen fields — rebuild via
-            # the same round-trip pattern the overwrite path uses). Sniff the
-            # data-derived properties first (geom is mandatory server-side);
-            # the write_datasource tail then PATCHes with the full set.
+            # NEW datasource: there is no metadata record yet for the proxy to
+            # resolve driver_args from, so POST it FIRST with the izarr driver
+            # and the canonical bare-repository convention (repository ==
+            # datasource id, resolved server-side against
+            # ICECHUNK_BUCKET/ICECHUNK_PREFIX). Sniff data-derived properties
+            # first (geom is mandatory server-side); the write_datasource tail
+            # then PATCHes with the full set.
+            driver_args = ds.driver_args or None
+            if not driver_args:
+                driver_args = {"repository": datasource_id}
             ds._guess_props(data, None, append)
             if ds.geom is None:
                 # geom is mandatory on POST; the v2 proxy registered new
@@ -682,9 +675,34 @@ class Connector(object):
                 ds.geom = shapely.geometry.Point(0, 0)
             dump = ds.model_dump(by_alias=True)
             dump["driver"] = "izarr"
-            dump["args"] = driver_args or {}
+            dump["args"] = driver_args
             ds = Datasource(**dump)
+            ds._exists = False
             self._metadata_write(ds)
+            ds._exists = True
+
+        # Open the per-datasource v3 store (owns one session) and stream the
+        # dataset through it, then finalise on success / abort on failure.
+        store = make_v3_store(self, datasource_id, read_only=False)
+        try:
+            to_zarr_kwargs = {}
+            if mode == "a" and append_dims:
+                # xarray append along the (single) append dimension.
+                to_zarr_kwargs["append_dim"] = append_dims[0]
+            try:
+                data.to_zarr(
+                    store,
+                    mode=mode,
+                    consolidated=False,
+                    zarr_format=3,
+                    **to_zarr_kwargs,
+                )
+            except Exception:
+                store._abort()
+                raise
+            store._finalise()
+        finally:
+            store.close()
         ds._exists = True
         return ds
 

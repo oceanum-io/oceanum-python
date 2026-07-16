@@ -128,6 +128,10 @@ class FakeSession:
 
     id = "test-session-id"
 
+    def __init__(self):
+        self.closed = False
+        self.finalised = None
+
     def add_header(self, headers):
         return {**headers, "X-DATAMESH-SESSIONID": self.id}
 
@@ -142,7 +146,191 @@ class FakeSession:
         return False
 
     def close(self, finalise_write=False):
-        pass
+        self.closed = True
+        self.finalised = finalise_write
+
+
+class FakeV3Gateway:
+    """In-process fake of the proxy ``/secure/zarr`` (v3 / izarr) data plane.
+
+    Serves the exact surface ``DatameshV3Store`` speaks:
+    ``GET/HEAD/PUT/DELETE`` on ``/secure/zarr/{datasource}/{key}``, a listing
+    endpoint (``GET /secure/zarr/{datasource}?op=list&prefix=``), and the two
+    control POSTs ``/secure/zarr/_finalise/{ds}`` and ``/secure/zarr/_abort/{ds}``.
+
+    Every request is appended to ``self.requests`` as ``(method, key)`` (key is
+    the path relative to the datasource, or ``"_finalise"``/``"_abort"`` for the
+    control POSTs) so tests can assert exact fetch patterns — e.g. that opening
+    a consolidated group hits the root ``zarr.json`` once and never fetches a
+    per-array ``zarr.json``. Set ``ignore_range=True`` to exercise the store's
+    fetch-and-slice fallback (server returns the full object for a ranged GET).
+    """
+
+    def __init__(self, ignore_range=False):
+        # datasource -> {key: bytes}
+        self.stores = {}
+        self.requests = []
+        self.control = []  # (op, datasource)
+        self.last_headers = {}
+        self.ignore_range = ignore_range
+
+    def _store(self, ds):
+        return self.stores.setdefault(ds, {})
+
+    def seed_consolidated(self, ds_id, dataset):
+        """Populate ``ds_id`` with a consolidated zarr-v3 store of ``dataset``.
+
+        Writes the dataset to an in-memory zarr-v3 store with consolidated
+        metadata (proxy behaviour: the root ``zarr.json`` embeds
+        ``consolidated_metadata``) and copies every key into the fake.
+        """
+        import zarr
+        from zarr.core.buffer import default_buffer_prototype
+
+        mem = zarr.storage.MemoryStore()
+        dataset.to_zarr(mem, mode="w", zarr_format=3, consolidated=True)
+        proto = default_buffer_prototype()
+
+        async def _dump():
+            out = {}
+            async for k in mem.list():
+                buf = await mem.get(k, proto)
+                out[k] = buf.to_bytes()
+            return out
+
+        self.stores[ds_id] = __import__("asyncio").run(_dump())
+
+    def handler_factory(self):
+        gw = self
+
+        class H(BaseHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+
+            def _route(self):
+                parsed = urllib.parse.urlparse(self.path)
+                query = urllib.parse.parse_qs(parsed.query)
+                parts = parsed.path.split("/")
+                # ['', 'secure', 'zarr', <seg0>, <seg1...>]
+                seg0 = parts[3] if len(parts) > 3 else ""
+                if seg0 in ("_finalise", "_abort"):
+                    ds = parts[4] if len(parts) > 4 else ""
+                    return "control", seg0, ds, "", query
+                ds = seg0
+                key = urllib.parse.unquote("/".join(parts[4:]))
+                return "data", None, ds, key, query
+
+            def do_GET(self):
+                kind, _op, ds, key, query = self._route()
+                store = gw._store(ds)
+                if key == "" and "op" in query:
+                    op = query["op"][0]
+                    prefix = query.get("prefix", [""])[0]
+                    gw.requests.append(("GET", f"?op={op}&prefix={prefix}"))
+                    keys = _list_keys(store, op, prefix)
+                    self._json({"keys": keys})
+                    return
+                gw.requests.append(("GET", key))
+                gw.last_headers = dict(self.headers)
+                if key not in store:
+                    self.send_response(404)
+                    self.end_headers()
+                    return
+                body = store[key]
+                rng = self.headers.get("Range")
+                if rng and not gw.ignore_range:
+                    body, status = _apply_range(body, rng)
+                else:
+                    status = 200
+                self.send_response(status)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def do_HEAD(self):
+                _kind, _op, ds, key, _q = self._route()
+                store = gw._store(ds)
+                gw.requests.append(("HEAD", key))
+                self.send_response(200 if key in store else 404)
+                self.end_headers()
+
+            def do_PUT(self):
+                _kind, _op, ds, key, _q = self._route()
+                store = gw._store(ds)
+                length = int(self.headers.get("Content-Length", 0))
+                store[key] = self.rfile.read(length)
+                gw.requests.append(("PUT", key))
+                gw.last_headers = dict(self.headers)
+                self.send_response(201)
+                self.end_headers()
+
+            def do_DELETE(self):
+                _kind, _op, ds, key, _q = self._route()
+                store = gw._store(ds)
+                gw.requests.append(("DELETE", key))
+                for k in list(store):
+                    if k == key or k.startswith(key + "/") or key == "":
+                        del store[k]
+                self.send_response(204)
+                self.end_headers()
+
+            def do_POST(self):
+                kind, op, ds, _key, _q = self._route()
+                if kind == "control":
+                    gw.control.append((op, ds))
+                    gw.requests.append(("POST", op))
+                    self._json({"status": "ok", "op": op})
+                    return
+                self.send_response(405)
+                self.end_headers()
+
+            def _json(self, obj):
+                import json as _json_mod
+
+                body = _json_mod.dumps(obj).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+        return H
+
+
+def _list_keys(store, op, prefix):
+    prefix = prefix.rstrip("/")
+    base = f"{prefix}/" if prefix else ""
+    if op == "list_dir":
+        out = set()
+        for k in store:
+            if not k.startswith(base):
+                continue
+            rest = k[len(base):]
+            out.add(rest.split("/", 1)[0] if "/" in rest else rest)
+        return sorted(out)
+    return sorted(k for k in store if k.startswith(base))
+
+
+def _apply_range(body, rng):
+    # rng like "bytes=start-end" | "bytes=start-" | "bytes=-suffix"
+    spec = rng.split("=", 1)[1]
+    start_s, _, end_s = spec.partition("-")
+    if start_s == "":  # suffix
+        sliced = body[-int(end_s):]
+    elif end_s == "":  # offset
+        sliced = body[int(start_s):]
+    else:
+        sliced = body[int(start_s):int(end_s) + 1]
+    return sliced, 206
+
+
+def start_v3_gateway(ignore_range=False):
+    """Return (gateway, server, url); caller should ``server.shutdown()``."""
+    gw = FakeV3Gateway(ignore_range=ignore_range)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), gw.handler_factory())
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return gw, server, f"http://127.0.0.1:{server.server_address[1]}"
 
 
 class FakeConnection:
