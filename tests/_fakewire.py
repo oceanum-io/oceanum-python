@@ -164,18 +164,41 @@ class FakeV3Gateway:
     a consolidated group hits the root ``zarr.json`` once and never fetches a
     per-array ``zarr.json``. Set ``ignore_range=True`` to exercise the store's
     fetch-and-slice fallback (server returns the full object for a ranged GET).
+
+    Set ``staged_writes=True`` to reproduce the proxy's real write-session
+    read-visibility semantics (the default keeps the simple read-your-writes
+    dict so the other tests are unaffected):
+
+    * PUTs of keys ending in ``zarr.json`` apply IMMEDIATELY to the served
+      state (eager metadata — matches the proxy committing ``zarr.json`` to the
+      session branch);
+    * all other PUTs (chunk data) go into a per-datasource ``pending`` staging
+      dict that reads (GET/HEAD/list) do NOT see — matching per-worker write
+      forks that are invisible to reads until finalise;
+    * ``_finalise`` merges ``pending`` into the served state (last-write-wins
+      per key); ``_abort`` drops ``pending``.
+
+    Under these semantics a write algorithm that reads back a chunk it wrote
+    earlier in the same session gets the stale branch copy — so the class of
+    ordering bug the live proxy exposes becomes catchable offline.
     """
 
-    def __init__(self, ignore_range=False):
-        # datasource -> {key: bytes}
+    def __init__(self, ignore_range=False, staged_writes=False):
+        # datasource -> {key: bytes}  (served / committed branch state)
         self.stores = {}
+        # datasource -> {key: bytes}  (uncommitted chunk PUTs, staged_writes only)
+        self.pending = {}
         self.requests = []
         self.control = []  # (op, datasource)
         self.last_headers = {}
         self.ignore_range = ignore_range
+        self.staged_writes = staged_writes
 
     def _store(self, ds):
         return self.stores.setdefault(ds, {})
+
+    def _pending(self, ds):
+        return self.pending.setdefault(ds, {})
 
     def seed_consolidated(self, ds_id, dataset):
         """Populate ``ds_id`` with a consolidated zarr-v3 store of ``dataset``.
@@ -256,9 +279,14 @@ class FakeV3Gateway:
 
             def do_PUT(self):
                 _kind, _op, ds, key, _q = self._route()
-                store = gw._store(ds)
                 length = int(self.headers.get("Content-Length", 0))
-                store[key] = self.rfile.read(length)
+                body = self.rfile.read(length)
+                if gw.staged_writes and not key.endswith("zarr.json"):
+                    # Chunk data lands in the invisible write fork; only
+                    # ``zarr.json`` metadata commits eagerly to the branch.
+                    gw._pending(ds)[key] = body
+                else:
+                    gw._store(ds)[key] = body
                 gw.requests.append(("PUT", key))
                 gw.last_headers = dict(self.headers)
                 self.send_response(201)
@@ -266,11 +294,14 @@ class FakeV3Gateway:
 
             def do_DELETE(self):
                 _kind, _op, ds, key, _q = self._route()
-                store = gw._store(ds)
                 gw.requests.append(("DELETE", key))
-                for k in list(store):
-                    if k == key or k.startswith(key + "/") or key == "":
-                        del store[k]
+                targets = [gw._store(ds)]
+                if gw.staged_writes:
+                    targets.append(gw._pending(ds))
+                for tgt in targets:
+                    for k in list(tgt):
+                        if k == key or k.startswith(key + "/") or key == "":
+                            del tgt[k]
                 self.send_response(204)
                 self.end_headers()
 
@@ -279,6 +310,12 @@ class FakeV3Gateway:
                 if kind == "control":
                     gw.control.append((op, ds))
                     gw.requests.append(("POST", op))
+                    if gw.staged_writes:
+                        pending = gw.pending.pop(ds, {})
+                        if op == "_finalise":
+                            # Commit staged chunk PUTs to the branch (LWW).
+                            gw._store(ds).update(pending)
+                        # ``_abort`` simply drops ``pending`` (popped above).
                     self._json({"status": "ok", "op": op})
                     return
                 self.send_response(405)
@@ -324,9 +361,9 @@ def _apply_range(body, rng):
     return sliced, 206
 
 
-def start_v3_gateway(ignore_range=False):
+def start_v3_gateway(ignore_range=False, staged_writes=False):
     """Return (gateway, server, url); caller should ``server.shutdown()``."""
-    gw = FakeV3Gateway(ignore_range=ignore_range)
+    gw = FakeV3Gateway(ignore_range=ignore_range, staged_writes=staged_writes)
     server = ThreadingHTTPServer(("127.0.0.1", 0), gw.handler_factory())
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()

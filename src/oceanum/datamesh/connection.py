@@ -743,10 +743,14 @@ class Connector(object):
           appended along the append dim.
 
         The existing dataset is opened through a read-only, non-owning clone of
-        the *write* store so the read rides the same session: the proxy pins a
-        write session's reads to its branch, giving read-your-own-writes
-        consistency. Both writes go through the caller's single write session
-        (finalised once by ``_zarr_write_v3``).
+        the *write* store so the read rides the same session. All validation
+        reads happen before any write, and the write phase is ordered so no
+        chunk is ever read after it has been written this session — see the
+        write-phase comment below. This matters because the live proxy does
+        NOT give read-your-writes for chunk data within a write session (chunk
+        PUTs land in per-worker write forks invisible to reads until finalise;
+        only ``zarr.json`` metadata commits eagerly). Both writes go through the
+        caller's single write session (finalised once by ``_zarr_write_v3``).
         """
 
         def _is_monotonic_non_decreasing(values) -> bool:
@@ -820,21 +824,52 @@ class Connector(object):
                     raise DatameshWriteError(
                         f"Data inconsistency on coordinate {append} replacing a inner section of an existing zarr array"
                     )
-                replace_section.to_zarr(
-                    store,
-                    mode="a",
-                    region={append_dim: replace_slice},
-                    zarr_format=3,
-                    consolidated=False,
-                )
+            # -- write phase (session read-visibility constraint) -------------
+            # The live proxy does NOT provide read-your-writes for chunk data
+            # within a write session: metadata (``zarr.json``) PUTs commit
+            # eagerly to the session branch and are visible to subsequent reads,
+            # but chunk PUTs go into per-worker write forks that reads cannot see
+            # until ``_finalise``. So a read-modify-write of a chunk written
+            # earlier in this same session would read the STALE branch copy and
+            # clobber the earlier write. The invariant we must preserve is:
+            # within the session, no chunk read may occur for an index range
+            # already written this session. We therefore order the two writes so
+            # every RMW reads only pre-session state:
+            #   1. Append the extension FIRST. Its boundary-chunk RMW reads the
+            #      pre-session archive (nothing has been written yet), and the
+            #      metadata resize commits eagerly so step 2 sees the new shape.
+            #   2. Region-write the FULL incoming data over the whole
+            #      overlap+extension span (deliberately re-writing the extension
+            #      indices with identical values). Chunks fully covered by the
+            #      region are written with no read. A partially-covered chunk's
+            #      RMW read can only contribute indices OUTSIDE the region — i.e.
+            #      below ``replace_start`` — which were never written this
+            #      session, so the stale branch copy is valid there; every index
+            #      >= ``replace_start`` comes from the region buffer. This holds
+            #      for any per-variable chunk layout.
             if len(data[append]) > len(replace_range):
-                append_chunk = data.isel(
+                extension = data.isel(
                     **{append_dim: slice(len(replace_range), None)}
                 )
-                append_chunk.to_zarr(
+                extension.to_zarr(
                     store,
                     mode="a",
                     append_dim=append_dim,
+                    zarr_format=3,
+                    consolidated=False,
+                )
+            if len(replace_range):
+                replace_start = int(replace_range[0])
+                full_section = data.drop_vars(
+                    drop_coords + drop_vars, errors="ignore"
+                )
+                full_slice = slice(
+                    replace_start, replace_start + len(data[append])
+                )
+                full_section.to_zarr(
+                    store,
+                    mode="a",
+                    region={append_dim: full_slice},
                     zarr_format=3,
                     consolidated=False,
                 )
