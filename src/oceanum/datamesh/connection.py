@@ -8,6 +8,7 @@ import datetime
 import tempfile
 import hashlib
 import fsspec
+import numpy
 import xarray
 import geopandas
 import pandas
@@ -547,6 +548,24 @@ class Connector(object):
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset or use_dask:
+            # Per-datasource read-wire dispatch: izarr datasources are served
+            # over the v3 (izarr/Icechunk) wire, everything else over the v2
+            # wire. The driver is resolved from the metadata record (never sent
+            # on the zarr wire).
+            driver = getattr(self.get_datasource(datasource_id), "driver", None)
+            if driver == "izarr":
+                # The v3 store acquires and owns its OWN session in the factory,
+                # so release the stage session here (only one session lives for
+                # the returned dataset's lifetime — the v3 store's). The store
+                # (and its session) stays open for the lazily-read dataset; the
+                # server embeds consolidated_metadata in the root zarr.json, so
+                # consolidated open works.
+                session.close()
+                store = make_v3_store(self, datasource_id, read_only=True)
+                return xarray.open_zarr(
+                    store, zarr_format=3, consolidated=True,
+                    decode_coords="all", mask_and_scale=True,
+                )
             store = make_v2wire_store(
                 self,
                 datasource_id,
@@ -653,7 +672,6 @@ class Connector(object):
         record already exists, so no metadata is written here and the
         ``write_datasource`` tail PATCHes it afterwards, unchanged.
         """
-        append_dims = [append] if append else None
         mode = "a" if (append and not overwrite) else "w"
         existed = ds._exists
 
@@ -682,21 +700,22 @@ class Connector(object):
             ds._exists = True
 
         # Open the per-datasource v3 store (owns one session) and stream the
-        # dataset through it, then finalise on success / abort on failure.
+        # dataset through it, then finalise on success / abort on failure. A
+        # single write session covers both the region write and the extend so
+        # the whole append lands as one Icechunk commit.
         store = make_v3_store(self, datasource_id, read_only=False)
         try:
-            to_zarr_kwargs = {}
-            if mode == "a" and append_dims:
-                # xarray append along the (single) append dimension.
-                to_zarr_kwargs["append_dim"] = append_dims[0]
             try:
-                data.to_zarr(
-                    store,
-                    mode=mode,
-                    consolidated=False,
-                    zarr_format=3,
-                    **to_zarr_kwargs,
-                )
+                if mode == "a":
+                    # Append with v2-parity overlap-replace semantics.
+                    self._zarr_v3_overlap_append(store, data, append)
+                else:
+                    data.to_zarr(
+                        store,
+                        mode="w",
+                        consolidated=False,
+                        zarr_format=3,
+                    )
             except Exception:
                 store._abort()
                 raise
@@ -705,6 +724,120 @@ class Connector(object):
             store.close()
         ds._exists = True
         return ds
+
+    def _zarr_v3_overlap_append(self, store, data, append):
+        """Overlap-replace append on the v3 wire (parity with ``zarr_write``).
+
+        Ports the v2 overlap-replace algorithm from
+        :func:`oceanum.datamesh.zarr.zarr_write` to the v3 store, preserving its
+        exact semantics and error cases:
+
+        * the append coordinate must exist in the existing store and be 1-D, and
+          the incoming append coordinate must be monotonic non-decreasing;
+        * the overlap (existing indices within ``[new[0], new[-1]]``) must be
+          contiguous and no longer than the incoming data, and the overlapping
+          timestamps must exactly match the existing values (no inserting new
+          timestamps inside an existing range);
+        * the overlapping section is region-written (dropping coords/vars that
+          don't carry the append dim, exactly like v2) and the remainder is
+          appended along the append dim.
+
+        The existing dataset is opened through a read-only, non-owning clone of
+        the *write* store so the read rides the same session: the proxy pins a
+        write session's reads to its branch, giving read-your-own-writes
+        consistency. Both writes go through the caller's single write session
+        (finalised once by ``_zarr_write_v3``).
+        """
+
+        def _is_monotonic_non_decreasing(values) -> bool:
+            if len(values) < 2:
+                return True
+            return bool(numpy.all(values[:-1] <= values[1:]))
+
+        # Read the existing store through a read-only clone (zarr-python opens
+        # stores read-only for reads); the clone shares — and does not own —
+        # the write session.
+        read_store = store.with_read_only(True)
+        with xarray.open_zarr(
+            read_store, zarr_format=3, consolidated=True,
+            decode_coords="all", mask_and_scale=True,
+        ) as dexist:
+            if append not in dexist.coords:
+                raise DatameshWriteError(
+                    f"Append coordinate {append} not in existing zarr"
+                )
+            cexist = dexist[append]
+            if len(cexist.dims) > 1:
+                raise DatameshWriteError(
+                    f"Append coordinate {append} has more than one dimension"
+                )
+            # Materialise the existing coordinate so every subsequent check and
+            # both writes operate on an in-memory copy (all reads happen before
+            # any write on the shared session).
+            cexist = cexist.load()
+            cnew = data[append]
+            if not _is_monotonic_non_decreasing(cnew.values):
+                raise DatameshWriteError(
+                    f"Append coordinate {append} in incoming data must be monotonic non-decreasing"
+                )
+            append_dim = cexist.dims[0]
+            (replace_range,) = numpy.nonzero(
+                ((cexist >= data[append][0]) & (cexist <= data[append][-1])).values
+            )  # Get range in new data which overlaps - this just replaces everything >= first value in the new data
+            if len(replace_range):
+                if not numpy.all(numpy.diff(replace_range) == 1):
+                    raise DatameshWriteError(
+                        f"Cannot append on coordinate {append}: overlapping indices in existing zarr are non-contiguous (existing coordinate likely non-monotonic)"
+                    )
+                # Fail if the replacement range is larger than incomign data
+                if len(replace_range) > len(data[append]):
+                    raise DatameshWriteError(
+                        f"Cannot append to zarr with a region that would be smaller than the original"
+                    )
+
+                drop_coords = [c for c in data.coords if c != append]
+                drop_vars = [
+                    v for v in data.data_vars if not append in data[v].dims
+                ]
+                replace_section = data.isel(
+                    **{append_dim: slice(0, len(replace_range))}
+                ).drop_vars(drop_coords + drop_vars, errors="ignore")
+                replace_slice = slice(
+                    int(replace_range[0]), int(replace_range[-1]) + 1
+                )
+                replace_coord = replace_section[append]
+                existing_coord = cexist[replace_slice]
+                if not numpy.array_equal(
+                    replace_coord.values, existing_coord.values
+                ):
+                    raise DatameshWriteError(
+                        f"Cannot append on coordinate {append}: overlap timestamps do not match existing archive values. Inserting new timestamps into an existing coordinate range is not supported"
+                    )
+                # Fail if we are replacing an internal section and ends of coordinates do not match
+                if replace_range[-1] + 1 < len(cexist) and not numpy.array_equal(
+                    replace_section[append], cexist[replace_slice]
+                ):
+                    raise DatameshWriteError(
+                        f"Data inconsistency on coordinate {append} replacing a inner section of an existing zarr array"
+                    )
+                replace_section.to_zarr(
+                    store,
+                    mode="a",
+                    region={append_dim: replace_slice},
+                    zarr_format=3,
+                    consolidated=False,
+                )
+            if len(data[append]) > len(replace_range):
+                append_chunk = data.isel(
+                    **{append_dim: slice(len(replace_range), None)}
+                )
+                append_chunk.to_zarr(
+                    store,
+                    mode="a",
+                    append_dim=append_dim,
+                    zarr_format=3,
+                    consolidated=False,
+                )
 
     def write_datasource(
         self,
