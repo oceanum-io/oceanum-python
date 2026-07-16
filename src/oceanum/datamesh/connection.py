@@ -647,7 +647,14 @@ class Connector(object):
         """
         append_dims = [append] if append else None
         mode = "a" if (append and not overwrite) else "w"
+        existed = ds._exists
         driver_args = ds.driver_args or None
+        if not driver_args and not existed:
+            # NEW datasource: there is no metadata record yet to resolve
+            # driver_args from, so use the canonical bare-repository
+            # convention: repository == datasource id, resolved server-side
+            # against ICECHUNK_BUCKET/ICECHUNK_PREFIX.
+            driver_args = {"repository": datasource_id}
         client = ZarrClientV3(connection=self)
         try:
             client.write_dataset(
@@ -661,6 +668,23 @@ class Connector(object):
             )
         finally:
             client.close(finalise_write=False)
+        if not existed:
+            # Unlike the v2 proxy, proxy-zarr3 does NOT register datasource
+            # metadata during the write session, so POST the record now with
+            # the izarr driver + repository args (frozen fields — rebuild via
+            # the same round-trip pattern the overwrite path uses). Sniff the
+            # data-derived properties first (geom is mandatory server-side);
+            # the write_datasource tail then PATCHes with the full set.
+            ds._guess_props(data, None, append)
+            if ds.geom is None:
+                # geom is mandatory on POST; the v2 proxy registered new
+                # records with this same documented default.
+                ds.geom = shapely.geometry.Point(0, 0)
+            dump = ds.model_dump(by_alias=True)
+            dump["driver"] = "izarr"
+            dump["args"] = driver_args or {}
+            ds = Datasource(**dump)
+            self._metadata_write(ds)
         ds._exists = True
         return ds
 

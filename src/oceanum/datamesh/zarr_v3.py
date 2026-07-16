@@ -420,11 +420,19 @@ class ZarrClientV3:
             datasource, driver, driver_args,
             append_dims=append_dims, codec_profile=codec_profile,
         )
+        to_zarr_kwargs = {}
+        if mode == "a" and append_dims:
+            # xarray append along the (single) append dimension. NOTE: this is
+            # a plain extend — the v2 client's overlap-replace append
+            # semantics are not (yet) implemented on the wire path; appends
+            # must not overlap the existing coordinate range.
+            to_zarr_kwargs["append_dim"] = append_dims[0]
         try:
             dataset.to_zarr(
                 self.store(datasource, read_only=False),
                 mode=mode, consolidated=False, zarr_format=3,
                 encoding=encoding,
+                **to_zarr_kwargs,
             )
         except Exception:
             self.abort_write(datasource)
