@@ -659,7 +659,8 @@ class Connector(object):
             driver = os.environ.get("DATAMESH_DEFAULT_ZARR_DRIVER", "onzarr")
         return driver
 
-    def _zarr_write_v3(self, datasource_id, data, append, overwrite, ds):
+    def _zarr_write_v3(self, datasource_id, data, append, overwrite, ds,
+                       crs=None):
         """Write an xarray Dataset over the v3 (izarr/Icechunk) wire.
 
         Overwrite of an existing izarr datasource is handled upstream in
@@ -689,15 +690,21 @@ class Connector(object):
             driver_args = ds.driver_args or None
             if not driver_args:
                 driver_args = {"repository": datasource_id}
-            ds._guess_props(data, None, append)
+            # crs rides along so a sniffed bbox geometry is transformed
+            # to WGS84 before the record POST (the server validates it).
+            ds._guess_props(data, crs, append)
             if ds.geom is None:
                 # geom is mandatory on POST; the v2 proxy registered new
                 # records with this same documented default.
                 ds.geom = shapely.geometry.Point(0, 0)
-            dump = ds.model_dump(by_alias=True)
-            dump["driver"] = "izarr"
-            dump["args"] = driver_args
-            ds = Datasource(**dump)
+            # model_copy(update=...) bypasses validation deliberately:
+            # driver is frozen, and a dump/rebuild round-trip re-validates
+            # geom from its serialized GeoJSON-string form — which the
+            # WGS84 check rejects for projected-crs geometries (the tail of
+            # write_datasource transforms them after the write).
+            ds = ds.model_copy(
+                update={"driver": "izarr", "driver_args": driver_args}
+            )
             ds._exists = False
             self._metadata_write(ds)
             ds._exists = True
@@ -949,9 +956,11 @@ class Connector(object):
             try:
                 self._delete(datasource_id)
                 # This allows to carry over all metadata properties
-                # while wipping the existing stored data cleanly
+                # while wipping the existing stored data cleanly.
+                # model_copy (not a dump/rebuild): re-validation rejects the
+                # serialized geom form for projected-crs geometries.
                 ds._exists = False
-                ds = Datasource(**ds.model_dump(by_alias=True))
+                ds = ds.model_copy()
                 self._metadata_write(ds)
                 # The record was just re-POSTed: mark it as existing so the
                 # write wire doesn't POST it a second time (the izarr path
@@ -972,7 +981,8 @@ class Connector(object):
                     target_driver = self._resolve_zarr_write_driver(ds)
                     if target_driver == "izarr":
                         ds = self._zarr_write_v3(
-                            datasource_id, data, append, overwrite, ds
+                            datasource_id, data, append, overwrite, ds,
+                            crs=crs,
                         )
                     else:
                         ds = zarr_write(
