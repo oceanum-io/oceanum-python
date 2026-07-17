@@ -950,6 +950,10 @@ class Connector(object):
                 ds._exists = False
                 ds = Datasource(**ds.model_dump(by_alias=True))
                 self._metadata_write(ds)
+                # The record was just re-POSTed: mark it as existing so the
+                # write wire doesn't POST it a second time (the izarr path
+                # POSTs metadata FIRST for datasources it believes are new).
+                ds._exists = True
             except Exception as e:
                 raise DatameshWriteError(f"Cannot delete existing datasource")
 
