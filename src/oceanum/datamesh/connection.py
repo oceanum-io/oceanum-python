@@ -551,8 +551,11 @@ class Connector(object):
             # Per-datasource read-wire dispatch: izarr datasources are served
             # over the v3 (izarr/Icechunk) wire, everything else over the v2
             # wire. The driver is resolved from the metadata record (never sent
-            # on the zarr wire).
-            driver = getattr(self.get_datasource(datasource_id), "driver", None)
+            # on the zarr wire). The id may carry a chunk-pattern suffix
+            # (e.g. "myds:timeseries") which is not part of the record id.
+            driver = getattr(
+                self.get_datasource(datasource_id.split(":")[0]), "driver", None
+            )
             if driver == "izarr":
                 # The v3 store acquires and owns its OWN session in the factory,
                 # so release the stage session here (only one session lives for
