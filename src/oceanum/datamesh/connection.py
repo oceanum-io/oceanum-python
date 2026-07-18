@@ -1016,7 +1016,13 @@ class Connector(object):
                     #  - new datasource: driver from DATAMESH_DEFAULT_ZARR_DRIVER
                     #    (default "onzarr" -> v2 wire; "izarr" -> v3 wire).
                     target_driver = self._resolve_zarr_write_driver(ds)
-                    if target_driver == "izarr":
+                    # onzarr rides the v3 wire too: the zarr3 proxy's write
+                    # plane serves plain-store (onzarr) datasources natively,
+                    # and v2-wire writes are not served by the zarr3 stack.
+                    if target_driver == "izarr" or (
+                        target_driver == "onzarr"
+                        and os.environ.get("DATAMESH_ZARR_PROXY_ZARR3")
+                    ):
                         ds = self._zarr_write_v3(
                             datasource_id, data, append, overwrite, ds,
                             crs=crs,

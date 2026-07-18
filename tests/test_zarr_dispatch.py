@@ -89,6 +89,8 @@ def _drive_write(existing_driver=None, overwrite=False, append=None,
     if existing_driver is not None:
         existing = MagicMock(driver=existing_driver, _exists=True)
         existing.model_dump.return_value = {"driver": existing_driver}
+        # the overwrite path recreates the record via model_copy
+        existing.model_copy.return_value = existing
         c.get_datasource = MagicMock(return_value=existing)
     else:
         c.get_datasource = MagicMock(side_effect=DatameshConnectError("nope"))
@@ -102,7 +104,7 @@ def _drive_write(existing_driver=None, overwrite=False, append=None,
         calls["wire"] = "v2"
         return _tail_ds()
 
-    def fake_v3(dsid, d, ap, ov, ds):
+    def fake_v3(dsid, d, ap, ov, ds, crs=None):
         calls["wire"] = "v3"
         return _tail_ds()
 
@@ -123,7 +125,16 @@ def _drive_write(existing_driver=None, overwrite=False, append=None,
     return calls["wire"]
 
 
-def test_existing_onzarr_append_uses_v2(monkeypatch):
+def test_existing_onzarr_append_uses_v3_when_proxy_configured(monkeypatch):
+    # The zarr3 stack serves onzarr writes on the v3 wire (v2-wire writes
+    # are not served there) — with the v3 proxy configured, route there.
+    monkeypatch.setenv("DATAMESH_ZARR_PROXY_ZARR3", "http://0.0.0.0:8044")
+    assert _drive_write(existing_driver="onzarr", append="time",
+                        monkeypatch=monkeypatch) == "v3"
+
+
+def test_existing_onzarr_append_uses_v2_without_v3_proxy(monkeypatch):
+    monkeypatch.delenv("DATAMESH_ZARR_PROXY_ZARR3", raising=False)
     assert _drive_write(existing_driver="onzarr", append="time",
                         monkeypatch=monkeypatch) == "v2"
 
