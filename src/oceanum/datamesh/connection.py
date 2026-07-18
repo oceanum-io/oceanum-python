@@ -356,8 +356,13 @@ class Connector(object):
             try:
                 if cache_timeout:
                     localcache.lock(query)
+                # Non-lazy Dataset default transport is the zarr3 zipstore
+                # (pinned design 2026-07-18): the gateway ships a cached
+                # query's stored entry verbatim — no conversion server-side,
+                # no re-encoding here. Older gateways that don't know the
+                # format get one retry with netcdf.
                 transfer_format = (
-                    "application/x-netcdf4"
+                    "application/x-zarr3zip"
                     if stage.container == Container.Dataset
                     else "application/parquet"
                 )
@@ -370,6 +375,19 @@ class Connector(object):
                     data=query.model_dump_json(warnings=False),
                     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
                 )
+                if (transfer_format == "application/x-zarr3zip"
+                        and 400 <= resp.status_code < 500):
+                    # Older gateway (or format rejected): fall back to the
+                    # netcdf transport; genuine query errors fail there too.
+                    headers["Accept"] = "application/x-netcdf4"
+                    resp = self._retried_request(
+                        f"{self._gateway}/oceanql/",
+                        method="POST",
+                        headers=headers,
+                        data=query.model_dump_json(warnings=False),
+                        timeout=(DATAMESH_CONNECT_TIMEOUT,
+                                 DATAMESH_DOWNLOAD_TIMEOUT),
+                    )
                 if resp.status_code > 500:
                     if cache_timeout:
                         localcache.unlock(query)
@@ -394,7 +412,26 @@ class Connector(object):
                     with tempFile("wb") as f:
                         f.write(resp.content)
                         f.seek(0)
-                        if stage.container == Container.Dataset:
+                        content_type = resp.headers.get("Content-Type", "")
+                        if content_type.startswith("application/x-zarr3zip"):
+                            import zarr
+
+                            ds = xarray.open_zarr(
+                                zarr.storage.ZipStore(f.name, read_only=True),
+                                zarr_format=3, consolidated=False,
+                                decode_coords="all", mask_and_scale=True,
+                            ).load()
+                            order = ds.attrs.pop("_variable_order", None)
+                            if order:
+                                order = [v for v in json.loads(order)
+                                         if v in ds.data_vars]
+                                # Reorder only — never drop: a coords-only
+                                # result reopens with unreferenced coords
+                                # as data_vars the order list doesn't know.
+                                if order and set(order) == set(ds.data_vars):
+                                    ds = ds[order]
+                            ext = ".zarr3.zip"
+                        elif stage.container == Container.Dataset:
                             ds = xarray.load_dataset(
                                 f.name, decode_coords="all", mask_and_scale=True
                             )

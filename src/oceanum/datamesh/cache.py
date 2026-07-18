@@ -51,7 +51,31 @@ class LocalCache:
     def _get(self, query):
         cache_file = self._cachepath(query)
         try:
-            if os.path.exists(cache_file + ".nc"):
+            if os.path.exists(cache_file + ".zarr3.zip"):
+                if (
+                    os.path.getmtime(cache_file + ".zarr3.zip") + self.cache_timeout
+                    < time.time()
+                ):
+                    os.remove(cache_file + ".zarr3.zip")
+                    return None
+                import zarr
+
+                ds = xr.open_zarr(
+                    zarr.storage.ZipStore(cache_file + ".zarr3.zip",
+                                          read_only=True),
+                    zarr_format=3, consolidated=False,
+                    decode_coords="all", mask_and_scale=True,
+                )
+                import json as _json
+
+                order = ds.attrs.pop("_variable_order", None)
+                if order:
+                    order = [v for v in _json.loads(order)
+                             if v in ds.data_vars]
+                    if order and set(order) == set(ds.data_vars):
+                        ds = ds[order]
+                return ds
+            elif os.path.exists(cache_file + ".nc"):
                 if (
                     os.path.getmtime(cache_file + ".nc") + self.cache_timeout
                     < time.time()
