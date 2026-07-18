@@ -457,7 +457,8 @@ def _resolve_proxy(connection) -> str:
     return proxy.rstrip("/")
 
 
-def make_v3_store(connection, datasource, *, read_only: bool = True):
+def make_v3_store(connection, datasource, *, read_only: bool = True,
+                  allow_multiwrite: bool = False):
     """Construct a :class:`DatameshV3Store` for one datasource.
 
     Mirrors :func:`oceanum.datamesh.zarr_v2wire.make_v2wire_store`. Acquires a
@@ -471,7 +472,10 @@ def make_v3_store(connection, datasource, *, read_only: bool = True):
         _STORE_CLASS = _make_store_class()
 
     root_url = f"{_resolve_proxy(connection)}/secure/zarr"
-    session = Session.acquire(connection)
+    # allow_multiwrite rides on the SESSION: the proxy's implicit write
+    # registration reads it from the authenticated session record and puts
+    # concurrent writers on one shared icechunk branch.
+    session = Session.acquire(connection, allow_multiwrite=allow_multiwrite)
     headers = {
         **getattr(connection, "_auth_headers", {}),
         "X-DATAMESH-SESSIONID": session.id,
