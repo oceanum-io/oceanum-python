@@ -757,11 +757,23 @@ class Connector(object):
                     # Append with v2-parity overlap-replace semantics.
                     self._zarr_v3_overlap_append(store, data, append)
                 else:
+                    # v2-parity fill convention: floats fill with NaN (the
+                    # zarr-3 default of 0.0 would mask every legitimate
+                    # zero when the wire is read with CF decoding, and
+                    # absent all-fill chunks must decode as NaN, not 0).
+                    encoding = {
+                        name: {"fill_value": float("nan")}
+                        for name, var in data.variables.items()
+                        if var.dtype.kind == "f"
+                        and "fill_value" not in var.encoding
+                        and "_FillValue" not in var.attrs
+                    }
                     data.to_zarr(
                         store,
                         mode="w",
                         consolidated=False,
                         zarr_format=3,
+                        encoding=encoding or None,
                     )
             except Exception:
                 store._abort()
