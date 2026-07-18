@@ -75,6 +75,30 @@ def tempFile(mode="wb"):
             os.unlink(file.name)
 
 
+def _set_nan_fill(data):
+    """v2-parity fill convention for zarr_format=3 writes: floats fill
+    with NaN. zarr-python 3 defaults the array fill_value to 0.0 — absent
+    all-fill chunks must decode as NaN, not 0, and a 0.0 fill masks every
+    legitimate zero when the wire is read with CF decoding.
+
+    Sets ``fill_value`` in each variable's own encoding IN PLACE — the
+    ``encoding=`` kwarg of ``to_zarr`` would *replace* the variable's
+    whole encoding, destroying CF packing (scale_factor/dtype) on data
+    the user opened from packed sources. Only variables whose on-disk
+    (encoded) dtype is float are touched — a CF-packed float has an
+    integer target dtype that cannot hold NaN."""
+    for name, var in data.variables.items():
+        if "fill_value" in var.encoding or "_FillValue" in var.attrs:
+            continue
+        try:
+            target = numpy.dtype(var.encoding.get("dtype", var.dtype))
+        except TypeError:
+            continue
+        if target.kind == "f":
+            var.encoding["fill_value"] = float("nan")
+    return data
+
+
 class Connector(object):
     """Datamesh connector class.
 
@@ -761,19 +785,11 @@ class Connector(object):
                     # zarr-3 default of 0.0 would mask every legitimate
                     # zero when the wire is read with CF decoding, and
                     # absent all-fill chunks must decode as NaN, not 0).
-                    encoding = {
-                        name: {"fill_value": float("nan")}
-                        for name, var in data.variables.items()
-                        if var.dtype.kind == "f"
-                        and "fill_value" not in var.encoding
-                        and "_FillValue" not in var.attrs
-                    }
-                    data.to_zarr(
+                    _set_nan_fill(data).to_zarr(
                         store,
                         mode="w",
                         consolidated=False,
                         zarr_format=3,
-                        encoding=encoding or None,
                     )
             except Exception:
                 store._abort()
