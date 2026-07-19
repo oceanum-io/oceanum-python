@@ -721,7 +721,7 @@ class Connector(object):
         return driver
 
     def _zarr_write_v3(self, datasource_id, data, append, overwrite, ds,
-                       crs=None, group=None, repository=None):
+                       crs=None, group=None):
         """Write an xarray Dataset over the v3 (izarr/Icechunk) wire.
 
         Overwrite of an existing izarr datasource is handled upstream in
@@ -748,14 +748,16 @@ class Connector(object):
             # ICECHUNK_BUCKET/ICECHUNK_PREFIX). Sniff data-derived properties
             # first (geom is mandatory server-side); the write_datasource tail
             # then PATCHes with the full set.
-            driver_args = ds.driver_args or None
-            if not driver_args:
-                # group-scoped instances usually share one repository
-                # (pass repository=<shared name>); the group lands on the
-                # record so reads serve exactly that subtree (proxy D18)
-                driver_args = {"repository": repository or datasource_id}
-                if group:
-                    driver_args["group"] = group
+            # The repository is record-level and server-controlled: it
+            # rides in the driver args (callers sharing one repository
+            # across instances set args={"repository": ...}) and the
+            # server defaults it to the datasource id when absent. The
+            # group lands on the record so reads serve exactly that
+            # subtree (proxy D18).
+            driver_args = dict(ds.driver_args or {})
+            driver_args.setdefault("repository", datasource_id)
+            if group:
+                driver_args["group"] = group
             # crs rides along so a sniffed bbox geometry is transformed
             # to WGS84 before the record POST (the server validates it).
             ds._guess_props(data, crs, append)
@@ -969,7 +971,6 @@ class Connector(object):
         index=None,
         crs=None,
         group=None,
-        repository=None,
         **properties,
     ):
         """Write a datasource to datamesh from the work environment
@@ -982,8 +983,7 @@ class Connector(object):
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
             crs (Union[string,int], optional): Coordinate reference system for the datasource if not WGS84. The geom argument is also assumed to be in this CRS. default=None
-            group (string, optional): Write into this subtree (dataset instance) of the datasource's Icechunk repository — one repository can hold many instances (e.g. forecast cycles) and each datasource record serves one of them. Overwrite and delete then affect ONLY that instance. Requires the izarr (Icechunk) backend. default=None
-            repository (string, optional): Icechunk repository for a NEW group-scoped datasource — pass the same (shared) repository name for every instance of a family. Defaults to the datasource id. default=None
+            group (string, optional): Write into this subtree (dataset instance) of the datasource's Icechunk repository — one repository can hold many instances (e.g. forecast cycles) and each datasource record serves one of them. Overwrite and delete then affect ONLY that instance. Requires the izarr (Icechunk) backend. The repository itself is part of the record's driver args and is resolved server-side (defaulting to the datasource id) — instances of a family share one by passing ``args={"repository": "<shared name>"}``. default=None
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource`
 
         Returns:
@@ -1078,7 +1078,7 @@ class Connector(object):
                     ):
                         ds = self._zarr_write_v3(
                             datasource_id, data, append, overwrite, ds,
-                            crs=crs, group=group, repository=repository,
+                            crs=crs, group=group,
                         )
                     else:
                         ds = zarr_write(
@@ -1126,9 +1126,12 @@ class Connector(object):
         elif overwrite:
             ds = _ds
 
-        # Update the datasource properties
+        # Update the datasource properties. driver_args ("args") is like
+        # driver: frozen, applied at record CREATION only (the field is
+        # set through the Datasource constructor for new records) — it is
+        # not an updatable property of an existing datasource.
         for key in properties:
-            if key not in ["driver", "schema", "crs"]:
+            if key not in ["driver", "schema", "crs", "args", "driver_args"]:
                 setattr(ds, key, properties[key])
         if name:
             ds.name = name
