@@ -721,7 +721,7 @@ class Connector(object):
         return driver
 
     def _zarr_write_v3(self, datasource_id, data, append, overwrite, ds,
-                       crs=None):
+                       crs=None, group=None, repository=None):
         """Write an xarray Dataset over the v3 (izarr/Icechunk) wire.
 
         Overwrite of an existing izarr datasource is handled upstream in
@@ -750,7 +750,12 @@ class Connector(object):
             # then PATCHes with the full set.
             driver_args = ds.driver_args or None
             if not driver_args:
-                driver_args = {"repository": datasource_id}
+                # group-scoped instances usually share one repository
+                # (pass repository=<shared name>); the group lands on the
+                # record so reads serve exactly that subtree (proxy D18)
+                driver_args = {"repository": repository or datasource_id}
+                if group:
+                    driver_args["group"] = group
             # crs rides along so a sniffed bbox geometry is transformed
             # to WGS84 before the record POST (the server validates it).
             ds._guess_props(data, crs, append)
@@ -785,6 +790,10 @@ class Connector(object):
                     # zarr-3 default of 0.0 would mask every legitimate
                     # zero when the wire is read with CF decoding, and
                     # absent all-fill chunks must decode as NaN, not 0).
+                    # Group-scoped records need nothing here: the PROXY
+                    # scopes both wire planes to the record's subtree
+                    # (symmetric read/write), so this root-level write
+                    # recreates ONLY that instance — never siblings.
                     _set_nan_fill(data).to_zarr(
                         store,
                         mode="w",
@@ -959,6 +968,8 @@ class Connector(object):
         overwrite=False,
         index=None,
         crs=None,
+        group=None,
+        repository=None,
         **properties,
     ):
         """Write a datasource to datamesh from the work environment
@@ -971,6 +982,8 @@ class Connector(object):
             append (string, optional): Coordinate to append on. default=None
             overwrite (bool, optional): Overwrite existing datasource. default=False
             crs (Union[string,int], optional): Coordinate reference system for the datasource if not WGS84. The geom argument is also assumed to be in this CRS. default=None
+            group (string, optional): Write into this subtree (dataset instance) of the datasource's Icechunk repository — one repository can hold many instances (e.g. forecast cycles) and each datasource record serves one of them. Overwrite and delete then affect ONLY that instance. Requires the izarr (Icechunk) backend. default=None
+            repository (string, optional): Icechunk repository for a NEW group-scoped datasource — pass the same (shared) repository name for every instance of a family. Defaults to the datasource id. default=None
             **properties: Additional properties for the datasource - see :obj:`oceanum.datamesh.Datasource`
 
         Returns:
@@ -1044,6 +1057,18 @@ class Connector(object):
                     #  - new datasource: driver from DATAMESH_DEFAULT_ZARR_DRIVER
                     #    (default "onzarr" -> v2 wire; "izarr" -> v3 wire).
                     target_driver = self._resolve_zarr_write_driver(ds)
+                    if group and target_driver != "izarr":
+                        raise DatameshWriteError(
+                            "group writes require the izarr (Icechunk) "
+                            f"backend — datasource {datasource_id} targets "
+                            f"driver {target_driver!r}"
+                        )
+                    # An existing group-scoped izarr record keeps targeting
+                    # its own subtree without re-passing group every call.
+                    # (An onzarr record's "group" is the zarr-driver store
+                    # template concept, not a write scope — izarr only.)
+                    if group is None and ds._exists and target_driver == "izarr":
+                        group = (ds.driver_args or {}).get("group") or None
                     # onzarr rides the v3 wire too: the zarr3 proxy's write
                     # plane serves plain-store (onzarr) datasources natively,
                     # and v2-wire writes are not served by the zarr3 stack.
@@ -1053,7 +1078,7 @@ class Connector(object):
                     ):
                         ds = self._zarr_write_v3(
                             datasource_id, data, append, overwrite, ds,
-                            crs=crs,
+                            crs=crs, group=group, repository=repository,
                         )
                     else:
                         ds = zarr_write(

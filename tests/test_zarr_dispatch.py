@@ -104,7 +104,7 @@ def _drive_write(existing_driver=None, overwrite=False, append=None,
         calls["wire"] = "v2"
         return _tail_ds()
 
-    def fake_v3(dsid, d, ap, ov, ds, crs=None):
+    def fake_v3(dsid, d, ap, ov, ds, crs=None, group=None, repository=None):
         calls["wire"] = "v3"
         return _tail_ds()
 
