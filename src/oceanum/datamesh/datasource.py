@@ -446,9 +446,25 @@ class Datasource(BaseModel):
         return badcoords if len(badcoords) > 0 else None
 
     def _set_crs(self, crs):
-        if crs.to_epsg() != "4326":
-            self.dataschema.attrs["crs"] = crs.to_epsg()
+        """Store CRS in dataschema attrs, unless it is EPSG:4326 (platform default).
+
+        Args:
+            crs: pyproj.CRS instance
+
+        Returns:
+            crs: the input CRS unchanged
+        """
+        epsg = crs.to_epsg()
+        # EPSG:4326 is the platform default and should not be stamped
+        if epsg == 4326:
             return crs
+        # Store numeric EPSG codes when they differ from the default
+        if isinstance(epsg, int):
+            self.dataschema.attrs["crs"] = epsg
+        # Store string representation for CRS without an EPSG code
+        elif epsg is None:
+            self.dataschema.attrs["crs"] = crs.to_string()
+        return crs
 
 
 def _datasource_driver(data):
