@@ -466,15 +466,13 @@ class Query(BaseModel):
         return hash(self.model_dump_json(warnings=False))
 
 
-class Workspace(BaseModel):
-    data: List[Query] = Field(title="Datamesh queries")
-    id: Optional[str] = Field(title="Unique ID of this package", default=None)
-    name: Optional[str] = Field(title="Package name", default="OceanQL package")
-    description: Optional[str] = Field(title="Package description", default="")
+class WorkspaceData(Query):
+    id: str = Field(title="Unique ID of the data query", default=None)
+    label: Optional[str] = Field(title="Human-readable connection name", default=None)
 
 
 class Workspace(BaseModel):
-    data: List[Query] = Field(title="Datamesh queries")
+    data: List[WorkspaceData] = Field(title="Data items in the workspace", default=[])
     id: Optional[str] = Field(title="Unique ID of this package", default=None)
     name: Optional[str] = Field(title="Package name", default="OceanQL package")
     description: Optional[str] = Field(title="Package description", default="")
