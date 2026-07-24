@@ -388,7 +388,7 @@ class Query(BaseModel):
     """
 
     def __init__(self, **data):
-        field_names = set(Query.model_fields.keys())
+        field_names = set(type(self).model_fields.keys())
         extra_keys = set(data.keys()) - field_names
         for key in extra_keys:
             close = difflib.get_close_matches(key, field_names, n=1, cutoff=0.6)
