@@ -388,7 +388,7 @@ class Query(BaseModel):
     """
 
     def __init__(self, **data):
-        field_names = set(Query.model_fields.keys())
+        field_names = set(type(self).model_fields.keys())
         extra_keys = set(data.keys()) - field_names
         for key in extra_keys:
             close = difflib.get_close_matches(key, field_names, n=1, cutoff=0.6)
@@ -466,15 +466,13 @@ class Query(BaseModel):
         return hash(self.model_dump_json(warnings=False))
 
 
-class Workspace(BaseModel):
-    data: List[Query] = Field(title="Datamesh queries")
-    id: Optional[str] = Field(title="Unique ID of this package", default=None)
-    name: Optional[str] = Field(title="Package name", default="OceanQL package")
-    description: Optional[str] = Field(title="Package description", default="")
+class WorkspaceData(Query):
+    id: str = Field(title="Unique ID of the data query", default=None)
+    label: Optional[str] = Field(title="Human-readable connection name", default=None)
 
 
 class Workspace(BaseModel):
-    data: List[Query] = Field(title="Datamesh queries")
+    data: List[WorkspaceData] = Field(title="Data items in the workspace", default=[])
     id: Optional[str] = Field(title="Unique ID of this package", default=None)
     name: Optional[str] = Field(title="Package name", default="OceanQL package")
     description: Optional[str] = Field(title="Package description", default="")
