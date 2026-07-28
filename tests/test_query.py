@@ -5,9 +5,10 @@ import pytest
 import datetime
 import shapely
 import numpy
+from pydantic import ValidationError
 
 from oceanum.datamesh import Query
-from oceanum.datamesh.query import Stage
+from oceanum.datamesh.query import Stage, LevelFilter
 
 
 def test_query_datasource():
@@ -70,6 +71,52 @@ def test_query_timefilter_negative_periods():
     assert _times(
         {"times": [-numpy.timedelta64(5, "D"), numpy.timedelta64(2, "D")]}
     ) == ["-P5D", "P2D"]
+
+
+def test_query_levelfilter():
+    q = Query(
+        datasource="test",
+        levelfilter={"type": "range", "levels": [0.0, 10.0]},
+    )
+    q = Query(
+        datasource="test",
+        levelfilter={"type": "series", "levels": [0.0]},
+    )
+    q = Query(
+        datasource="test",
+        levelfilter={"type": "series", "levels": [0.0, 10.0, 20.0]},
+    )
+    q = Query(
+        datasource="test",
+        levelfilter={"type": "trajectory", "levels": [0.0, 10.0, 20.0]},
+    )
+
+
+def test_query_levelfilter_range_requires_two_values():
+    with pytest.raises(ValidationError) as excinfo:
+        LevelFilter(type="range", levels=[0.0])
+    message = str(excinfo.value)
+    assert "type='series'" in message
+    assert "exactly 2 values" in message
+
+    with pytest.raises(ValidationError):
+        LevelFilter(type="range", levels=[0.0, 5.0, 10.0])
+
+    # type defaults to 'range', so an omitted type must be caught too - this is
+    # the shape that reached production and crashed the query engine.
+    with pytest.raises(ValidationError) as excinfo:
+        LevelFilter(levels=[0.0])
+    assert "type='series'" in str(excinfo.value)
+
+
+def test_query_levelfilter_series_requires_at_least_one_value():
+    with pytest.raises(ValidationError):
+        LevelFilter(type="series", levels=[])
+
+
+def test_query_levelfilter_trajectory_requires_at_least_one_value():
+    with pytest.raises(ValidationError):
+        LevelFilter(type="trajectory", levels=[])
 
 
 def test_query_aggregate():
