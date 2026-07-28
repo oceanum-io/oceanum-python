@@ -270,6 +270,23 @@ class LevelFilter(BaseModel):
         description="Interpolation method to use for series type level filters",
     )
 
+    @field_validator("levels")
+    @classmethod
+    def validate_levels(cls, v, info):
+        type_ = info.data.get("type")
+        if type_ == LevelFilterType.range:
+            if len(v) != 2:
+                raise ValueError(
+                    f"For LevelFilters of type='range', levels must contain exactly 2 values: [levelstart, levelend], got {len(v)}. "
+                    "To select one or more individual levels, use type='series' instead."
+                )
+        elif type_ in (LevelFilterType.series, LevelFilterType.trajectory):
+            if len(v) < 1:
+                raise ValueError(
+                    f"For LevelFilters of type='{type_.value}', levels must contain at least 1 value"
+                )
+        return v
+
 
 class TimeFilter(BaseModel):
     """TimeFilter class
