@@ -6,6 +6,7 @@ import datetime
 import shapely
 import numpy
 from pydantic import ValidationError
+from geojson_pydantic import Feature
 
 from oceanum.datamesh import Query
 from oceanum.datamesh.query import Stage, LevelFilter
@@ -157,10 +158,98 @@ def test_query_geofilter_geom():
     q = Query(datasource="test", geofilter={"type": "feature", "geom": point})
 
 
+def test_query_geofilter_type_must_match_geom():
+    # A bbox list with type='feature' used to reach the query engine and die
+    # there with "'list' object has no attribute 'model_dump'".
+    with pytest.raises(ValidationError) as excinfo:
+        Query(datasource="test", geofilter={"type": "feature", "geom": [0, 0, 1, 1]})
+    assert "type='bbox'" in str(excinfo.value)
+
+    # ... and a feature with type='bbox' with "'Feature' object is not subscriptable".
+    with pytest.raises(ValidationError) as excinfo:
+        Query(
+            datasource="test",
+            geofilter={
+                "type": "bbox",
+                "geom": {
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [0, 0]},
+                    "properties": {},
+                },
+            },
+        )
+    assert "type='feature'" in str(excinfo.value)
+
+
+def test_query_geofilter_accepts_feature_instance():
+    # geom is typed Union[List[float], Feature] but a constructed Feature was
+    # rejected outright - only the dict form was accepted.
+    feature = Feature(
+        type="Feature",
+        geometry={"type": "Point", "coordinates": [0.0, 0.0]},
+        properties={},
+    )
+    q = Query(datasource="test", geofilter={"type": "feature", "geom": feature})
+    assert q.geofilter.geom.geometry.type == "Point"
+
+
+def test_query_geofilter_bbox_must_be_ordered():
+    Query(datasource="test", geofilter={"type": "bbox", "geom": [0, 0, 1, 1]})
+    for reversed_bbox in ([1, 0, 0, 1], [0, 1, 1, 0]):
+        with pytest.raises(ValidationError) as excinfo:
+            Query(datasource="test", geofilter={"type": "bbox", "geom": reversed_bbox})
+        assert "x_min <= x_max" in str(excinfo.value)
+
+
+def test_query_geofilter_resolution_not_negative():
+    with pytest.raises(ValidationError):
+        Query(
+            datasource="test",
+            geofilter={"type": "bbox", "geom": [0, 0, 1, 1], "resolution": -5},
+        )
+
+
+def test_query_timefilter_series_requires_a_value():
+    Query(datasource="test", timefilter={"type": "series", "times": ["2000-01-01"]})
+    for type_ in ("series", "trajectory"):
+        with pytest.raises(ValidationError) as excinfo:
+            Query(datasource="test", timefilter={"type": type_, "times": []})
+        assert "at least 1 value" in str(excinfo.value)
+
+
+def test_query_timefilter_resolution_must_be_a_freqstr():
+    Query(
+        datasource="test",
+        timefilter={"times": ["2000-01-01", "2001-01-01"], "resolution": "3h"},
+    )
+    Query(
+        datasource="test",
+        timefilter={"times": ["2000-01-01", "2001-01-01"], "resolution": "native"},
+    )
+    with pytest.raises(ValidationError) as excinfo:
+        Query(
+            datasource="test",
+            timefilter={"times": ["2000-01-01", "2001-01-01"], "resolution": "banana"},
+        )
+    assert "not a valid pandas frequency string" in str(excinfo.value)
+
+
+def test_query_limit_must_be_positive():
+    Query(datasource="test", limit=10)
+    for bad in (0, -5):
+        with pytest.raises(ValidationError):
+            Query(datasource="test", limit=bad)
+
+
 def test_query_coord():
     q = Query(
         datasource="test", coordfilter=[{"coord": "ensemble", "values": [1, 2, 3]}]
     )
+
+
+def test_query_coord_values_not_empty():
+    with pytest.raises(ValidationError):
+        Query(datasource="test", coordfilter=[{"coord": "ensemble", "values": []}])
 
 
 def test_stage_resp():
