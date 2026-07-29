@@ -3,6 +3,25 @@ name: Build and test the library
 on:
   push:
 
+# The write tests in tests/test_datamesh_write.py create, read back and delete
+# datasources with fixed ids (test-write-metadata, test-write-dataset-region-
+# chunked, ...) on the production datamesh. Those ids are shared global state,
+# so two runs overlapping anywhere in the repo corrupt each other: one run
+# registers an id the other is about to register ("data source with this id
+# already exists"), or deletes one the other is midway through reading (HTTP
+# 410 "deleted within your session").
+#
+# The group is a constant, deliberately: it must serialize across branches and
+# across workflows, because the contended resource is the production tenant and
+# not the ref. pypi-publish.yml runs the same tests and uses the same group - a
+# release publish fires both workflows at once, which is how two runs collided.
+#
+# cancel-in-progress is false because cancelling a run partway through leaves
+# exactly the orphaned datasources this is trying to avoid. Queue, do not kill.
+concurrency:
+  group: datamesh-prod-write-tests
+  cancel-in-progress: false
+
 jobs:
   build-and-test:
     name: Build and test
