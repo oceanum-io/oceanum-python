@@ -193,12 +193,12 @@ def test_query_geofilter_accepts_feature_instance():
     assert q.geofilter.geom.geometry.type == "Point"
 
 
-def test_query_geofilter_bbox_must_be_ordered():
+def test_query_geofilter_bbox_ordering_is_not_enforced():
+    # Corner ordering is deliberately left unvalidated: some datasources store
+    # descending coordinates and the ordering contract is not settled yet.
     Query(datasource="test", geofilter={"type": "bbox", "geom": [0, 0, 1, 1]})
     for reversed_bbox in ([1, 0, 0, 1], [0, 1, 1, 0]):
-        with pytest.raises(ValidationError) as excinfo:
-            Query(datasource="test", geofilter={"type": "bbox", "geom": reversed_bbox})
-        assert "x_min <= x_max" in str(excinfo.value)
+        Query(datasource="test", geofilter={"type": "bbox", "geom": reversed_bbox})
 
 
 def test_query_geofilter_resolution_not_negative():

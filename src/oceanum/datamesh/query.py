@@ -241,14 +241,10 @@ class GeoFilter(BaseModel):
                     "or a shapely geometry, not a bbox list. Use type='bbox' to select "
                     "with [x_min,y_min,x_max,y_max]."
                 )
-            x_min, y_min, x_max, y_max = v
-            if x_min > x_max or y_min > y_max:
-                raise ValueError(
-                    f"bbox must be ordered [x_min,y_min,x_max,y_max] with x_min <= x_max "
-                    f"and y_min <= y_max, got {v}. A reversed bbox selects nothing. Note "
-                    "that a bbox crossing the antimeridian is not supported - use the "
-                    "[-180,180] convention and split the query at +/-180."
-                )
+            # NOTE: bbox corner ordering is deliberately not validated here.
+            # A reversed bbox selects nothing, but some datasources store
+            # descending coordinates and the ordering contract is not settled,
+            # so the client stays permissive for now.
         else:
             if isinstance(v, dict):
                 if "properties" not in v:
