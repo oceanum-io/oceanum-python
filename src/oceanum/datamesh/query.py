@@ -215,6 +215,7 @@ class GeoFilter(BaseModel):
     resolution: Optional[float] = Field(
         title="Maximum spatial resolution of data",
         default=0.0,
+        ge=0.0,
         description="Maximum resolution of the data for downsampling in CRS units. Only works for feature datasources.",
     )
     alltouched: Optional[bool] = Field(
@@ -223,23 +224,44 @@ class GeoFilter(BaseModel):
 
     @field_validator("geom", mode="before")
     @classmethod
-    def validate_geom(cls, v):
+    def validate_geom(cls, v, info):
+        # type is declared before geom, so it is already validated and present
+        # in info.data - unless it failed its own validation, in which case the
+        # cross-checks below are skipped rather than reported twice.
+        type_ = info.data.get("type")
         if isinstance(v, (list, tuple, np.ndarray)):
             v = list(v)
             if len(v) != 4:
                 raise ValueError(
                     "bbox must be a list of length 4: [x_min,y_min,x_max,y_max]"
                 )
-        elif isinstance(v, dict):
-            if "properties" not in v:
-                v["properties"] = {}
-            v = Feature(**v)
-        elif isinstance(v, shapely.Geometry):
-            v = Feature(type="Feature", geometry=v.__geo_interface__, properties={})
+            if type_ == GeoFilterType.feature:
+                raise ValueError(
+                    "For GeoFilters of type='feature', geom must be a geojson feature "
+                    "or a shapely geometry, not a bbox list. Use type='bbox' to select "
+                    "with [x_min,y_min,x_max,y_max]."
+                )
+            # NOTE: bbox corner ordering is deliberately not validated here.
+            # A reversed bbox selects nothing, but some datasources store
+            # descending coordinates and the ordering contract is not settled,
+            # so the client stays permissive for now.
         else:
-            raise TypeError(
-                "geofilter geom must be a geojson feature, a list of length 4 or a shapely geometry"
-            )
+            if isinstance(v, dict):
+                if "properties" not in v:
+                    v["properties"] = {}
+                v = Feature(**v)
+            elif isinstance(v, shapely.Geometry):
+                v = Feature(type="Feature", geometry=v.__geo_interface__, properties={})
+            elif not isinstance(v, Feature):
+                raise TypeError(
+                    "geofilter geom must be a geojson feature, a list of length 4 or a shapely geometry"
+                )
+            if type_ == GeoFilterType.bbox:
+                raise ValueError(
+                    "For GeoFilters of type='bbox', geom must be a list of 4 values "
+                    "[x_min,y_min,x_max,y_max]. Use type='feature' to select with a "
+                    "geojson feature or a shapely geometry."
+                )
         return v
 
 
@@ -337,11 +359,32 @@ class TimeFilter(BaseModel):
     @field_validator("times")
     @classmethod
     def validate_times(cls, v, info):
-        if info.data.get("type") == TimeFilterType.range:
+        type_ = info.data.get("type")
+        if type_ == TimeFilterType.range:
             if len(v) != 2:
                 raise ValueError(
                     "For TimeFilters of type='range', times must contain exactly 2 values: [timestart, timeend] which must be of type Timestamp, Timedelta or None"
                 )
+        elif type_ in (TimeFilterType.series, TimeFilterType.trajectory):
+            if len(v) < 1:
+                raise ValueError(
+                    f"For TimeFilters of type='{type_.value}', times must contain at least 1 value"
+                )
+        return v
+
+    @field_validator("resolution")
+    @classmethod
+    def validate_resolution(cls, v):
+        if v is None or v == "native":
+            return v
+        try:
+            pd.tseries.frequencies.to_offset(v.lower())
+        except (ValueError, AttributeError) as e:
+            raise ValueError(
+                f"timefilter resolution '{v}' is not a valid pandas frequency string. "
+                "Use a pandas DateOffset freqstr such as '1h', '3h' or '1D', or "
+                "'native' to keep the datasource resolution."
+            ) from e
         return v
 
 
@@ -395,7 +438,9 @@ class Function(BaseModel):
 class CoordSelector(BaseModel):
     coord: str = Field(title="Coordinate name")
     values: List[str | int | float] = Field(
-        title="List of coordinate values to select by"
+        title="List of coordinate values to select by",
+        min_length=1,
+        description="Values to select by. Must contain at least one value - an empty list selects nothing.",
     )
 
 
@@ -470,7 +515,12 @@ class Query(BaseModel):
         description="Optional aggregation operators to apply to query after filtering",
     )
     functions: Optional[List[Function]] = Field(title="Functions", default=[])
-    limit: Optional[int] = Field(title="Limit size of response", default=None)
+    limit: Optional[int] = Field(
+        title="Limit size of response",
+        default=None,
+        gt=0,
+        description="Maximum number of records to return, counted from the end of the series. Must be greater than zero.",
+    )
     id: Optional[str] = Field(title="Unique ID of this query", default=None)
 
     def __bool__(self):
