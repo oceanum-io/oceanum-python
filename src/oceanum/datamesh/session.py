@@ -5,6 +5,11 @@ from .exceptions import DatameshConnectError, DatameshSessionError
 from .utils import retried_request, HTTPSession
 import atexit
 import os
+import logging
+import time
+
+
+logger = logging.getLogger(__name__)
 
 
 class Session(BaseModel):
@@ -153,19 +158,44 @@ class Session(BaseModel):
             atexit.unregister(self.close)
         except:
             pass
-        res = retried_request(
-            f"{self._connection._gateway}/session/{self.id}",
-            method="DELETE",
-            params={"finalise_write": finalise_write},
-            headers=self.header,
-            http_session=self._connection.http_session,
-        )
-        if res.status_code != 204:
-            if finalise_write:
-                raise DatameshConnectError(
-                    "Failed to finalise write with error: " + res.text
+
+        # Retry DELETE on non-204 responses with exponential backoff
+        max_attempts = 4  # initial + 3 retries
+        backoff_delays = [1, 2, 4]  # seconds
+
+        for attempt in range(max_attempts):
+            res = retried_request(
+                f"{self._connection._gateway}/session/{self.id}",
+                method="DELETE",
+                params={"finalise_write": finalise_write},
+                headers=self.header,
+                http_session=self._connection.http_session,
+            )
+
+            if res.status_code == 204:
+                return
+
+            # Treat 404/410 as success (session already closed)
+            if res.status_code in (404, 410):
+                return
+
+            # If this was the last attempt, handle the error
+            if attempt == max_attempts - 1:
+                if finalise_write:
+                    raise DatameshConnectError(
+                        "Failed to finalise write with error: " + res.text
+                    )
+                # Log warning instead of raising for finalise_write=False
+                # (we're in __exit__ and raising would mask the original error)
+                logger.warning(
+                    f"Failed to close session {self.id} after {max_attempts} attempts. "
+                    f"Status code: {res.status_code}. Response: {res.text}. "
+                    f"Session may block writes to its datasource until it expires."
                 )
-            print("Failed to close session with error: " + res.text)
+                return
+
+            # Not the last attempt and status != 204/404/410, so retry with backoff
+            time.sleep(backoff_delays[attempt])
 
     def __enter__(self):
         return self
