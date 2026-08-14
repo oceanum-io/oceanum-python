@@ -60,7 +60,11 @@ class ZarrClient(MutableMapping):
         session,
         parameters={},
         method="post",
-        retries=10,
+        # Bounded: chunk GETs are the highest-volume request this client
+        # makes, and their read timeout now covers the platform's whole
+        # chunk-generation budget -- aggressive retrying here multiplies
+        # load on the entire gateway chain (2026-08 retry storm).
+        retries=3,
         read_timeout=DATAMESH_CHUNK_READ_TIMEOUT,
         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
         write_timeout=DATAMESH_CHUNK_WRITE_TIMEOUT,
@@ -169,11 +173,14 @@ class ZarrClient(MutableMapping):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support delete operations")
         encoded_item = urllib.parse.quote(item, safe="/")
+        # A delete may cover the whole store (clear() passes ""), which the
+        # server processes synchronously -- give it the write budget, not a
+        # token metadata timeout.
         self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
             method="DELETE",
             connect_timeout=self.connect_timeout,
-            read_timeout=10,
+            read_timeout=self.write_timeout,
         )
 
     def __iter__(self):

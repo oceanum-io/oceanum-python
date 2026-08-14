@@ -35,6 +35,7 @@ from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteE
 from .session import Session
 from .utils import (
     retried_request,
+    backoff_delay,
     HTTPSession,
     DATAMESH_WRITE_TIMEOUT,
     DATAMESH_CONNECT_TIMEOUT,
@@ -368,8 +369,13 @@ class Connector(object):
                 if resp.status_code > 500:
                     if cache_timeout:
                         localcache.unlock(query)
-                    if retry < 5:
-                        time.sleep(retry)
+                    # One deliberate re-attempt for a gateway-level failure
+                    # (502/503/504). The query POST is not auto-retried by
+                    # retried_request -- re-running a query duplicates
+                    # expensive upstream work -- but a single retry after a
+                    # short pause covers a pod restarting mid-request.
+                    if retry < 1:
+                        time.sleep(backoff_delay(retry + 1, resp))
                         return self._query(query, use_dask, cache_timeout, retry + 1)
                     else:
                         raise DatameshConnectError(
