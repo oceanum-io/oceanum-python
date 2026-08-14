@@ -179,7 +179,8 @@ def backoff_delay(attempt, resp=None):
         retry_after = resp.headers.get("Retry-After")
         if retry_after is not None:
             try:
-                return min(float(retry_after), 120.0)
+                # Clamp: a malformed negative value must not crash sleep().
+                return min(max(float(retry_after), 0.0), 120.0)
             except ValueError:
                 pass  # HTTP-date form; fall through to backoff
     return min(0.5 * 2**attempt, 15.0) * uniform(0.5, 1.0)
@@ -260,7 +261,9 @@ def retried_request(
                 verify=verify,
             )
         except requests.exceptions.ConnectionError as e:
-            # Includes ConnectTimeout: nothing reached the service.
+            # Covers ConnectTimeout and connection resets. A reset after the
+            # request was delivered can re-issue work on retry; accepted for
+            # this client, whose write endpoints tolerate re-delivery.
             last_error = e
         except requests.exceptions.Timeout as e:
             raise DatameshConnectError(

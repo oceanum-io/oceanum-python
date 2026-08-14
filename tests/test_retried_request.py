@@ -85,6 +85,8 @@ def test_backoff_honors_numeric_retry_after():
     assert backoff_delay(1, _response(503, {"Retry-After": "7"})) == 7.0
     # Capped so a hostile/buggy header cannot park the client for an hour.
     assert backoff_delay(1, _response(503, {"Retry-After": "3600"})) == 120.0
+    # A malformed negative value must clamp to zero, not crash time.sleep().
+    assert backoff_delay(1, _response(503, {"Retry-After": "-5"})) == 0.0
 
 
 def test_backoff_is_jittered_and_capped():

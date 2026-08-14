@@ -173,11 +173,14 @@ class ZarrClient(MutableMapping):
         if self.api == "query":
             raise DatameshConnectError("Query api does not support delete operations")
         encoded_item = urllib.parse.quote(item, safe="/")
+        # A delete may cover the whole store (clear() passes ""), which the
+        # server processes synchronously -- give it the write budget, not a
+        # token metadata timeout.
         self._retried_request(
             f"{self._proxy}/{self.datasource}/{encoded_item}",
             method="DELETE",
             connect_timeout=self.connect_timeout,
-            read_timeout=10,
+            read_timeout=self.write_timeout,
         )
 
     def __iter__(self):
