@@ -60,7 +60,11 @@ class ZarrClient(MutableMapping):
         session,
         parameters={},
         method="post",
-        retries=10,
+        # Bounded: chunk GETs are the highest-volume request this client
+        # makes, and their read timeout now covers the platform's whole
+        # chunk-generation budget -- aggressive retrying here multiplies
+        # load on the entire gateway chain (2026-08 retry storm).
+        retries=3,
         read_timeout=DATAMESH_CHUNK_READ_TIMEOUT,
         connect_timeout=DATAMESH_CONNECT_TIMEOUT,
         write_timeout=DATAMESH_CHUNK_WRITE_TIMEOUT,
