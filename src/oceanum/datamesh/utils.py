@@ -186,6 +186,68 @@ def backoff_delay(attempt, resp=None):
     return min(0.5 * 2**attempt, 15.0) * uniform(0.5, 1.0)
 
 
+# urllib3 / stdlib error names that mean the request never reached the server,
+# so re-issuing it cannot duplicate work. Matched by NAME rather than imported:
+# these have been stable across urllib3 1.x and 2.x, and a hard import would
+# couple this client to a transitive dependency's layout.
+_NOT_DELIVERED_ERRORS = (
+    "NewConnectionError",      # never opened a socket
+    "ConnectTimeoutError",     # connect phase timed out
+    "NameResolutionError",     # DNS never resolved
+    "ProxyError",              # never got past the proxy
+)
+
+# ... and the names that mean the connection was established, the request was
+# written, and the failure happened afterwards. The server may have done the
+# whole job before dying.
+_DELIVERED_ERRORS = (
+    "ProtocolError",           # urllib3's wrapper for a mid-stream abort
+    "ConnectionResetError",    # peer sent RST
+    "RemoteDisconnected",      # peer closed without responding
+    "IncompleteRead",
+    "ChunkedEncodingError",
+)
+
+
+def request_was_delivered(exc, default=True):
+    """Whether a transport failure happened *after* the request was delivered.
+
+    This is the difference between a retry that is free and a retry that
+    re-runs the work that just killed a server process. A query-engine pod
+    OOMKilled mid-request resets the connection with no status code and no
+    response bytes -- from the client it looks exactly like a connect failure
+    unless the cause chain is inspected. Retrying that lands the same killer
+    query on a sibling replica: on 2026-09-22 it took both query-engine pods
+    12 seconds apart.
+
+    Note this cannot be decided by "did any response bytes arrive": the
+    query-engine builds netCDF/parquet responses in full before sending a
+    byte (FileResponse), so the fatal case produces zero bytes.
+
+    `default` applies when the cause chain says nothing recognisable. It
+    defaults to True -- assume delivered, so a non-idempotent request is
+    surfaced rather than re-issued. Under-retrying costs one error; over-
+    retrying cost a production outage.
+    """
+    if isinstance(exc, requests.exceptions.ConnectTimeout):
+        return False
+    seen = set()
+    node = exc
+    while node is not None and id(node) not in seen:
+        seen.add(id(node))
+        name = type(node).__name__
+        if name in _NOT_DELIVERED_ERRORS:
+            return False
+        if name in _DELIVERED_ERRORS:
+            return True
+        nxt = node.__cause__ or node.__context__
+        if nxt is None:
+            args = getattr(node, "args", ())
+            nxt = args[0] if args and isinstance(args[0], BaseException) else None
+        node = nxt
+    return default
+
+
 def retried_request(
     url,
     method="GET",
@@ -207,8 +269,11 @@ def retried_request(
 
     Retry semantics:
 
-    - Connection-level failures (including connect timeouts): always
-      retried -- the request never reached the service.
+    - Connect failures (including connect timeouts, DNS and proxy errors):
+      always retried -- the request never reached the service.
+    - Connection resets *after* the request was delivered: retried for
+      idempotent methods only. The server may have completed the work, and if
+      that work is what killed it, a retry kills the next replica too.
     - Read timeouts: never retried. Timeouts are sized above the platform's
       own chunk-generation budget, so hitting one means the chain failed;
       re-requesting would only duplicate work still running server-side.
@@ -261,9 +326,16 @@ def retried_request(
                 verify=verify,
             )
         except requests.exceptions.ConnectionError as e:
-            # Covers ConnectTimeout and connection resets. A reset after the
-            # request was delivered can re-issue work on retry; accepted for
-            # this client, whose write endpoints tolerate re-delivery.
+            # Two very different failures arrive here. A connect failure never
+            # reached the server and is free to re-issue for any method. A reset
+            # *after* the request was delivered means the server may have done
+            # the work -- and if that work is what killed it, retrying hands the
+            # same request to a sibling replica. So delivered resets follow the
+            # same rule as the mid-response branch below: idempotent only.
+            if request_was_delivered(e) and method.upper() not in IDEMPOTENT_METHODS:
+                raise DatameshConnectError(
+                    f"Request to {url} failed after delivery: {e}"
+                )
             last_error = e
         except requests.exceptions.Timeout as e:
             raise DatameshConnectError(
