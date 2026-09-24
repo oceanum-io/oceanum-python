@@ -55,16 +55,21 @@ from ..__init__ import __version__
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
 
-class _GatewayRetry(Exception):
-    """Internal: a 502 worth one more attempt, carrying how long to wait.
+class _GatewayOutcome(Exception):
+    """Internal: a gateway failure whose wait must happen with no session held.
 
-    Raised from _query_attempt and caught by _query so the sleep happens with
-    the session already closed. Never escapes this module.
+    Every gateway wait on the query path is taken by _query, after the session
+    is closed -- a 15-30s sleep holding a session pins server-side state for
+    no reason, and the wait exists to pace the *caller*, not to keep us busy.
+
+    `error is None` means wait then re-attempt; otherwise wait then raise it.
+    Never escapes this module.
     """
 
-    def __init__(self, delay):
-        super().__init__(f"gateway retry after {delay:.1f}s")
+    def __init__(self, delay, error=None):
+        super().__init__(f"gateway outcome after {delay:.1f}s")
         self.delay = delay
+        self.error = error
 
 
 DASK_QUERY_SIZE = 1000000000  # 1GB
@@ -310,34 +315,31 @@ class Connector(object):
         self._validate_response(resp)
         return Datasource(**resp.json())
 
-    def _stage_request(self, query, session, cache=False):
+    def _stage_request(self, query, session, cache=False, retry=None):
         qhash = hashlib.sha224(
             query.model_dump_json(warnings=False).encode()
         ).hexdigest()
 
         url = f"{self._gateway}/oceanql/stage/"
-        # Staging is the cheap half of a query -- it resolves the query against
-        # the catalog and is keyed by qhash server-side -- so a gateway failure
-        # here is worth re-attempting where the download POST is not. It also
-        # gets no status retry from retried_request, because it is a POST.
-        attempt = 0
-        while True:
-            resp = self._retried_request(
-                url,
-                method="POST",
-                headers=session.header,
-                data=query.model_dump_json(warnings=False),
-                timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT),
-            )
-            if resp.status_code not in (502, 503, 504):
-                break
-            delay = gateway_retry_delay(resp)
-            if resp.status_code == 502 and attempt + 1 < DATAMESH_QUERY_RETRIES:
-                attempt += 1
-                time.sleep(delay)
-                continue
-            time.sleep(delay)
-            raise unavailable_error(url, resp, attempted=attempt)
+        resp = self._retried_request(
+            url,
+            method="POST",
+            headers=session.header,
+            data=query.model_dump_json(warnings=False),
+            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT),
+        )
+        # retried_request does not status-retry a POST, so gateway failures
+        # arrive here untouched. Staging is the cheap, qhash-keyed half of a
+        # query, so a 502 here is worth re-attempting -- but through _query's
+        # shared budget, so stage and download together deliver the query at
+        # most DATAMESH_QUERY_RETRIES times.
+        if resp.status_code in (502, 503, 504):
+            if retry is None:
+                # Called outside _query (load_datasource): no loop to defer to,
+                # so pace here and raise the public error.
+                time.sleep(gateway_retry_delay(resp))
+                raise unavailable_error(url, resp)
+            raise self._gateway_failure(url, resp, retry)
 
         if resp.status_code >= 400:
             # A JSON body with a `detail` is the server rejecting the query.
@@ -356,6 +358,25 @@ class Connector(object):
         else:
             return Stage(**resp.json())
 
+    def _gateway_failure(self, url, resp, retry):
+        """Build the _GatewayOutcome for a 5xx on the query path.
+
+        One re-attempt budget is shared by the stage POST and the download
+        POST, so a single query() delivers the query to query-engine at most
+        twice however the two hops fail. Giving each hop its own budget let one
+        call make four staging requests and sleep four long waits.
+
+        502 means the instance serving us died and a sibling is likely healthy,
+        so it is worth re-attempting. 503/504 means no instance is available, a
+        dependency is down, or the request exceeded what one worker can do --
+        re-running that is what took out both replicas on 2026-09-22.
+        """
+        delay = gateway_retry_delay(resp)
+        error = unavailable_error(url, resp, attempted=retry)
+        if resp.status_code == 502 and retry + 1 < DATAMESH_QUERY_RETRIES:
+            return _GatewayOutcome(delay)
+        return _GatewayOutcome(delay, error)
+
     def _query(self, query, use_dask=False, cache_timeout=0, retry=0):
         """Run a query, re-attempting a 502 after a long jittered wait.
 
@@ -367,8 +388,11 @@ class Connector(object):
         while True:
             try:
                 return self._query_attempt(query, use_dask, cache_timeout, retry)
-            except _GatewayRetry as again:
-                time.sleep(again.delay)
+            except _GatewayOutcome as outcome:
+                # The session is already closed by the time we get here.
+                time.sleep(outcome.delay)
+                if outcome.error is not None:
+                    raise outcome.error
                 retry += 1
 
     def _query_attempt(self, query, use_dask=False, cache_timeout=0, retry=0):
@@ -380,8 +404,16 @@ class Connector(object):
             if cached is not None:
                 return cached
         session = Session.acquire(self)
-        stage = self._stage_request(query, session)
+        # Staging sits outside the try/finally below (the dask branch has to
+        # keep the session alive), so its failure paths have to close the
+        # session themselves or it leaks until atexit.
+        try:
+            stage = self._stage_request(query, session, retry=retry)
+        except BaseException:
+            session.close()
+            raise
         if stage is None:
+            session.close()
             warnings.warn("No data found for query")
             return None
         elif stage.dlen >= 2000000 and stage.container in [
@@ -446,15 +478,8 @@ class Connector(object):
                     # both query-engine replicas on 2026-09-22. We still wait
                     # before raising, because that wait rate-limits whatever
                     # retry loop is wrapping this call.
-                    delay = gateway_retry_delay(resp)
-                    if (
-                        resp.status_code == 502
-                        and retry + 1 < DATAMESH_QUERY_RETRIES
-                    ):
-                        raise _GatewayRetry(delay)
-                    time.sleep(delay)
-                    raise unavailable_error(
-                        f"{self._gateway}/oceanql/", resp, attempted=retry
+                    raise self._gateway_failure(
+                        f"{self._gateway}/oceanql/", resp, retry
                     )
                 if resp.status_code >= 400:
                     if cache_timeout:
@@ -620,10 +645,19 @@ class Connector(object):
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
         session = Session.acquire(self)
-        stage = self._stage_request(
-            Query(datasource=datasource_id, parameters=parameters), session=session
-        )
+        # As in _query_attempt: the dask/zarr branch below keeps the session
+        # alive, so there is no blanket finally and the early exits have to
+        # close it themselves.
+        try:
+            stage = self._stage_request(
+                Query(datasource=datasource_id, parameters=parameters),
+                session=session,
+            )
+        except BaseException:
+            session.close()
+            raise
         if stage is None:
+            session.close()
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset or use_dask:

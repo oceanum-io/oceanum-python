@@ -66,20 +66,34 @@ def no_session():
 # --------------------------------------------------------------------------
 
 
-def test_stage_502_is_reattempted_once(conn, no_session):
-    stage_ok = _response(200, json_body={
-        "query": QUERY, "qhash": "abc", "formats": ["application/x-netcdf4"],
-        "size": 10, "dlen": 1, "coordmap": {}, "coordkeys": {},
-        "container": "dataset", "sig": "deadbeef",
-    })
+def test_stage_502_standalone_paces_then_raises(conn, no_session):
+    """Called outside _query (load_datasource) there is no loop to defer the
+    wait to, so _stage_request paces here and raises the public error.
+
+    The re-attempt itself is _query's job now -- see
+    test_stage_and_download_share_one_reattempt_budget -- because a per-hop
+    budget let one query() make four staging POSTs and take four long waits.
+    """
     with patch.object(conn, "_retried_request",
-                      side_effect=[_response(502, text="Bad Gateway"), stage_ok]) as rr, \
+                      return_value=_response(502, text="Bad Gateway")) as rr, \
          patch("oceanum.datamesh.connection.time.sleep") as slept:
-        stage = conn._stage_request(_query_obj(), no_session.acquire.return_value)
-    assert rr.call_count == 2
-    assert stage.qhash == "abc"
-    # The wait must be the long one, not a sub-second backoff.
-    assert slept.call_args[0][0] >= 10
+        with pytest.raises(DatameshUnavailableError) as exc:
+            conn._stage_request(_query_obj(), no_session.acquire.return_value)
+    assert rr.call_count == 1
+    assert exc.value.status_code == 502
+    # Paced, and with the long delay rather than a sub-second backoff.
+    assert slept.call_count == 1 and slept.call_args[0][0] >= 10
+
+
+def test_stage_502_defers_its_wait_when_called_from_query(conn, no_session):
+    """With a retry index supplied, _stage_request must not sleep -- the wait
+    belongs to _query, after the session is closed."""
+    with patch.object(conn, "_retried_request", return_value=_response(502)), \
+         patch("oceanum.datamesh.connection.time.sleep") as slept:
+        with pytest.raises(Exception) as exc:
+            conn._stage_request(_query_obj(), no_session.acquire.return_value, retry=0)
+    assert slept.call_count == 0, "_stage_request must not sleep while a session is held"
+    assert type(exc.value).__name__ == "_GatewayOutcome"
 
 
 def test_stage_503_is_not_reattempted(conn, no_session):
@@ -110,6 +124,58 @@ def test_stage_4xx_without_json_is_a_connect_error(conn, no_session):
                       return_value=_response(404, text="<html>nginx</html>")):
         with pytest.raises(DatameshConnectError, match="Datamesh server error"):
             conn._stage_request(_query_obj(), no_session.acquire.return_value)
+
+
+def test_stage_failure_does_not_leak_the_session(conn, no_session):
+    """Staging sits outside the try/finally that closes the session, so every
+    one of its failure paths has to close it explicitly. A leaked session
+    blocks writes to its datasource until it expires."""
+    sess = no_session.acquire.return_value
+    from oceanum.datamesh.query import Container
+
+    for body, expected in (
+        (_response(503, text="no server"), DatameshUnavailableError),
+        (_response(400, json_body={"detail": "nope"}), DatameshQueryError),
+        (_response(404, text="<html>"), DatameshConnectError),
+    ):
+        sess.close.reset_mock()
+        with patch.object(conn, "_retried_request", return_value=body), \
+             patch("oceanum.datamesh.connection.time.sleep"):
+            with pytest.raises(expected):
+                conn._query(QUERY)
+        assert sess.close.call_count >= 1, f"session leaked on {body.status_code}"
+
+
+def test_empty_stage_does_not_leak_the_session(conn, no_session):
+    """`stage is None` (no data for the query) returns early -- also outside
+    the try/finally."""
+    sess = no_session.acquire.return_value
+    sess.close.reset_mock()
+    with patch.object(conn, "_stage_request", return_value=None):
+        with pytest.warns(UserWarning, match="No data found"):
+            assert conn._query(QUERY) is None
+    assert sess.close.call_count == 1
+
+
+def test_stage_and_download_share_one_reattempt_budget(conn, no_session):
+    """A 502 at either hop consumes the same budget.
+
+    With a per-hop budget, one query() could make four staging POSTs and take
+    four long waits. The contract is one re-attempt per query() call.
+    """
+    stage_ok = _response(200, json_body={
+        "query": QUERY, "qhash": "abc", "formats": ["application/x-netcdf4"],
+        "size": 10, "dlen": 1, "coordmap": {}, "coordkeys": {},
+        "container": "dataset", "sig": "deadbeef",
+    })
+    # stage 502 -> (re-attempt) stage ok -> download 502 -> budget spent, raise
+    calls = [_response(502), stage_ok, _response(502)]
+    with patch.object(conn, "_retried_request", side_effect=calls) as rr, \
+         patch("oceanum.datamesh.connection.time.sleep") as slept:
+        with pytest.raises(DatameshUnavailableError):
+            conn._query(QUERY)
+    assert rr.call_count == 3, f"expected 3 requests, got {rr.call_count}"
+    assert slept.call_count == 2, "at most two waits per query() call"
 
 
 # --------------------------------------------------------------------------
@@ -236,5 +302,10 @@ def test_query_session_is_closed_before_the_reattempt_wait(conn, no_session):
         with pytest.raises(DatameshUnavailableError):
             conn._query(QUERY)
 
-    # The first close must precede the first inter-attempt sleep.
-    assert order[0] == "close", f"session still open during the wait: {order}"
+    # Every wait must sit between a close and the next acquire. Asserting only
+    # order[0] is not enough: the terminal wait before raising used to happen
+    # inside the try/finally, so a correct-looking order[0] hid an open-session
+    # sleep later in the same call.
+    assert order == ["close", "sleep", "close", "sleep"], (
+        f"a wait was taken while a session was open: {order}"
+    )

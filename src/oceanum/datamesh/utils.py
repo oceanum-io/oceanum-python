@@ -5,6 +5,7 @@ from requests.adapters import HTTPAdapter
 import numpy as np
 from .exceptions import DatameshConnectError, DatameshUnavailableError
 import os
+import warnings
 
 
 # Platform-wide chunk generation budget in seconds. Generating one zarr chunk
@@ -167,13 +168,24 @@ class HTTPSession:
 # backoff says. That is the only lever we have over client code we do not
 # own, and with AI-generated callers the norm, assuming a naive
 # retry-on-any-exception wrapper is the safe default.
-DATAMESH_GATEWAY_RETRY_DELAY = os.getenv("DATAMESH_GATEWAY_RETRY_DELAY", 30)
-DATAMESH_GATEWAY_RETRY_DELAY = float(DATAMESH_GATEWAY_RETRY_DELAY)
+DATAMESH_GATEWAY_RETRY_DELAY = float(os.getenv("DATAMESH_GATEWAY_RETRY_DELAY", 30))
+
+# Floor for a server-supplied Retry-After on the gateway path, for the same
+# reason: a service that asks us to come straight back must not be able to
+# switch the pacing off.
+DATAMESH_GATEWAY_RETRY_MIN = float(os.getenv("DATAMESH_GATEWAY_RETRY_MIN", 5))
 
 # Number of attempts the query path makes at a 502. 2 = one re-attempt.
 # Set to 1 to disable re-attempting entirely (the query is then surfaced on
 # the first gateway failure).
-DATAMESH_QUERY_RETRIES = int(os.getenv("DATAMESH_QUERY_RETRIES", 2))
+try:
+    DATAMESH_QUERY_RETRIES = int(os.getenv("DATAMESH_QUERY_RETRIES", 2))
+except ValueError:
+    # A typo in an env var must not make `import oceanum` fail.
+    warnings.warn(
+        "DATAMESH_QUERY_RETRIES is not an integer; using the default of 2"
+    )
+    DATAMESH_QUERY_RETRIES = 2
 
 # What we advertise as `retry_after` when the server gives us no guidance.
 # Recovering from a dead pod, or from whatever load produced the failure,
@@ -237,7 +249,7 @@ def unavailable_error(url, resp, attempted=0):
     """
     status = getattr(resp, "status_code", None)
     retry_after = retry_after_seconds(resp)
-    if retry_after is None:
+    if retry_after is None or retry_after <= 0:
         retry_after = DATAMESH_UNAVAILABLE_RETRY_AFTER
     tried = f" Re-attempted {attempted} time(s) already." if attempted else ""
     if status == 502:
@@ -270,8 +282,10 @@ def gateway_retry_delay(resp=None):
     is long: it paces the caller's retry loop as much as our own.
     """
     hinted = retry_after_seconds(resp)
-    if hinted is not None:
-        return hinted * uniform(0.75, 1.0)
+    # A zero or negative Retry-After would cancel the pacing wait entirely,
+    # which is the one thing this delay exists to provide. Treat it as absent.
+    if hinted is not None and hinted > 0:
+        return max(hinted, DATAMESH_GATEWAY_RETRY_MIN) * uniform(0.75, 1.0)
     return DATAMESH_GATEWAY_RETRY_DELAY * uniform(0.5, 1.0)
 
 
@@ -304,6 +318,14 @@ _DELIVERED_ERRORS = (
 # so it lands in the same branch as a mid-stream reset and is indistinguishable
 # from one without inspecting the chain.
 _READ_TIMEOUT_ERRORS = ("ReadTimeoutError",)
+
+# RequestExceptions that mean "the response started and then broke", as opposed
+# to the deterministic ones (MissingSchema, InvalidURL, InvalidHeader,
+# TooManyRedirects) where a second identical attempt fails identically.
+_MID_RESPONSE_EXCEPTIONS = (
+    requests.exceptions.ChunkedEncodingError,
+    requests.exceptions.ContentDecodingError,
+)
 
 
 def _walk_causes(exc):
@@ -492,14 +514,18 @@ def retried_request(
             raise DatameshConnectError(
                 f"No response from {url} within {timeout[1] if isinstance(timeout, tuple) else timeout}s: {e}"
             )
-        except requests.RequestException as e:
-            # Transport failure part-way through a response body (e.g. a
-            # chunked transfer aborted). Same reasoning as the body-timeout
-            # case above: one re-attempt, any method.
+        except _MID_RESPONSE_EXCEPTIONS as e:
+            # The response body was aborted part-way through (e.g. a chunked
+            # transfer cut short). Same reasoning as the body-timeout case
+            # above: the answer existed, so one re-attempt, any method.
             if mid_response_attempts >= 1:
                 raise DatameshConnectError(f"Request to {url} failed: {e}")
             mid_response_attempts += 1
             last_error = e
+        except requests.RequestException as e:
+            # Everything else reaching here is deterministic -- a malformed
+            # URL, a bad header, a redirect loop. Repeating it cannot help.
+            raise DatameshConnectError(f"Request to {url} failed: {e}")
         else:
             if (
                 resp.status_code in RETRYABLE_STATUS_CODES
