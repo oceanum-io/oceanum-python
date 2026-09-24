@@ -362,6 +362,37 @@ def _walk_causes(exc):
         node = nxt
 
 
+# A TLS failure during connection setup transmits nothing, so re-issuing it is
+# free for any method -- but only some of them can ever succeed on a second
+# attempt. These two names mean the peer's certificate was rejected, which is a
+# configuration state rather than a blip: it will fail identically forever.
+_CERTIFICATE_ERRORS = ("SSLCertVerificationError", "CertificateError")
+
+
+def certificate_verification_failed(exc):
+    """Whether this failure is the peer's certificate being rejected."""
+    return any(
+        type(n).__name__ in _CERTIFICATE_ERRORS for n in _walk_causes(exc)
+    )
+
+
+def tls_failed_before_sending(exc):
+    """Whether a TLS failure happened while establishing the connection.
+
+    urllib3 raises MaxRetryError only from inside urlopen, i.e. before any
+    response exists, so an SSL error carrying one broke during the handshake --
+    nothing was written to the socket. The common cause in this stack is the
+    TLS terminator being rolled (ingress restart, certificate renewal, node
+    replacement), which surfaces as SSLEOFError and is worth another attempt
+    for any method, POST included, because no request was delivered.
+
+    An SSL error *without* MaxRetryError came from reading the body, where the
+    request certainly was delivered -- that keeps the cautious treatment.
+    """
+    names = [type(n).__name__ for n in _walk_causes(exc)]
+    return "MaxRetryError" in names and any(n.startswith("SSL") for n in names)
+
+
 def response_body_timed_out(exc):
     """Whether this failure is a read timeout *after* headers arrived.
 
@@ -438,6 +469,11 @@ def retried_request(
       collecting it again is cheap (query-engine serves the second attempt
       from its shared cache) and the risk that motivates the rule above does
       not apply.
+    - TLS certificate verification failures: never retried, and reported as
+      such. The certificate will not become valid on a second attempt.
+    - Other TLS failures during connection setup (a terminator being rolled,
+      a certificate renewal): retried for any method. The handshake never
+      completed, so no request was delivered and there is nothing to duplicate.
     - Pre-header read timeouts: not retried by default. Where the timeout is
       derived from the platform's own generation budget (chunk reads, staging,
       downloads), hitting it means the chain failed and re-requesting would
@@ -507,8 +543,17 @@ def retried_request(
                 verify=verify,
             )
         except requests.exceptions.ConnectionError as e:
-            # Three very different failures arrive here, and requests gives
+            # Several very different failures arrive here, and requests gives
             # them all the same class.
+            if certificate_verification_failed(e):
+                # Deterministic: the certificate will be just as invalid next
+                # time. Say so, because the generic wording below would send
+                # the reader looking for a transient fault.
+                raise DatameshConnectError(
+                    f"TLS certificate verification failed for {url}. A retry "
+                    f"cannot help -- check the service certificate, the system "
+                    f"CA bundle, or whether something is intercepting TLS: {e}"
+                )
             if response_body_timed_out(e):
                 # Headers arrived, the body did not. The server built the
                 # answer; we failed to collect it. One re-attempt, any method:
@@ -518,6 +563,10 @@ def retried_request(
                         f"Response from {url} stalled mid-body twice: {e}"
                     )
                 mid_response_attempts += 1
+                last_error = e
+            elif tls_failed_before_sending(e):
+                # Handshake broke: nothing was transmitted, so this is safe to
+                # re-issue whatever the method is.
                 last_error = e
             elif request_was_delivered(e) and method.upper() not in IDEMPOTENT_METHODS:
                 # A reset *after* delivery with no response at all. The server

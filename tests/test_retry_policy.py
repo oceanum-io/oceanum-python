@@ -334,3 +334,89 @@ def test_metadata_timeout_is_above_measured_latency():
 
     assert DATAMESH_METADATA_READ_TIMEOUT > DATAMESH_READ_TIMEOUT
     assert DATAMESH_METADATA_READ_TIMEOUT >= 15
+
+
+# --------------------------------------------------------------------------
+# TLS: a certificate is not a blip, a dropped handshake is
+# --------------------------------------------------------------------------
+
+
+def _tls_error(inner):
+    """The real shape: requests.SSLError -> MaxRetryError -> SSLError -> inner.
+
+    Verified against live TLS servers 2026-09-24 -- MaxRetryError is present
+    because urllib3 raises it from inside urlopen, i.e. before any response.
+    """
+    u_ssl = urllib3.exceptions.SSLError("tls failed")
+    u_ssl.__cause__ = inner
+    mre = urllib3.exceptions.MaxRetryError(None, "/x", reason=u_ssl)
+    mre.__cause__ = u_ssl
+    return requests.exceptions.SSLError(mre)
+
+
+def _cert_error():
+    import ssl
+
+    return _tls_error(
+        ssl.SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] self-signed")
+    )
+
+
+def _handshake_eof():
+    import ssl
+
+    return _tls_error(ssl.SSLEOFError("EOF occurred in violation of protocol"))
+
+
+@patch("oceanum.datamesh.utils.sleep")
+@patch("oceanum.datamesh.utils.requests.request")
+def test_certificate_failure_is_terminal_and_says_so(mock_request, mock_sleep):
+    """A certificate will not become valid on a second attempt, and the generic
+    'may have been delivered' wording would point the reader at a transient
+    fault that isn't there."""
+    for method in ("GET", "POST"):
+        mock_request.reset_mock()
+        mock_request.side_effect = _cert_error()
+        with pytest.raises(DatameshConnectError, match="certificate verification failed"):
+            retried_request("https://gateway/oceanql/", method=method, retries=3)
+        assert mock_request.call_count == 1, f"{method} retried a bad certificate"
+
+
+@patch("oceanum.datamesh.utils.sleep")
+@patch("oceanum.datamesh.utils.requests.request")
+def test_dropped_handshake_is_retried_for_any_method(mock_request, mock_sleep):
+    """The handshake never completed, so nothing was transmitted -- this is the
+    one failure where re-issuing a POST is provably free.
+
+    Likely in this stack: the TLS terminator is rolled on ingress restarts,
+    certificate renewals and node replacements.
+    """
+    mock_request.side_effect = [_handshake_eof(), _response(200)]
+    resp = retried_request("https://gateway/oceanql/", method="POST", retries=3)
+    assert resp.status_code == 200
+    assert mock_request.call_count == 2
+
+
+@patch("oceanum.datamesh.utils.sleep")
+@patch("oceanum.datamesh.utils.requests.request")
+def test_dropped_handshake_retries_are_bounded(mock_request, mock_sleep):
+    mock_request.side_effect = _handshake_eof()
+    with pytest.raises(DatameshConnectError, match="after 3 attempts"):
+        retried_request("https://gateway/oceanql/", method="POST", retries=3)
+    assert mock_request.call_count == 3
+
+
+def test_tls_classification_helpers():
+    from oceanum.datamesh.utils import (
+        certificate_verification_failed,
+        tls_failed_before_sending,
+    )
+
+    assert certificate_verification_failed(_cert_error()) is True
+    assert certificate_verification_failed(_handshake_eof()) is False
+    assert tls_failed_before_sending(_handshake_eof()) is True
+    # A mid-body SSL failure has no MaxRetryError: the request was delivered,
+    # so it must keep the cautious treatment.
+    mid_body = requests.exceptions.SSLError("decrypt error during read")
+    assert tls_failed_before_sending(mid_body) is False
+    assert certificate_verification_failed(mid_body) is False
