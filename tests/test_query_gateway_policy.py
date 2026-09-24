@@ -352,3 +352,65 @@ def test_no_caching_means_no_cache_object(conn, no_session):
         except Exception:
             pass
         assert not LC.called
+
+
+# --------------------------------------------------------------------------
+# Resource and presentation invariants for the gateway paths
+# --------------------------------------------------------------------------
+
+
+def test_internal_sentinel_does_not_appear_in_the_traceback(conn, no_session):
+    """_GatewayOutcome is an implementation detail. Raising the terminal error
+    from inside `except _GatewayOutcome` chained it, so users saw
+    "_GatewayOutcome: gateway outcome after 27.3s / During handling of the above
+    exception, another exception occurred"."""
+    from oceanum.datamesh.query import Container
+
+    stage = _stage()
+    stage.container = Container.Dataset
+    with patch.object(conn, "_stage_request", return_value=stage), \
+         patch.object(conn, "_retried_request", return_value=_response(503)), \
+         patch("oceanum.datamesh.connection.time.sleep"):
+        with pytest.raises(DatameshUnavailableError) as exc:
+            conn._query(QUERY)
+    assert exc.value.__suppress_context__ is True, (
+        "the internal sentinel is shown to the user as a chained exception"
+    )
+
+
+def test_load_datasource_closes_the_session_on_the_success_path(conn, no_session):
+    """Only the zarr branch needs the session to outlive the call. The
+    DataFrame/GeoDataFrame branches used to return without closing it, so it
+    survived to atexit holding server-side state."""
+    from oceanum.datamesh.query import Container
+
+    sess = no_session.acquire.return_value
+    sess.close.reset_mock()
+    stage = _stage()
+    stage.container = Container.DataFrame
+    with patch.object(conn, "_stage_request", return_value=stage), \
+         patch.object(conn, "_data_request", return_value="/tmp/x.pq"), \
+         patch("oceanum.datamesh.connection.pandas.read_parquet", return_value="DF"):
+        assert conn.load_datasource("dsx") == "DF"
+    assert sess.close.call_count == 1, "load_datasource leaked its session"
+
+
+def test_cache_lock_is_released_when_the_download_raises(conn, no_session):
+    """lock() was released only on the paths that inspected a status code, so a
+    transport failure or a parse error left it held for its full 60 s timeout --
+    blocking the next query() for the same hash."""
+    from oceanum.datamesh.query import Container
+
+    stage = _stage()
+    stage.container = Container.DataFrame
+    lc = Mock()
+    lc.get.return_value = None
+    with patch.object(conn, "_stage_request", return_value=stage), \
+         patch.object(conn, "_retried_request",
+                      side_effect=DatameshConnectError("transport died")), \
+         patch("oceanum.datamesh.connection.LocalCache", return_value=lc):
+        with pytest.raises(DatameshConnectError):
+            conn._query(QUERY, cache_timeout=600)
+    assert lc.lock.call_count == lc.unlock.call_count, (
+        f"cache lock left held: lock={lc.lock.call_count} unlock={lc.unlock.call_count}"
+    )
