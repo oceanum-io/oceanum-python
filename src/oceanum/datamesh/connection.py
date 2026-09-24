@@ -47,6 +47,7 @@ from .utils import (
     DATAMESH_CONNECT_TIMEOUT,
     DATAMESH_DOWNLOAD_TIMEOUT,
     DATAMESH_STAGE_READ_TIMEOUT,
+    DATAMESH_METADATA_READ_TIMEOUT,
     DATAMESH_QUERY_RETRIES,
     DATAMESH_UNAVAILABLE_RETRY_AFTER,
 )
@@ -228,9 +229,15 @@ class Connector(object):
             raise DatameshConnectError(msg)
 
     def _metadata_request(self, datasource_id="", params={}):
+        # A catalog search is not the "small json payload" that
+        # DATAMESH_READ_TIMEOUT assumes, so it gets its own budget -- and a read
+        # timeout here is a latency spike on the metadata server, not a failed
+        # chain with expensive work still running, so it is worth retrying.
         resp = self._retried_request(
             f"{self._proto}://{self._host}/datasource/{datasource_id}",
             params=params,
+            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_METADATA_READ_TIMEOUT),
+            retry_read_timeout=True,
         )
         if resp.status_code == 404:
             raise DatameshConnectError(f"Datasource {datasource_id} not found")
@@ -244,12 +251,16 @@ class Connector(object):
             "utf-8", "ignore"
         )
         headers = {"Content-Type": "application/json"}
+        # Same server as _metadata_request, so the same budget. No
+        # retry_read_timeout here -- these are POST/PATCH and must not repeat.
+        timeout = (DATAMESH_CONNECT_TIMEOUT, DATAMESH_METADATA_READ_TIMEOUT)
         if datasource._exists:
             resp = self._retried_request(
                 f"{self._proto}://{self._host}/datasource/{datasource.id}/",
                 method="PATCH",
                 data=data,
                 headers=headers,
+                timeout=timeout,
             )
 
         else:
@@ -258,6 +269,7 @@ class Connector(object):
                 method="POST",
                 data=data,
                 headers=headers,
+                timeout=timeout,
             )
         self._validate_response(resp)
         return resp

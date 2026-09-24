@@ -35,6 +35,18 @@ DATAMESH_READ_TIMEOUT = (
     None if DATAMESH_READ_TIMEOUT == "None" else float(DATAMESH_READ_TIMEOUT)
 )
 
+# Timeout in seconds for metadata-server requests (catalog search, datasource
+# metadata). Separate from DATAMESH_READ_TIMEOUT because a catalog search is not
+# the "small json payload" that constant assumes: it runs a hybrid RRF search
+# with an embedding lookup, measured at 2-4 s against prod, on a server whose
+# CPU sits at its autoscaling target from embedding regeneration. 10 s left
+# only ~2.5x headroom and a routine spike tipped it over.
+DATAMESH_METADATA_READ_TIMEOUT = os.getenv("DATAMESH_METADATA_READ_TIMEOUT", 20)
+DATAMESH_METADATA_READ_TIMEOUT = (
+    None if DATAMESH_METADATA_READ_TIMEOUT == "None"
+    else float(DATAMESH_METADATA_READ_TIMEOUT)
+)
+
 # Timeout in seconds for staging endpoint
 DATAMESH_STAGE_READ_TIMEOUT = os.getenv("DATAMESH_STAGE_READ_TIMEOUT", 900)
 DATAMESH_STAGE_READ_TIMEOUT = (
@@ -403,6 +415,7 @@ def retried_request(
     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_READ_TIMEOUT),
     verify=True,
     http_session: HTTPSession = None,
+    retry_read_timeout=False,
 ):
     """
     Bounded, jittered retry wrapper around a single datamesh request.
@@ -425,9 +438,15 @@ def retried_request(
       collecting it again is cheap (query-engine serves the second attempt
       from its shared cache) and the risk that motivates the rule above does
       not apply.
-    - Pre-header read timeouts: never retried. Nothing was produced, and the
-      timeouts are sized above the platform's own generation budget, so
-      re-requesting would duplicate work still running server-side.
+    - Pre-header read timeouts: not retried by default. Where the timeout is
+      derived from the platform's own generation budget (chunk reads, staging,
+      downloads), hitting it means the chain failed and re-requesting would
+      duplicate work still running server-side.
+      That reasoning does not hold for an endpoint whose timeout is simply a
+      short arbitrary number -- the metadata server, where a routine latency
+      spike is not a failed chain and there is no expensive in-flight work to
+      duplicate. Those callers pass `retry_read_timeout=True`, which allows a
+      read timeout into the normal bounded budget for idempotent methods only.
     - 502/503/504: retried for idempotent methods only, honoring a numeric
       Retry-After header. POST/PATCH responses are returned untouched so the
       caller can apply a policy this function cannot -- see
@@ -451,6 +470,10 @@ def retried_request(
         Request connect and read timeout in seconds, by default (3.05, 10)
     http_session : HTTPSession, optional
         Session object to use for request
+    retry_read_timeout : bool, optional
+        Allow a pre-header read timeout to be retried, for idempotent methods
+        only. Set this where the read timeout is a short arbitrary value rather
+        than one derived from a server-side work budget. Default False.
 
     Returns
     -------
@@ -509,11 +532,16 @@ def retried_request(
                 # Connect failure: never reached the server, free to re-issue.
                 last_error = e
         except requests.exceptions.Timeout as e:
-            # Pre-header timeout only -- nothing was produced, so there is
-            # nothing to collect on a second attempt.
-            raise DatameshConnectError(
-                f"No response from {url} within {timeout[1] if isinstance(timeout, tuple) else timeout}s: {e}"
-            )
+            # Pre-header timeout: nothing was produced. Whether that is worth
+            # another attempt depends on where the timeout came from -- see the
+            # retry_read_timeout note in the docstring. ConnectTimeout never
+            # reaches here; it is a ConnectionError subclass caught above.
+            if retry_read_timeout and method.upper() in IDEMPOTENT_METHODS:
+                last_error = e
+            else:
+                raise DatameshConnectError(
+                    f"No response from {url} within {timeout[1] if isinstance(timeout, tuple) else timeout}s: {e}"
+                )
         except _MID_RESPONSE_EXCEPTIONS as e:
             # The response body was aborted part-way through (e.g. a chunked
             # transfer cut short). Same reasoning as the body-timeout case

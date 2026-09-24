@@ -243,3 +243,94 @@ def test_exceptions_share_a_base_and_are_exported():
     # retry_after is present on every datamesh error, so a caller can read it
     # unconditionally; None means "we have no opinion", not "retry now".
     assert DatameshQueryError("x").retry_after is None
+
+
+# --------------------------------------------------------------------------
+# Pre-header read timeouts: terminal where the timeout is a work budget,
+# retryable where it is a short arbitrary number
+# --------------------------------------------------------------------------
+
+
+@patch("oceanum.datamesh.utils.sleep")
+@patch("oceanum.datamesh.utils.requests.request")
+def test_read_timeout_is_terminal_by_default(mock_request, mock_sleep):
+    """The chunk/download path keeps its protection: those timeouts are derived
+    from the platform's generation budget, so hitting one means the chain failed
+    and the work may still be running server-side."""
+    mock_request.side_effect = requests.exceptions.ReadTimeout("timed out")
+    with pytest.raises(DatameshConnectError, match="No response from"):
+        retried_request("http://gateway/zarr/ds/0.0", method="GET", retries=3)
+    assert mock_request.call_count == 1
+
+
+@patch("oceanum.datamesh.utils.sleep")
+@patch("oceanum.datamesh.utils.requests.request")
+def test_read_timeout_is_retried_when_opted_in(mock_request, mock_sleep):
+    """A catalog search timing out at 20s is a metadata latency spike, not a
+    failed chain. CI hit exactly this and failed a live test."""
+    mock_request.side_effect = [
+        requests.exceptions.ReadTimeout("timed out"),
+        _response(200),
+    ]
+    resp = retried_request(
+        "http://host/datasource/", method="GET", retries=3, retry_read_timeout=True
+    )
+    assert resp.status_code == 200
+    assert mock_request.call_count == 2
+
+
+@patch("oceanum.datamesh.utils.sleep")
+@patch("oceanum.datamesh.utils.requests.request")
+def test_opted_in_read_timeout_is_still_bounded(mock_request, mock_sleep):
+    mock_request.side_effect = requests.exceptions.ReadTimeout("timed out")
+    with pytest.raises(DatameshConnectError, match="after 3 attempts"):
+        retried_request(
+            "http://host/datasource/", method="GET", retries=3, retry_read_timeout=True
+        )
+    assert mock_request.call_count == 3
+
+
+@patch("oceanum.datamesh.utils.sleep")
+@patch("oceanum.datamesh.utils.requests.request")
+def test_opt_in_does_not_override_idempotency(mock_request, mock_sleep):
+    """Even opted in, a non-idempotent method is never repeated."""
+    mock_request.side_effect = requests.exceptions.ReadTimeout("timed out")
+    with pytest.raises(DatameshConnectError, match="No response from"):
+        retried_request(
+            "http://host/datasource/", method="POST", retries=3, retry_read_timeout=True
+        )
+    assert mock_request.call_count == 1
+
+
+def test_metadata_path_opts_in_and_the_download_path_does_not():
+    """Pin the wiring, not just the mechanism: the opt-in has to land on the
+    metadata calls and stay off the ones with budget-derived timeouts.
+
+    A blanket opt-in at the Connector level would have covered _data_request,
+    which is a GET with the 900s download budget -- the exact case the default
+    protects.
+    """
+    import inspect
+    from oceanum.datamesh import connection as mod
+
+    src = inspect.getsource(mod.Connector._metadata_request)
+    assert "retry_read_timeout=True" in src
+    assert "DATAMESH_METADATA_READ_TIMEOUT" in src
+
+    for name in ("_data_request", "_stage_request", "_query_attempt"):
+        body = inspect.getsource(getattr(mod.Connector, name))
+        assert "retry_read_timeout" not in body, (
+            f"{name} must not opt in: its read timeout is a work budget"
+        )
+
+
+def test_metadata_timeout_is_above_measured_latency():
+    """Measured against prod 2026-09-24: catalog search median 2.9s, max 3.9s.
+    10s left ~2.5x headroom and a routine spike tipped it over."""
+    from oceanum.datamesh.utils import (
+        DATAMESH_METADATA_READ_TIMEOUT,
+        DATAMESH_READ_TIMEOUT,
+    )
+
+    assert DATAMESH_METADATA_READ_TIMEOUT > DATAMESH_READ_TIMEOUT
+    assert DATAMESH_METADATA_READ_TIMEOUT >= 15
