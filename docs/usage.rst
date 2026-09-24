@@ -307,6 +307,159 @@ in asynchronous workflows::
     await datamesh.delete_datasource_async("my_data")
 
 
+Errors and Retries
+~~~~~~~~~~~~~~~~~~
+
+Every error raised by the datamesh client inherits from
+:class:`~oceanum.datamesh.DatameshError`, so one ``except`` clause catches them
+all::
+
+    from oceanum.datamesh import Connector, DatameshError
+
+    try:
+        ds = datamesh.query(query)
+    except DatameshError as e:
+        print(f"datamesh request failed: {e}")
+
+The subclasses tell you what to do next, which matters because they call for
+opposite responses:
+
+.. list-table::
+   :widths: 28 72
+   :header-rows: 1
+
+   * - Exception
+     - What it means
+   * - :class:`~oceanum.datamesh.DatameshQueryError`
+     - The query was rejected. Re-running it unchanged will fail the same way.
+   * - :class:`~oceanum.datamesh.DatameshUnavailableError`
+     - A service was reachable but could not serve the request. May succeed
+       later, but **not immediately** -- see ``retry_after`` below.
+   * - :class:`~oceanum.datamesh.DatameshConnectError`
+     - The service could not be reached, or the request failed in transport.
+   * - :class:`~oceanum.datamesh.DatameshWriteError`
+     - A write to a datasource failed.
+   * - :class:`~oceanum.datamesh.DatameshSessionError`
+     - A session could not be created, used or finalised.
+
+``DatameshUnavailableError`` subclasses ``DatameshConnectError``, so existing
+handlers keep working. Catch the more specific class first where the difference
+matters.
+
+The client already retries
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Do not wrap datamesh calls in a tight retry loop.** The client retries
+internally, with bounded attempts and jittered backoff, and it deliberately does
+*not* retry the cases where a retry cannot help or would make things worse:
+
+* Failures that never reached the service are retried for any method.
+* A request that may already have been delivered is **not** re-sent unless the
+  method is idempotent. Re-running an expensive query that just exhausted a
+  worker's memory would simply exhaust the next one.
+* A gateway failure waits 15--30 seconds before raising. That wait is
+  deliberate: if the service is struggling, every client retrying in the same
+  second is what keeps it down.
+* A rejected TLS certificate, and a query the server rejected, are terminal --
+  no attempt is repeated.
+
+If you do add your own retry, honour ``retry_after`` rather than a schedule of
+your own::
+
+    import time
+    from oceanum.datamesh import DatameshUnavailableError, DatameshQueryError
+
+    try:
+        ds = datamesh.query(query)
+    except DatameshQueryError:
+        raise                                   # the query is wrong; fix it
+    except DatameshUnavailableError as e:
+        time.sleep(e.retry_after)               # seconds; typically ~300
+        ds = datamesh.query(query)
+
+``retry_after`` is present on every datamesh exception, defaulting to ``None``.
+``None`` means the client has no opinion -- it does **not** mean "retry now".
+``DatameshUnavailableError`` also carries ``status_code``.
+
+One case deserves care: if a request exceeded what a single worker can process,
+it is reported as unavailable and **will fail again however long you wait**. The
+message says so. The fix is to make the request smaller -- a shorter time range,
+a smaller area, or fewer variables -- not to repeat it.
+
+Timeouts
+^^^^^^^^
+
+Timeouts are set per operation, because the work behind them differs by orders
+of magnitude. All are seconds, and all can be overridden by environment
+variable. Setting one to ``"None"`` disables it.
+
+.. list-table::
+   :widths: 40 12 48
+   :header-rows: 1
+
+   * - Variable
+     - Default
+     - Applies to
+   * - ``DATAMESH_CONNECT_TIMEOUT``
+     - 3.05
+     - Establishing any connection
+   * - ``DATAMESH_READ_TIMEOUT``
+     - 10
+     - Small JSON responses
+   * - ``DATAMESH_METADATA_READ_TIMEOUT``
+     - 20
+     - Catalog search and datasource metadata
+   * - ``DATAMESH_STAGE_READ_TIMEOUT``
+     - 900
+     - Resolving a query against the catalog
+   * - ``DATAMESH_DOWNLOAD_TIMEOUT``
+     - 900
+     - Downloading a query result
+   * - ``DATAMESH_CHUNK_READ_TIMEOUT``
+     - 1020
+     - One zarr chunk (``DATAMESH_CHUNK_BUDGET`` + 120)
+   * - ``DATAMESH_CHUNK_WRITE_TIMEOUT``
+     - 600
+     - Writing one zarr chunk
+   * - ``DATAMESH_WRITE_TIMEOUT``
+     - ``None``
+     - Datasource writes
+
+A chunk read can legitimately block for the whole server-side generation of that
+chunk, which is why its timeout is derived from ``DATAMESH_CHUNK_BUDGET`` (900)
+rather than picked independently. Lowering it below the budget causes the client
+to give up on work the platform is still doing, and to ask for it again.
+
+Tuning the retry behaviour
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :widths: 40 12 48
+   :header-rows: 1
+
+   * - Variable
+     - Default
+     - Effect
+   * - ``DATAMESH_QUERY_RETRIES``
+     - 2
+     - Total attempts at a query when the gateway reports 502. Set to ``1`` to
+       surface the first failure immediately.
+   * - ``DATAMESH_GATEWAY_RETRY_DELAY``
+     - 30
+     - Base wait before re-attempting or raising on a gateway failure; jittered.
+   * - ``DATAMESH_GATEWAY_RETRY_MIN``
+     - 5
+     - Floor applied to a server-supplied ``Retry-After``.
+   * - ``DATAMESH_UNAVAILABLE_RETRY_AFTER``
+     - 300
+     - ``retry_after`` reported when the server gives no guidance.
+   * - ``DATAMESH_CONNECTION_POOL_LIFETIME``
+     - ``None``
+     - Recycle pooled connections after this many seconds. Useful for
+       long-running processes where an idle connection may be dropped silently
+       by a load balancer between requests.
+
+
 Work with Storage
 -----------------
 

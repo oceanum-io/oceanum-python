@@ -21,6 +21,19 @@ End-user classes
     Query
 
 
+Exceptions
+
+.. autosummary::
+   :toctree: classes/datamesh
+
+    DatameshError
+    DatameshConnectError
+    DatameshUnavailableError
+    DatameshQueryError
+    DatameshWriteError
+    DatameshSessionError
+
+
 Storage
 ---------------------
 .. currentmodule:: oceanum.storage
