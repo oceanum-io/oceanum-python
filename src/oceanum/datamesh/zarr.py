@@ -59,7 +59,12 @@ class ZarrClient(MutableMapping):
         datasource,
         session,
         parameters={},
-        method="post",
+        # PUT, not POST. A chunk write is idempotent by operation -- the same
+        # bytes to the same key -- and the proxy's PUT handler is the same code
+        # as its POST handler. Declaring it idempotent is what lets
+        # retried_request retry a 502, so one ingress blip during a rolling
+        # restart no longer aborts an entire store write.
+        method="put",
         # Bounded: chunk GETs are the highest-volume request this client
         # makes, and their read timeout now covers the platform's whole
         # chunk-generation budget -- aggressive retrying here multiplies

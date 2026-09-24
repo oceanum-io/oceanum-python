@@ -3,7 +3,7 @@ from random import uniform
 import requests
 from requests.adapters import HTTPAdapter
 import numpy as np
-from .exceptions import DatameshConnectError
+from .exceptions import DatameshConnectError, DatameshUnavailableError
 import os
 
 
@@ -156,6 +156,32 @@ class HTTPSession:
         return self.session.request(method, url, *args, **kwargs)
 
 
+# Base delay in seconds before re-attempting, or raising on, a gateway-level
+# failure on the query path. Deliberately long.
+#
+# Two things justify the size. A 502 means the pod serving us died; the
+# sibling needs time to pick up the slack, and a sub-second retry arrives
+# while the ingress is still settling. More importantly this delay is taken
+# *before raising*, so it rate-limits the caller's own retry loop: a wrapper
+# that retries our call cannot iterate faster than this, whatever its own
+# backoff says. That is the only lever we have over client code we do not
+# own, and with AI-generated callers the norm, assuming a naive
+# retry-on-any-exception wrapper is the safe default.
+DATAMESH_GATEWAY_RETRY_DELAY = os.getenv("DATAMESH_GATEWAY_RETRY_DELAY", 30)
+DATAMESH_GATEWAY_RETRY_DELAY = float(DATAMESH_GATEWAY_RETRY_DELAY)
+
+# Number of attempts the query path makes at a 502. 2 = one re-attempt.
+# Set to 1 to disable re-attempting entirely (the query is then surfaced on
+# the first gateway failure).
+DATAMESH_QUERY_RETRIES = int(os.getenv("DATAMESH_QUERY_RETRIES", 2))
+
+# What we advertise as `retry_after` when the server gives us no guidance.
+# Recovering from a dead pod, or from whatever load produced the failure,
+# takes minutes rather than seconds.
+DATAMESH_UNAVAILABLE_RETRY_AFTER = float(
+    os.getenv("DATAMESH_UNAVAILABLE_RETRY_AFTER", 300)
+)
+
 # Gateway statuses worth a bounded retry: the datamesh services classify 503
 # as transient (Retry-After may accompany it); 502/504 cover a pod restarting
 # or an ingress hop failing. Other statuses -- including 500 -- are terminal
@@ -175,15 +201,78 @@ def backoff_delay(attempt, resp=None):
     and un-jittered backoff makes every client that saw the same failure
     retry in lockstep, re-creating the load spike that caused the failure.
     """
-    if resp is not None:
-        retry_after = resp.headers.get("Retry-After")
-        if retry_after is not None:
-            try:
-                # Clamp: a malformed negative value must not crash sleep().
-                return min(max(float(retry_after), 0.0), 120.0)
-            except ValueError:
-                pass  # HTTP-date form; fall through to backoff
+    hinted = retry_after_seconds(resp)
+    if hinted is not None:
+        # Jitter this too. An un-jittered Retry-After is worse than none: every
+        # client that saw the same overload wakes in the same instant.
+        return hinted * uniform(0.75, 1.0)
     return min(0.5 * 2**attempt, 15.0) * uniform(0.5, 1.0)
+
+
+def retry_after_seconds(resp):
+    """Numeric Retry-After from a response, clamped, or None.
+
+    The HTTP-date form is not decoded -- no datamesh service emits it, and
+    guessing wrong is worse than falling back to our own backoff.
+    """
+    if resp is None:
+        return None
+    value = resp.headers.get("Retry-After")
+    if value is None:
+        return None
+    try:
+        # Clamp: a malformed negative value must not crash sleep().
+        return min(max(float(value), 0.0), 120.0)
+    except (TypeError, ValueError):
+        return None  # HTTP-date form; caller falls back to backoff
+
+
+def unavailable_error(url, resp, attempted=0):
+    """Build the DatameshUnavailableError for a gateway-level failure.
+
+    The message is written to be acted on by whoever reads it -- increasingly
+    an agent generating or repairing client code rather than a person. So it
+    says what to do, not just what happened: how long to wait, and when
+    waiting cannot possibly help.
+    """
+    status = getattr(resp, "status_code", None)
+    retry_after = retry_after_seconds(resp)
+    if retry_after is None:
+        retry_after = DATAMESH_UNAVAILABLE_RETRY_AFTER
+    tried = f" Re-attempted {attempted} time(s) already." if attempted else ""
+    if status == 502:
+        detail = (
+            "the datamesh instance handling this request became unavailable "
+            "before it could answer."
+        )
+    else:
+        detail = (
+            "no datamesh instance was able to serve this request. This can "
+            "mean the service is restarting, a dependency is unreachable, or "
+            "the request exceeded what a single worker can process -- in that "
+            "last case it will fail again however long you wait, and the fix "
+            "is to make the request smaller (shorter timerange, smaller area, "
+            "fewer variables) rather than to repeat it unchanged."
+        )
+    return DatameshUnavailableError(
+        f"Datamesh returned {status} for {url}: {detail}{tried} "
+        f"Do not retry sooner than {retry_after:.0f}s.",
+        retry_after=retry_after,
+        status_code=status,
+    )
+
+
+def gateway_retry_delay(resp=None):
+    """Delay before re-attempting, or raising on, a gateway failure.
+
+    Honours Retry-After when the service offers one, otherwise a jittered
+    delay around DATAMESH_GATEWAY_RETRY_DELAY. See that constant for why it
+    is long: it paces the caller's retry loop as much as our own.
+    """
+    hinted = retry_after_seconds(resp)
+    if hinted is not None:
+        return hinted * uniform(0.75, 1.0)
+    return DATAMESH_GATEWAY_RETRY_DELAY * uniform(0.5, 1.0)
 
 
 # urllib3 / stdlib error names that mean the request never reached the server,
@@ -208,6 +297,48 @@ _DELIVERED_ERRORS = (
     "ChunkedEncodingError",
 )
 
+# A read timeout that happens *after* the response headers arrive does not
+# surface as requests.exceptions.ReadTimeout. requests re-wraps urllib3's
+# ReadTimeoutError as a ConnectionError while iterating the body
+# (requests/models.py, `except ReadTimeoutError as e: raise ConnectionError(e)`),
+# so it lands in the same branch as a mid-stream reset and is indistinguishable
+# from one without inspecting the chain.
+_READ_TIMEOUT_ERRORS = ("ReadTimeoutError",)
+
+
+def _walk_causes(exc):
+    """Yield exc and its cause chain, once each, cycle-safe."""
+    seen = set()
+    node = exc
+    while node is not None and id(node) not in seen:
+        seen.add(id(node))
+        yield node
+        nxt = node.__cause__ or node.__context__
+        if nxt is None:
+            # urllib3's MaxRetryError keeps the real cause on `.reason`. It is
+            # normally raised `from reason` so __cause__ is set too, but not
+            # when it is constructed rather than raised -- follow the attribute
+            # so classification never depends on that.
+            reason = getattr(node, "reason", None)
+            if isinstance(reason, BaseException):
+                nxt = reason
+        if nxt is None:
+            args = getattr(node, "args", ())
+            nxt = args[0] if args and isinstance(args[0], BaseException) else None
+        node = nxt
+
+
+def response_body_timed_out(exc):
+    """Whether this failure is a read timeout *after* headers arrived.
+
+    Distinguishing this from a mid-stream reset matters because the two want
+    opposite handling. Both mean the server accepted the request and started
+    answering -- but a body timeout says the response existed and we failed to
+    collect it, which for a query means query-engine already built and cached
+    the result. Re-requesting it is a cache hit, not a recomputation.
+    """
+    return any(type(n).__name__ in _READ_TIMEOUT_ERRORS for n in _walk_causes(exc))
+
 
 def request_was_delivered(exc, default=True):
     """Whether a transport failure happened *after* the request was delivered.
@@ -231,20 +362,12 @@ def request_was_delivered(exc, default=True):
     """
     if isinstance(exc, requests.exceptions.ConnectTimeout):
         return False
-    seen = set()
-    node = exc
-    while node is not None and id(node) not in seen:
-        seen.add(id(node))
+    for node in _walk_causes(exc):
         name = type(node).__name__
         if name in _NOT_DELIVERED_ERRORS:
             return False
         if name in _DELIVERED_ERRORS:
             return True
-        nxt = node.__cause__ or node.__context__
-        if nxt is None:
-            args = getattr(node, "args", ())
-            nxt = args[0] if args and isinstance(args[0], BaseException) else None
-        node = nxt
     return default
 
 
@@ -271,15 +394,23 @@ def retried_request(
 
     - Connect failures (including connect timeouts, DNS and proxy errors):
       always retried -- the request never reached the service.
-    - Connection resets *after* the request was delivered: retried for
-      idempotent methods only. The server may have completed the work, and if
-      that work is what killed it, a retry kills the next replica too.
-    - Read timeouts: never retried. Timeouts are sized above the platform's
-      own chunk-generation budget, so hitting one means the chain failed;
-      re-requesting would only duplicate work still running server-side.
+    - Connection resets *after* the request was delivered, with no response:
+      never retried for non-idempotent methods. The server may have completed
+      the work, and if that work is what killed it, a retry kills the next
+      replica too.
+    - Failures *after the response headers arrived* -- a body read timeout or
+      an aborted transfer: one re-attempt, any method. The answer existed, so
+      collecting it again is cheap (query-engine serves the second attempt
+      from its shared cache) and the risk that motivates the rule above does
+      not apply.
+    - Pre-header read timeouts: never retried. Nothing was produced, and the
+      timeouts are sized above the platform's own generation budget, so
+      re-requesting would duplicate work still running server-side.
     - 502/503/504: retried for idempotent methods only, honoring a numeric
-      Retry-After header. POST/PATCH responses are returned/raised untouched
-      so the caller can decide (e.g. Connection._query re-attempts once).
+      Retry-After header. POST/PATCH responses are returned untouched so the
+      caller can apply a policy this function cannot -- see
+      Connection._query, which waits far longer and treats 502 and 503
+      differently.
     - Every other status: returned to the caller untouched.
 
     Parameters
@@ -313,6 +444,11 @@ def retried_request(
     requester = http_session if http_session else requests
     attempt = 0
     last_error = None
+    # A mid-response failure gets one re-attempt at most, independently of the
+    # `retries` budget: the response existed, so a second collection attempt is
+    # cheap (query-engine serves it from its shared cache), but repeated
+    # attempts against a connection that keeps dying mid-body are just a stall.
+    mid_response_attempts = 0
     while True:
         resp = None
         try:
@@ -326,26 +462,43 @@ def retried_request(
                 verify=verify,
             )
         except requests.exceptions.ConnectionError as e:
-            # Two very different failures arrive here. A connect failure never
-            # reached the server and is free to re-issue for any method. A reset
-            # *after* the request was delivered means the server may have done
-            # the work -- and if that work is what killed it, retrying hands the
-            # same request to a sibling replica. So delivered resets follow the
-            # same rule as the mid-response branch below: idempotent only.
-            if request_was_delivered(e) and method.upper() not in IDEMPOTENT_METHODS:
+            # Three very different failures arrive here, and requests gives
+            # them all the same class.
+            if response_body_timed_out(e):
+                # Headers arrived, the body did not. The server built the
+                # answer; we failed to collect it. One re-attempt, any method:
+                # for a query that is a cache hit rather than a recomputation.
+                if mid_response_attempts >= 1:
+                    raise DatameshConnectError(
+                        f"Response from {url} stalled mid-body twice: {e}"
+                    )
+                mid_response_attempts += 1
+                last_error = e
+            elif request_was_delivered(e) and method.upper() not in IDEMPOTENT_METHODS:
+                # A reset *after* delivery with no response at all. The server
+                # may have died doing the work -- and if that work is what
+                # killed it, retrying hands the same request to a sibling.
                 raise DatameshConnectError(
-                    f"Request to {url} failed after delivery: {e}"
+                    f"Request to {url} may have been delivered before the "
+                    f"connection failed, and {method.upper()} is not safe to "
+                    f"repeat automatically. Re-run it if that is safe: {e}"
                 )
-            last_error = e
+            else:
+                # Connect failure: never reached the server, free to re-issue.
+                last_error = e
         except requests.exceptions.Timeout as e:
+            # Pre-header timeout only -- nothing was produced, so there is
+            # nothing to collect on a second attempt.
             raise DatameshConnectError(
                 f"No response from {url} within {timeout[1] if isinstance(timeout, tuple) else timeout}s: {e}"
             )
         except requests.RequestException as e:
-            # Transport failure mid-response: the server processed the
-            # request, so only idempotent methods may re-issue it.
-            if method.upper() not in IDEMPOTENT_METHODS:
+            # Transport failure part-way through a response body (e.g. a
+            # chunked transfer aborted). Same reasoning as the body-timeout
+            # case above: one re-attempt, any method.
+            if mid_response_attempts >= 1:
                 raise DatameshConnectError(f"Request to {url} failed: {e}")
+            mid_response_attempts += 1
             last_error = e
         else:
             if (

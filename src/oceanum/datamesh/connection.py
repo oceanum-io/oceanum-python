@@ -31,21 +31,41 @@ from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter, GeoFilterType
 from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
-from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
+from .exceptions import (
+    DatameshConnectError,
+    DatameshQueryError,
+    DatameshUnavailableError,
+    DatameshWriteError,
+)
 from .session import Session
 from .utils import (
     retried_request,
-    backoff_delay,
+    gateway_retry_delay,
+    unavailable_error,
     HTTPSession,
     DATAMESH_WRITE_TIMEOUT,
     DATAMESH_CONNECT_TIMEOUT,
     DATAMESH_DOWNLOAD_TIMEOUT,
     DATAMESH_STAGE_READ_TIMEOUT,
+    DATAMESH_QUERY_RETRIES,
+    DATAMESH_UNAVAILABLE_RETRY_AFTER,
 )
 from ..__init__ import __version__
 
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
+
+class _GatewayRetry(Exception):
+    """Internal: a 502 worth one more attempt, carrying how long to wait.
+
+    Raised from _query_attempt and caught by _query so the sleep happens with
+    the session already closed. Never escapes this module.
+    """
+
+    def __init__(self, delay):
+        super().__init__(f"gateway retry after {delay:.1f}s")
+        self.delay = delay
+
 
 DASK_QUERY_SIZE = 1000000000  # 1GB
 
@@ -295,25 +315,63 @@ class Connector(object):
             query.model_dump_json(warnings=False).encode()
         ).hexdigest()
 
-        resp = self._retried_request(
-            f"{self._gateway}/oceanql/stage/",
-            method="POST",
-            headers=session.header,
-            data=query.model_dump_json(warnings=False),
-            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT),
-        )
+        url = f"{self._gateway}/oceanql/stage/"
+        # Staging is the cheap half of a query -- it resolves the query against
+        # the catalog and is keyed by qhash server-side -- so a gateway failure
+        # here is worth re-attempting where the download POST is not. It also
+        # gets no status retry from retried_request, because it is a POST.
+        attempt = 0
+        while True:
+            resp = self._retried_request(
+                url,
+                method="POST",
+                headers=session.header,
+                data=query.model_dump_json(warnings=False),
+                timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT),
+            )
+            if resp.status_code not in (502, 503, 504):
+                break
+            delay = gateway_retry_delay(resp)
+            if resp.status_code == 502 and attempt + 1 < DATAMESH_QUERY_RETRIES:
+                attempt += 1
+                time.sleep(delay)
+                continue
+            time.sleep(delay)
+            raise unavailable_error(url, resp, attempted=attempt)
+
         if resp.status_code >= 400:
+            # A JSON body with a `detail` is the server rejecting the query.
+            # Anything else (an ingress error page, an empty body) is a
+            # transport-level problem wearing a status code.
+            detail = None
             try:
-                msg = resp.json()["detail"]
-                raise DatameshQueryError(msg)
-            except:
-                raise DatameshConnectError("Datamesh server error: " + resp.text)
+                detail = resp.json()["detail"]
+            except Exception:
+                pass
+            if detail is not None:
+                raise DatameshQueryError(detail)
+            raise DatameshConnectError("Datamesh server error: " + resp.text)
         elif resp.status_code == 204:
             return None
         else:
             return Stage(**resp.json())
 
     def _query(self, query, use_dask=False, cache_timeout=0, retry=0):
+        """Run a query, re-attempting a 502 after a long jittered wait.
+
+        The wait happens here rather than inside _query_attempt so the session
+        is already closed while we sleep -- a re-attempt that held the old
+        session open for half a minute would leave server-side session state
+        pinned for no reason.
+        """
+        while True:
+            try:
+                return self._query_attempt(query, use_dask, cache_timeout, retry)
+            except _GatewayRetry as again:
+                time.sleep(again.delay)
+                retry += 1
+
+    def _query_attempt(self, query, use_dask=False, cache_timeout=0, retry=0):
         if not isinstance(query, Query):
             query = Query(**query)
         if cache_timeout and not use_dask:
@@ -369,28 +427,48 @@ class Connector(object):
                 if resp.status_code > 500:
                     if cache_timeout:
                         localcache.unlock(query)
-                    # One deliberate re-attempt for a gateway-level failure
-                    # (502/503/504). The query POST is not auto-retried by
-                    # retried_request -- re-running a query duplicates
-                    # expensive upstream work -- but a single retry after a
-                    # short pause covers a pod restarting mid-request.
-                    if retry < 1:
-                        time.sleep(backoff_delay(retry + 1, resp))
-                        return self._query(query, use_dask, cache_timeout, retry + 1)
-                    else:
-                        raise DatameshConnectError(
-                            "Datamesh server error: " + resp.text
-                        )
+                    # 502 and 503 mean different things here and deserve
+                    # different handling.
+                    #
+                    # 502 is the ingress reporting that the instance serving
+                    # this request died. A sibling is very likely healthy, the
+                    # query has to run somewhere, and the work was lost rather
+                    # than completed -- so one re-attempt is worth it. But
+                    # after a long jittered wait, not half a second: the pod
+                    # is still being replaced, and a fast retry during a
+                    # correlated failure is how a rolling restart becomes a
+                    # storm.
+                    #
+                    # 503/504 is never worth an automatic re-attempt. It means
+                    # no instance is available, a dependency is down, or the
+                    # request exceeded what one worker can process -- and in
+                    # that last case re-running it is precisely what took out
+                    # both query-engine replicas on 2026-09-22. We still wait
+                    # before raising, because that wait rate-limits whatever
+                    # retry loop is wrapping this call.
+                    delay = gateway_retry_delay(resp)
+                    if (
+                        resp.status_code == 502
+                        and retry + 1 < DATAMESH_QUERY_RETRIES
+                    ):
+                        raise _GatewayRetry(delay)
+                    time.sleep(delay)
+                    raise unavailable_error(
+                        f"{self._gateway}/oceanql/", resp, attempted=retry
+                    )
                 if resp.status_code >= 400:
-                    try:
-                        msg = resp.json()["detail"]
-                    except:
-                        raise DatameshConnectError(
-                            "Datamesh server error: " + resp.text
-                        )
                     if cache_timeout:
                         localcache.unlock(query)
-                    raise DatameshQueryError(msg)
+                    detail = None
+                    try:
+                        detail = resp.json()["detail"]
+                    except Exception:
+                        pass  # not a JSON error body (e.g. an ingress page)
+                    if detail is not None:
+                        raise DatameshQueryError(detail)
+                    raise DatameshConnectError(
+                        "Datamesh server error: " + resp.text
+                    )
                 else:
                     with tempFile("wb") as f:
                         f.write(resp.content)

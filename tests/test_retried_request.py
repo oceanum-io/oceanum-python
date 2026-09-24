@@ -99,7 +99,7 @@ def test_reset_after_delivery_is_not_retried_for_post(mock_request, mock_sleep):
     and if that work killed the pod, retrying kills the next replica too.
     """
     mock_request.side_effect = _reset_after_delivery()
-    with pytest.raises(DatameshConnectError, match="after delivery"):
+    with pytest.raises(DatameshConnectError, match="not safe to repeat"):
         retried_request("http://gateway/oceanql/", method="POST", retries=3)
     assert mock_request.call_count == 1
 
@@ -160,11 +160,17 @@ def test_terminal_statuses_return_untouched(mock_request, mock_sleep):
 
 
 def test_backoff_honors_numeric_retry_after():
-    assert backoff_delay(1, _response(503, {"Retry-After": "7"})) == 7.0
+    # Jittered, not verbatim: an un-jittered Retry-After is worse than none,
+    # because every client that saw the same overload wakes in one instant.
+    for _ in range(50):
+        assert 5.25 <= backoff_delay(1, _response(503, {"Retry-After": "7"})) <= 7.0
     # Capped so a hostile/buggy header cannot park the client for an hour.
-    assert backoff_delay(1, _response(503, {"Retry-After": "3600"})) == 120.0
+    assert backoff_delay(1, _response(503, {"Retry-After": "3600"})) <= 120.0
+    assert backoff_delay(1, _response(503, {"Retry-After": "3600"})) >= 90.0
     # A malformed negative value must clamp to zero, not crash time.sleep().
     assert backoff_delay(1, _response(503, {"Retry-After": "-5"})) == 0.0
+    # An HTTP-date Retry-After is not decoded; fall back to our own backoff.
+    assert backoff_delay(1, _response(503, {"Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"})) <= 15.0
 
 
 def test_backoff_is_jittered_and_capped():
