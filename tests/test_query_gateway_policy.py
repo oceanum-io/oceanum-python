@@ -248,8 +248,15 @@ def test_query_504_is_never_reattempted(conn, no_session):
 
 
 def test_query_500_is_not_a_gateway_failure(conn, no_session):
-    """500 is the service answering, not the gateway failing. It must not be
-    retried and must not become DatameshUnavailableError."""
+    """500 is the service answering, not the gateway failing: not retried, and
+    not DatameshUnavailableError.
+
+    It is also not DatameshQueryError. The query-engine renders every
+    InternalQueryError as {"detail": ...} with a 500, so classifying a
+    detail-bearing 500 as a rejected query told callers a transient server-side
+    failure was terminal -- and flipped at least one pipeline from
+    skip-this-grid-with-a-warning to crash.
+    """
     from oceanum.datamesh.query import Container
 
     stage = _stage()
@@ -258,8 +265,10 @@ def test_query_500_is_not_a_gateway_failure(conn, no_session):
          patch.object(conn, "_retried_request",
                       return_value=_response(500, json_body={"detail": "boom"})) as rr, \
          patch("oceanum.datamesh.connection.time.sleep"):
-        with pytest.raises(DatameshQueryError, match="boom"):
+        with pytest.raises(DatameshConnectError, match="boom") as exc:
             conn._query(QUERY)
+    assert not isinstance(exc.value, DatameshQueryError), "a 500 is not a rejected query"
+    assert not isinstance(exc.value, DatameshUnavailableError)
     assert rr.call_count == 1
 
 
@@ -414,3 +423,36 @@ def test_cache_lock_is_released_when_the_download_raises(conn, no_session):
     assert lc.lock.call_count == lc.unlock.call_count, (
         f"cache lock left held: lock={lc.lock.call_count} unlock={lc.unlock.call_count}"
     )
+
+
+def test_4xx_is_a_query_error_and_5xx_is_not(conn, no_session):
+    """The dividing line: 4xx means the request was wrong, 5xx means the server
+    failed. Both carry a `detail`, so only the status can tell them apart."""
+    from oceanum.datamesh.query import Container
+
+    stage = _stage()
+    stage.container = Container.Dataset
+    for status, expect_query_error in ((400, True), (404, True), (422, True), (500, False)):
+        with patch.object(conn, "_stage_request", return_value=stage), \
+             patch.object(conn, "_retried_request",
+                          return_value=_response(status, json_body={"detail": "d"})), \
+             patch("oceanum.datamesh.connection.time.sleep"):
+            with pytest.raises(DatameshConnectError if not expect_query_error
+                               else DatameshQueryError) as exc:
+                conn._query(QUERY)
+        assert isinstance(exc.value, DatameshQueryError) is expect_query_error, status
+        # the server's detail survives either way
+        assert "d" in str(exc.value), status
+
+
+def test_stage_4xx_vs_5xx_split(conn, no_session):
+    """Same split on the staging hop."""
+    for status, expect_query_error in ((400, True), (500, False)):
+        with patch.object(conn, "_retried_request",
+                          return_value=_response(status, json_body={"detail": "why"})), \
+             patch("oceanum.datamesh.connection.time.sleep"):
+            with pytest.raises(DatameshConnectError if not expect_query_error
+                               else DatameshQueryError) as exc:
+                conn._stage_request(_query_obj(), no_session.acquire.return_value)
+        assert isinstance(exc.value, DatameshQueryError) is expect_query_error, status
+        assert "why" in str(exc.value), status

@@ -362,9 +362,17 @@ class Connector(object):
                 detail = resp.json()["detail"]
             except Exception:
                 pass
-            if detail is not None:
+            # DatameshQueryError means "your request was rejected, repeating it
+            # unchanged will fail the same way", so it must be 4xx only. A 500
+            # carries a `detail` too -- the query-engine renders every
+            # InternalQueryError as {"detail": ...} -- and those are server-side
+            # failures that may well succeed on a later attempt. Labelling them
+            # terminal told callers to give up on transient faults.
+            if detail is not None and resp.status_code < 500:
                 raise DatameshQueryError(detail)
-            raise DatameshConnectError("Datamesh server error: " + resp.text)
+            raise DatameshConnectError(
+                "Datamesh server error: " + (resp.text if detail is None else detail)
+            )
         elif resp.status_code == 204:
             return None
         else:
@@ -513,10 +521,14 @@ class Connector(object):
                         detail = resp.json()["detail"]
                     except Exception:
                         pass  # not a JSON error body (e.g. an ingress page)
-                    if detail is not None:
+                    # 4xx only -- see the note in _stage_request. A 500 here is
+                    # the query-engine's InternalQueryError handler, not a
+                    # rejected query.
+                    if detail is not None and resp.status_code < 500:
                         raise DatameshQueryError(detail)
                     raise DatameshConnectError(
-                        "Datamesh server error: " + resp.text
+                        "Datamesh server error: "
+                        + (resp.text if detail is None else detail)
                     )
                 else:
                     with tempFile("wb") as f:
