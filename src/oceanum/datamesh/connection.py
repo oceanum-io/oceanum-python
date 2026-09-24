@@ -404,7 +404,10 @@ class Connector(object):
                 # The session is already closed by the time we get here.
                 time.sleep(outcome.delay)
                 if outcome.error is not None:
-                    raise outcome.error
+                    # `from None` so the internal sentinel does not appear as
+                    # "During handling of the above exception..." in the user's
+                    # traceback. It is an implementation detail.
+                    raise outcome.error from None
                 retry += 1
 
     def _query_attempt(self, query, use_dask=False, cache_timeout=0, retry=0):
@@ -535,6 +538,13 @@ class Connector(object):
                             localcache.unlock(query)
                     return ds
             finally:
+                # The download or the parse can raise between lock() and the
+                # copy below; without this the next query() for the same hash
+                # blocks on the lock for its full 60 s timeout. unlock() is a
+                # no-op when nothing is locked, so calling it here is safe even
+                # after the success path has already unlocked.
+                if localcache is not None:
+                    localcache.unlock(query)
                 session.close()
 
     def get_catalog(self, search=None, timefilter=None, geofilter=None, limit=None):
@@ -693,12 +703,18 @@ class Connector(object):
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
-        elif stage.container == Container.GeoDataFrame:
-            tmpfile = self._data_request(datasource_id, "application/parquet")
-            return geopandas.read_parquet(tmpfile)
-        elif stage.container == Container.DataFrame:
-            tmpfile = self._data_request(datasource_id, "application/parquet")
-            return pandas.read_parquet(tmpfile)
+        # Only the zarr branch above needs the session to outlive this call; the
+        # /data/ GET does not use it at all, so these branches must close it or
+        # it survives until atexit and holds server-side state meanwhile.
+        try:
+            if stage.container == Container.GeoDataFrame:
+                tmpfile = self._data_request(datasource_id, "application/parquet")
+                return geopandas.read_parquet(tmpfile)
+            elif stage.container == Container.DataFrame:
+                tmpfile = self._data_request(datasource_id, "application/parquet")
+                return pandas.read_parquet(tmpfile)
+        finally:
+            session.close()
 
     @asyncwrapper
     def load_datasource_async(self, datasource_id, parameters={}, use_dask=False):

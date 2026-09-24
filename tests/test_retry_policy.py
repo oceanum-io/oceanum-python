@@ -303,25 +303,36 @@ def test_opt_in_does_not_override_idempotency(mock_request, mock_sleep):
 
 
 def test_metadata_path_opts_in_and_the_download_path_does_not():
-    """Pin the wiring, not just the mechanism: the opt-in has to land on the
-    metadata calls and stay off the ones with budget-derived timeouts.
+    """Pin the wiring by the kwargs actually passed, not by reading source text.
 
-    A blanket opt-in at the Connector level would have covered _data_request,
-    which is a GET with the 900s download budget -- the exact case the default
-    protects.
+    A blanket opt-in on Connector._retried_request would have covered
+    _data_request, which is a GET carrying the 900s download budget -- the exact
+    case the default protects.
     """
-    import inspect
-    from oceanum.datamesh import connection as mod
+    from unittest.mock import ANY
+    from oceanum.datamesh.connection import Connector
+    from oceanum.datamesh.utils import DATAMESH_METADATA_READ_TIMEOUT
 
-    src = inspect.getsource(mod.Connector._metadata_request)
-    assert "retry_read_timeout=True" in src
-    assert "DATAMESH_METADATA_READ_TIMEOUT" in src
+    with patch.object(Connector, "_check_info", return_value=None):
+        conn = Connector(token="dummy-not-a-real-token", service="https://gateway")
 
-    for name in ("_data_request", "_stage_request", "_query_attempt"):
-        body = inspect.getsource(getattr(mod.Connector, name))
-        assert "retry_read_timeout" not in body, (
-            f"{name} must not opt in: its read timeout is a work budget"
-        )
+    def kwargs_for(call):
+        with patch.object(Connector, "_retried_request") as rr:
+            rr.return_value = _response(200, json_body={})
+            try:
+                call(conn)
+            except Exception:
+                pass
+        return rr.call_args.kwargs if rr.call_args else {}
+
+    meta = kwargs_for(lambda c: c._metadata_request("dsx"))
+    assert meta.get("retry_read_timeout") is True
+    assert meta.get("timeout")[1] == DATAMESH_METADATA_READ_TIMEOUT
+
+    data = kwargs_for(lambda c: c._data_request("dsx", "application/parquet"))
+    assert data.get("retry_read_timeout") in (None, False), (
+        "the download path must not opt in: its read timeout is a work budget"
+    )
 
 
 def test_metadata_timeout_is_above_measured_latency():
@@ -344,8 +355,11 @@ def test_metadata_timeout_is_above_measured_latency():
 def _tls_error(inner):
     """The real shape: requests.SSLError -> MaxRetryError -> SSLError -> inner.
 
-    Verified against live TLS servers 2026-09-24 -- MaxRetryError is present
-    because urllib3 raises it from inside urlopen, i.e. before any response.
+    Verified against live TLS servers 2026-09-24. Note this shape is produced by
+    a failed *handshake* AND by an SSL error raised from conn.getresponse() after
+    the request body was written (urllib3 connectionpool.py:535 then :824), so it
+    does not identify the connect phase -- see
+    test_non_certificate_tls_is_not_assumed_to_predate_delivery.
     """
     u_ssl = urllib3.exceptions.SSLError("tls failed")
     u_ssl.__cause__ = inner
@@ -372,8 +386,7 @@ def _handshake_eof():
 @patch("oceanum.datamesh.utils.requests.request")
 def test_certificate_failure_is_terminal_and_says_so(mock_request, mock_sleep):
     """A certificate will not become valid on a second attempt, and the generic
-    'may have been delivered' wording would point the reader at a transient
-    fault that isn't there."""
+    wording would point the reader at a transient fault that isn't there."""
     for method in ("GET", "POST"):
         mock_request.reset_mock()
         mock_request.side_effect = _cert_error()
@@ -384,39 +397,38 @@ def test_certificate_failure_is_terminal_and_says_so(mock_request, mock_sleep):
 
 @patch("oceanum.datamesh.utils.sleep")
 @patch("oceanum.datamesh.utils.requests.request")
-def test_dropped_handshake_is_retried_for_any_method(mock_request, mock_sleep):
-    """The handshake never completed, so nothing was transmitted -- this is the
-    one failure where re-issuing a POST is provably free.
+def test_non_certificate_tls_is_not_assumed_to_predate_delivery(mock_request, mock_sleep):
+    """The load-bearing one: a POST must not be re-sent on a TLS failure.
 
-    Likely in this stack: the TLS terminator is rolled on ingress restarts,
-    certificate renewals and node replacements.
+    An earlier version of this code inferred "the handshake failed, so nothing
+    was sent" from MaxRetryError plus an SSL class name, and retried POSTs on
+    that basis. urllib3 produces the identical chain for an SSL error raised by
+    conn.getresponse() -- after the request body was fully written -- so that
+    inference could re-deliver a query. If that query is the one that exhausts a
+    worker's memory, it is the 2026-09-22 cascade.
+
+    Non-certificate TLS failures therefore get the ordinary cautious treatment.
     """
-    mock_request.side_effect = [_handshake_eof(), _response(200)]
-    resp = retried_request("https://gateway/oceanql/", method="POST", retries=3)
-    assert resp.status_code == 200
-    assert mock_request.call_count == 2
+    mock_request.side_effect = _handshake_eof()
+    with pytest.raises(DatameshConnectError):
+        retried_request("https://gateway/oceanql/", method="POST", retries=3)
+    assert mock_request.call_count == 1, "a POST was re-sent after a TLS failure"
 
 
 @patch("oceanum.datamesh.utils.sleep")
 @patch("oceanum.datamesh.utils.requests.request")
-def test_dropped_handshake_retries_are_bounded(mock_request, mock_sleep):
-    mock_request.side_effect = _handshake_eof()
-    with pytest.raises(DatameshConnectError, match="after 3 attempts"):
-        retried_request("https://gateway/oceanql/", method="POST", retries=3)
-    assert mock_request.call_count == 3
+def test_non_certificate_tls_still_retries_for_idempotent_methods(mock_request, mock_sleep):
+    mock_request.side_effect = [_handshake_eof(), _response(200)]
+    resp = retried_request("https://gateway/zarr/x", method="GET", retries=3)
+    assert resp.status_code == 200
+    assert mock_request.call_count == 2
 
 
-def test_tls_classification_helpers():
-    from oceanum.datamesh.utils import (
-        certificate_verification_failed,
-        tls_failed_before_sending,
-    )
+def test_certificate_helper_matches_only_certificates():
+    from oceanum.datamesh.utils import certificate_verification_failed
 
     assert certificate_verification_failed(_cert_error()) is True
     assert certificate_verification_failed(_handshake_eof()) is False
-    assert tls_failed_before_sending(_handshake_eof()) is True
-    # A mid-body SSL failure has no MaxRetryError: the request was delivered,
-    # so it must keep the cautious treatment.
-    mid_body = requests.exceptions.SSLError("decrypt error during read")
-    assert tls_failed_before_sending(mid_body) is False
-    assert certificate_verification_failed(mid_body) is False
+    assert certificate_verification_failed(
+        requests.exceptions.SSLError("decrypt error during read")
+    ) is False

@@ -362,10 +362,17 @@ def _walk_causes(exc):
         node = nxt
 
 
-# A TLS failure during connection setup transmits nothing, so re-issuing it is
-# free for any method -- but only some of them can ever succeed on a second
-# attempt. These two names mean the peer's certificate was rejected, which is a
-# configuration state rather than a blip: it will fail identically forever.
+# The peer's certificate being rejected is a configuration state, not a blip:
+# it will fail identically forever, so it is terminal for every method.
+#
+# Deliberately NOT here: any attempt to decide whether a *non-certificate* TLS
+# failure happened before or after the request was written. urllib3 wraps an SSL
+# error from conn.getresponse() -- i.e. after the body was fully sent -- in the
+# same MaxRetryError shape as a failed handshake (connectionpool.py:535 then
+# :824), so the two are indistinguishable from the exception alone. Guessing
+# "handshake" would re-send a delivered POST, which is the one mistake this
+# module exists to avoid. Non-certificate TLS failures therefore keep the
+# cautious default: idempotent methods retry, others do not.
 _CERTIFICATE_ERRORS = ("SSLCertVerificationError", "CertificateError")
 
 
@@ -374,23 +381,6 @@ def certificate_verification_failed(exc):
     return any(
         type(n).__name__ in _CERTIFICATE_ERRORS for n in _walk_causes(exc)
     )
-
-
-def tls_failed_before_sending(exc):
-    """Whether a TLS failure happened while establishing the connection.
-
-    urllib3 raises MaxRetryError only from inside urlopen, i.e. before any
-    response exists, so an SSL error carrying one broke during the handshake --
-    nothing was written to the socket. The common cause in this stack is the
-    TLS terminator being rolled (ingress restart, certificate renewal, node
-    replacement), which surfaces as SSLEOFError and is worth another attempt
-    for any method, POST included, because no request was delivered.
-
-    An SSL error *without* MaxRetryError came from reading the body, where the
-    request certainly was delivered -- that keeps the cautious treatment.
-    """
-    names = [type(n).__name__ for n in _walk_causes(exc)]
-    return "MaxRetryError" in names and any(n.startswith("SSL") for n in names)
 
 
 def response_body_timed_out(exc):
@@ -471,9 +461,9 @@ def retried_request(
       not apply.
     - TLS certificate verification failures: never retried, and reported as
       such. The certificate will not become valid on a second attempt.
-    - Other TLS failures during connection setup (a terminator being rolled,
-      a certificate renewal): retried for any method. The handshake never
-      completed, so no request was delivered and there is nothing to duplicate.
+    - Other TLS failures: treated like any other transport failure -- the
+      exception cannot tell a failed handshake from an SSL error while reading
+      the response, so idempotent methods retry and others do not.
     - Pre-header read timeouts: not retried by default. Where the timeout is
       derived from the platform's own generation budget (chunk reads, staging,
       downloads), hitting it means the chain failed and re-requesting would
@@ -564,10 +554,6 @@ def retried_request(
                     )
                 mid_response_attempts += 1
                 last_error = e
-            elif tls_failed_before_sending(e):
-                # Handshake broke: nothing was transmitted, so this is safe to
-                # re-issue whatever the method is.
-                last_error = e
             elif request_was_delivered(e) and method.upper() not in IDEMPOTENT_METHODS:
                 # A reset *after* delivery with no response at all. The server
                 # may have died doing the work -- and if that work is what
@@ -588,8 +574,14 @@ def retried_request(
             if retry_read_timeout and method.upper() in IDEMPOTENT_METHODS:
                 last_error = e
             else:
+                # Report both values rather than guessing which fired: a TLS
+                # handshake that hangs surfaces as a ReadTimeout carrying the
+                # *connect* timeout, so naming timeout[1] alone was misleading
+                # (a chunk read would claim 1020 s after 3 s).
+                _c, _r = timeout if isinstance(timeout, tuple) else (None, timeout)
                 raise DatameshConnectError(
-                    f"No response from {url} within {timeout[1] if isinstance(timeout, tuple) else timeout}s: {e}"
+                    f"No response from {url} (connect timeout {_c}s, "
+                    f"read timeout {_r}s): {e}"
                 )
         except _MID_RESPONSE_EXCEPTIONS as e:
             # The response body was aborted part-way through (e.g. a chunked
