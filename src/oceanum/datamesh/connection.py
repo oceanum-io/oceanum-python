@@ -31,20 +31,47 @@ from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter, GeoFilterType
 from .zarr import zarr_write, ZarrClient
 from .cache import LocalCache
-from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
+from .exceptions import (
+    DatameshConnectError,
+    DatameshQueryError,
+    DatameshUnavailableError,
+    DatameshWriteError,
+)
 from .session import Session
 from .utils import (
     retried_request,
+    gateway_retry_delay,
+    unavailable_error,
     HTTPSession,
     DATAMESH_WRITE_TIMEOUT,
     DATAMESH_CONNECT_TIMEOUT,
     DATAMESH_DOWNLOAD_TIMEOUT,
     DATAMESH_STAGE_READ_TIMEOUT,
+    DATAMESH_METADATA_READ_TIMEOUT,
+    DATAMESH_QUERY_RETRIES,
+    DATAMESH_UNAVAILABLE_RETRY_AFTER,
 )
 from ..__init__ import __version__
 
 
 DEFAULT_CONFIG = {"DATAMESH_SERVICE": "https://datamesh.oceanum.io"}
+
+class _GatewayOutcome(Exception):
+    """Internal: a gateway failure whose wait must happen with no session held.
+
+    Every gateway wait on the query path is taken by _query, after the session
+    is closed -- a 15-30s sleep holding a session pins server-side state for
+    no reason, and the wait exists to pace the *caller*, not to keep us busy.
+
+    `error is None` means wait then re-attempt; otherwise wait then raise it.
+    Never escapes this module.
+    """
+
+    def __init__(self, delay, error=None):
+        super().__init__(f"gateway outcome after {delay:.1f}s")
+        self.delay = delay
+        self.error = error
+
 
 DASK_QUERY_SIZE = 1000000000  # 1GB
 
@@ -202,9 +229,15 @@ class Connector(object):
             raise DatameshConnectError(msg)
 
     def _metadata_request(self, datasource_id="", params={}):
+        # A catalog search is not the "small json payload" that
+        # DATAMESH_READ_TIMEOUT assumes, so it gets its own budget -- and a read
+        # timeout here is a latency spike on the metadata server, not a failed
+        # chain with expensive work still running, so it is worth retrying.
         resp = self._retried_request(
             f"{self._proto}://{self._host}/datasource/{datasource_id}",
             params=params,
+            timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_METADATA_READ_TIMEOUT),
+            retry_read_timeout=True,
         )
         if resp.status_code == 404:
             raise DatameshConnectError(f"Datasource {datasource_id} not found")
@@ -218,12 +251,16 @@ class Connector(object):
             "utf-8", "ignore"
         )
         headers = {"Content-Type": "application/json"}
+        # Same server as _metadata_request, so the same budget. No
+        # retry_read_timeout here -- these are POST/PATCH and must not repeat.
+        timeout = (DATAMESH_CONNECT_TIMEOUT, DATAMESH_METADATA_READ_TIMEOUT)
         if datasource._exists:
             resp = self._retried_request(
                 f"{self._proto}://{self._host}/datasource/{datasource.id}/",
                 method="PATCH",
                 data=data,
                 headers=headers,
+                timeout=timeout,
             )
 
         else:
@@ -232,6 +269,7 @@ class Connector(object):
                 method="POST",
                 data=data,
                 headers=headers,
+                timeout=timeout,
             )
         self._validate_response(resp)
         return resp
@@ -289,40 +327,125 @@ class Connector(object):
         self._validate_response(resp)
         return Datasource(**resp.json())
 
-    def _stage_request(self, query, session, cache=False):
+    def _stage_request(self, query, session, cache=False, retry=None):
         qhash = hashlib.sha224(
             query.model_dump_json(warnings=False).encode()
         ).hexdigest()
 
+        url = f"{self._gateway}/oceanql/stage/"
         resp = self._retried_request(
-            f"{self._gateway}/oceanql/stage/",
+            url,
             method="POST",
             headers=session.header,
             data=query.model_dump_json(warnings=False),
             timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_STAGE_READ_TIMEOUT),
         )
+        # retried_request does not status-retry a POST, so gateway failures
+        # arrive here untouched. Staging is the cheap, qhash-keyed half of a
+        # query, so a 502 here is worth re-attempting -- but through _query's
+        # shared budget, so stage and download together deliver the query at
+        # most DATAMESH_QUERY_RETRIES times.
+        if resp.status_code in (502, 503, 504):
+            if retry is None:
+                # Called outside _query (load_datasource): no loop to defer to,
+                # so pace here and raise the public error.
+                time.sleep(gateway_retry_delay(resp))
+                raise unavailable_error(url, resp)
+            raise self._gateway_failure(url, resp, retry)
+
         if resp.status_code >= 400:
+            # A JSON body with a `detail` is the server rejecting the query.
+            # Anything else (an ingress error page, an empty body) is a
+            # transport-level problem wearing a status code.
+            detail = None
             try:
-                msg = resp.json()["detail"]
-                raise DatameshQueryError(msg)
-            except:
-                raise DatameshConnectError("Datamesh server error: " + resp.text)
+                detail = resp.json()["detail"]
+            except Exception:
+                pass
+            # DatameshQueryError means "your request was rejected, repeating it
+            # unchanged will fail the same way", so it must be 4xx only. A 500
+            # carries a `detail` too -- the query-engine renders every
+            # InternalQueryError as {"detail": ...} -- and those are server-side
+            # failures that may well succeed on a later attempt. Labelling them
+            # terminal told callers to give up on transient faults.
+            if detail is not None and resp.status_code < 500:
+                raise DatameshQueryError(detail)
+            raise DatameshConnectError(
+                "Datamesh server error: " + (resp.text if detail is None else detail)
+            )
         elif resp.status_code == 204:
             return None
         else:
             return Stage(**resp.json())
 
+    def _gateway_failure(self, url, resp, retry):
+        """Build the _GatewayOutcome for a 5xx on the query path.
+
+        One re-attempt budget is shared by the stage POST and the download
+        POST, so a single query() delivers the query to query-engine at most
+        twice however the two hops fail. Giving each hop its own budget let one
+        call make four staging requests and sleep four long waits.
+
+        502 means the instance serving us died and a sibling is likely healthy,
+        so it is worth re-attempting. 503/504 means no instance is available, a
+        dependency is down, or the request exceeded what one worker can do --
+        re-running that is what took out both replicas on 2026-09-22.
+        """
+        delay = gateway_retry_delay(resp)
+        error = unavailable_error(url, resp, attempted=retry)
+        if resp.status_code == 502 and retry + 1 < DATAMESH_QUERY_RETRIES:
+            return _GatewayOutcome(delay)
+        return _GatewayOutcome(delay, error)
+
     def _query(self, query, use_dask=False, cache_timeout=0, retry=0):
+        """Run a query, re-attempting a 502 after a long jittered wait.
+
+        The wait happens here rather than inside _query_attempt so the session
+        is already closed while we sleep -- a re-attempt that held the old
+        session open for half a minute would leave server-side session state
+        pinned for no reason.
+        """
+        while True:
+            try:
+                return self._query_attempt(query, use_dask, cache_timeout, retry)
+            except _GatewayOutcome as outcome:
+                # The session is already closed by the time we get here.
+                time.sleep(outcome.delay)
+                if outcome.error is not None:
+                    # `from None` so the internal sentinel does not appear as
+                    # "During handling of the above exception..." in the user's
+                    # traceback. It is an implementation detail.
+                    raise outcome.error from None
+                retry += 1
+
+    def _query_attempt(self, query, use_dask=False, cache_timeout=0, retry=0):
         if not isinstance(query, Query):
             query = Query(**query)
-        if cache_timeout and not use_dask:
-            localcache = LocalCache(cache_timeout)
+        # Created whenever caching is on, but only *consulted* here when the
+        # caller is not asking for a lazy result -- there is nothing useful to
+        # serve a dask-backed query from the local cache.
+        #
+        # These used to be the same condition, while the lock/copy calls below
+        # tested `cache_timeout` alone. use_dask is also set True further down
+        # for any query over DASK_QUERY_SIZE, so a large DataFrame query with
+        # caching on reached localcache.lock() with localcache undefined and
+        # raised NameError.
+        localcache = LocalCache(cache_timeout) if cache_timeout else None
+        if localcache is not None and not use_dask:
             cached = localcache.get(query)
             if cached is not None:
                 return cached
         session = Session.acquire(self)
-        stage = self._stage_request(query, session)
+        # Staging sits outside the try/finally below (the dask branch has to
+        # keep the session alive), so its failure paths have to close the
+        # session themselves or it leaks until atexit.
+        try:
+            stage = self._stage_request(query, session, retry=retry)
+        except BaseException:
+            session.close()
+            raise
         if stage is None:
+            session.close()
             warnings.warn("No data found for query")
             return None
         elif stage.dlen >= 2000000 and stage.container in [
@@ -349,7 +472,7 @@ class Connector(object):
             # in the previous use_dask case the session needs to carry on
             # in order to the zarr client to keep working
             try:
-                if cache_timeout:
+                if localcache is not None:
                     localcache.lock(query)
                 transfer_format = (
                     "application/x-netcdf4"
@@ -366,25 +489,47 @@ class Connector(object):
                     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
                 )
                 if resp.status_code > 500:
-                    if cache_timeout:
+                    if localcache is not None:
                         localcache.unlock(query)
-                    if retry < 5:
-                        time.sleep(retry)
-                        return self._query(query, use_dask, cache_timeout, retry + 1)
-                    else:
-                        raise DatameshConnectError(
-                            "Datamesh server error: " + resp.text
-                        )
+                    # 502 and 503 mean different things here and deserve
+                    # different handling.
+                    #
+                    # 502 is the ingress reporting that the instance serving
+                    # this request died. A sibling is very likely healthy, the
+                    # query has to run somewhere, and the work was lost rather
+                    # than completed -- so one re-attempt is worth it. But
+                    # after a long jittered wait, not half a second: the pod
+                    # is still being replaced, and a fast retry during a
+                    # correlated failure is how a rolling restart becomes a
+                    # storm.
+                    #
+                    # 503/504 is never worth an automatic re-attempt. It means
+                    # no instance is available, a dependency is down, or the
+                    # request exceeded what one worker can process -- and in
+                    # that last case re-running it is precisely what took out
+                    # both query-engine replicas on 2026-09-22. We still wait
+                    # before raising, because that wait rate-limits whatever
+                    # retry loop is wrapping this call.
+                    raise self._gateway_failure(
+                        f"{self._gateway}/oceanql/", resp, retry
+                    )
                 if resp.status_code >= 400:
-                    try:
-                        msg = resp.json()["detail"]
-                    except:
-                        raise DatameshConnectError(
-                            "Datamesh server error: " + resp.text
-                        )
-                    if cache_timeout:
+                    if localcache is not None:
                         localcache.unlock(query)
-                    raise DatameshQueryError(msg)
+                    detail = None
+                    try:
+                        detail = resp.json()["detail"]
+                    except Exception:
+                        pass  # not a JSON error body (e.g. an ingress page)
+                    # 4xx only -- see the note in _stage_request. A 500 here is
+                    # the query-engine's InternalQueryError handler, not a
+                    # rejected query.
+                    if detail is not None and resp.status_code < 500:
+                        raise DatameshQueryError(detail)
+                    raise DatameshConnectError(
+                        "Datamesh server error: "
+                        + (resp.text if detail is None else detail)
+                    )
                 else:
                     with tempFile("wb") as f:
                         f.write(resp.content)
@@ -400,11 +545,18 @@ class Connector(object):
                         else:
                             ds = pandas.read_parquet(f.name)
                             ext = ".pq"
-                        if cache_timeout:
+                        if localcache is not None:
                             localcache.copy(query, f.name, ext)
                             localcache.unlock(query)
                     return ds
             finally:
+                # The download or the parse can raise between lock() and the
+                # copy below; without this the next query() for the same hash
+                # blocks on the lock for its full 60 s timeout. unlock() is a
+                # no-op when nothing is locked, so calling it here is safe even
+                # after the success path has already unlocked.
+                if localcache is not None:
+                    localcache.unlock(query)
                 session.close()
 
     def get_catalog(self, search=None, timefilter=None, geofilter=None, limit=None):
@@ -536,10 +688,19 @@ class Connector(object):
             Union[:obj:`pandas.DataFrame`, :obj:`geopandas.GeoDataFrame`, :obj:`xarray.Dataset`]: The datasource container
         """
         session = Session.acquire(self)
-        stage = self._stage_request(
-            Query(datasource=datasource_id, parameters=parameters), session=session
-        )
+        # As in _query_attempt: the dask/zarr branch below keeps the session
+        # alive, so there is no blanket finally and the early exits have to
+        # close it themselves.
+        try:
+            stage = self._stage_request(
+                Query(datasource=datasource_id, parameters=parameters),
+                session=session,
+            )
+        except BaseException:
+            session.close()
+            raise
         if stage is None:
+            session.close()
             warnings.warn("No data found for query")
             return None
         if stage.container == Container.Dataset or use_dask:
@@ -554,12 +715,18 @@ class Connector(object):
             return xarray.open_zarr(
                 mapper, consolidated=True, decode_coords="all", mask_and_scale=True
             )
-        elif stage.container == Container.GeoDataFrame:
-            tmpfile = self._data_request(datasource_id, "application/parquet")
-            return geopandas.read_parquet(tmpfile)
-        elif stage.container == Container.DataFrame:
-            tmpfile = self._data_request(datasource_id, "application/parquet")
-            return pandas.read_parquet(tmpfile)
+        # Only the zarr branch above needs the session to outlive this call; the
+        # /data/ GET does not use it at all, so these branches must close it or
+        # it survives until atexit and holds server-side state meanwhile.
+        try:
+            if stage.container == Container.GeoDataFrame:
+                tmpfile = self._data_request(datasource_id, "application/parquet")
+                return geopandas.read_parquet(tmpfile)
+            elif stage.container == Container.DataFrame:
+                tmpfile = self._data_request(datasource_id, "application/parquet")
+                return pandas.read_parquet(tmpfile)
+        finally:
+            session.close()
 
     @asyncwrapper
     def load_datasource_async(self, datasource_id, parameters={}, use_dask=False):

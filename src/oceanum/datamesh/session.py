@@ -164,37 +164,51 @@ class Session(BaseModel):
         backoff_delays = [1, 2, 4]  # seconds
 
         for attempt in range(max_attempts):
-            res = retried_request(
-                f"{self._connection._gateway}/session/{self.id}",
-                method="DELETE",
-                params={"finalise_write": finalise_write},
-                headers=self.header,
-                http_session=self._connection.http_session,
-            )
+            # retries=1: this loop is the retry policy for session close.
+            # retried_request would otherwise retry gateway 5xx internally
+            # (DELETE is idempotent) and, once exhausted, *raise* instead of
+            # returning the response -- which in __exit__ would mask the
+            # original error. Catch its failure and treat it as one attempt.
+            error_text = None
+            res = None
+            try:
+                res = retried_request(
+                    f"{self._connection._gateway}/session/{self.id}",
+                    method="DELETE",
+                    params={"finalise_write": finalise_write},
+                    headers=self.header,
+                    retries=1,
+                    http_session=self._connection.http_session,
+                )
+            except DatameshConnectError as e:
+                error_text = str(e)
 
-            if res.status_code == 204:
-                return
+            if res is not None:
+                if res.status_code == 204:
+                    return
 
-            # Treat 404/410 as success (session already closed)
-            if res.status_code in (404, 410):
-                return
+                # Treat 404/410 as success (session already closed)
+                if res.status_code in (404, 410):
+                    return
+
+                error_text = f"Status code: {res.status_code}. Response: {res.text}."
 
             # If this was the last attempt, handle the error
             if attempt == max_attempts - 1:
                 if finalise_write:
                     raise DatameshConnectError(
-                        "Failed to finalise write with error: " + res.text
+                        "Failed to finalise write with error: " + error_text
                     )
                 # Log warning instead of raising for finalise_write=False
                 # (we're in __exit__ and raising would mask the original error)
                 logger.warning(
                     f"Failed to close session {self.id} after {max_attempts} attempts. "
-                    f"Status code: {res.status_code}. Response: {res.text}. "
+                    f"{error_text} "
                     f"Session may block writes to its datasource until it expires."
                 )
                 return
 
-            # Not the last attempt and status != 204/404/410, so retry with backoff
+            # Not the last attempt and close did not succeed, so retry with backoff
             time.sleep(backoff_delays[attempt])
 
     def __enter__(self):
