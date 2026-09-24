@@ -310,9 +310,8 @@ in asynchronous workflows::
 Errors and Retries
 ~~~~~~~~~~~~~~~~~~
 
-Every error raised by the datamesh client inherits from
-:class:`~oceanum.datamesh.DatameshError`, so one ``except`` clause catches them
-all::
+Errors raised by datamesh *requests* inherit from
+:class:`~oceanum.datamesh.DatameshError`, so one ``except`` clause covers them::
 
     from oceanum.datamesh import Connector, DatameshError
 
@@ -321,8 +320,18 @@ all::
     except DatameshError as e:
         print(f"datamesh request failed: {e}")
 
-The subclasses tell you what to do next, which matters because they call for
-opposite responses:
+Two things this does **not** catch, both raised before any request is made:
+
+* :class:`ValueError` -- constructing a :class:`~oceanum.datamesh.Connector`
+  with no token, or an invalid ``session_duration``.
+* pydantic ``ValidationError`` -- a malformed query. ``query()`` builds a
+  :class:`~oceanum.datamesh.Query` from a dict, so an invalid field is rejected
+  locally rather than by the server.
+
+Catch those separately if you accept queries from outside your own code.
+
+What the exceptions mean
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 28 72
@@ -346,6 +355,17 @@ opposite responses:
 handlers keep working. Catch the more specific class first where the difference
 matters.
 
+.. note::
+
+   This full taxonomy applies to :meth:`~oceanum.datamesh.Connector.query` and
+   :meth:`~oceanum.datamesh.Connector.load_datasource`. Catalog and metadata
+   calls -- :meth:`~oceanum.datamesh.Connector.get_catalog`,
+   :meth:`~oceanum.datamesh.Connector.get_datasource` and the write-metadata
+   paths -- are coarser: every response status of 400 or above raises a plain
+   ``DatameshConnectError``, with ``retry_after`` unset. A
+   ``DatameshUnavailableError`` handler will not fire for those, so catch
+   ``DatameshConnectError`` if you need to cover them.
+
 The client already retries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -357,9 +377,11 @@ internally, with bounded attempts and jittered backoff, and it deliberately does
 * A request that may already have been delivered is **not** re-sent unless the
   method is idempotent. Re-running an expensive query that just exhausted a
   worker's memory would simply exhaust the next one.
-* A gateway failure waits 15--30 seconds before raising. That wait is
-  deliberate: if the service is struggling, every client retrying in the same
-  second is what keeps it down.
+* On the query path, a gateway failure waits 15--30 seconds before raising.
+  That wait is deliberate: if the service is struggling, every client retrying
+  in the same second is what keeps it down. Catalog and metadata calls are not
+  paced this way -- they back off between attempts (up to 15 s) and then raise
+  immediately, so a loop of your own around those can run hot.
 * A rejected TLS certificate, and a query the server rejected, are terminal --
   no attempt is repeated.
 
@@ -374,12 +396,13 @@ your own::
     except DatameshQueryError:
         raise                                   # the query is wrong; fix it
     except DatameshUnavailableError as e:
-        time.sleep(e.retry_after)               # seconds; typically ~300
+        time.sleep(e.retry_after or 300)        # may be None on other paths
         ds = datamesh.query(query)
 
 ``retry_after`` is present on every datamesh exception, defaulting to ``None``.
-``None`` means the client has no opinion -- it does **not** mean "retry now".
-``DatameshUnavailableError`` also carries ``status_code``.
+``None`` means the client has no opinion -- it does **not** mean "retry now", so
+guard the sleep as above. ``DatameshUnavailableError`` also carries
+``status_code``.
 
 One case deserves care: if a request exceeded what a single worker can process,
 it is reported as unavailable and **will fail again however long you wait**. The
@@ -415,9 +438,14 @@ variable. Setting one to ``"None"`` disables it.
    * - ``DATAMESH_DOWNLOAD_TIMEOUT``
      - 900
      - Downloading a query result
+   * - ``DATAMESH_CHUNK_BUDGET``
+     - 900
+     - The platform's own budget for generating one zarr chunk. Not a timeout
+       itself -- it is the anchor the chunk read timeout is derived from.
    * - ``DATAMESH_CHUNK_READ_TIMEOUT``
      - 1020
-     - One zarr chunk (``DATAMESH_CHUNK_BUDGET`` + 120)
+     - One zarr chunk. Defaults to ``DATAMESH_CHUNK_BUDGET`` + 120, so setting
+       the budget to ``"None"`` disables this timeout too.
    * - ``DATAMESH_CHUNK_WRITE_TIMEOUT``
      - 600
      - Writing one zarr chunk
@@ -426,9 +454,11 @@ variable. Setting one to ``"None"`` disables it.
      - Datasource writes
 
 A chunk read can legitimately block for the whole server-side generation of that
-chunk, which is why its timeout is derived from ``DATAMESH_CHUNK_BUDGET`` (900)
-rather than picked independently. Lowering it below the budget causes the client
-to give up on work the platform is still doing, and to ask for it again.
+chunk, which is why its timeout is derived from the chunk budget rather than
+picked independently. Lowering it below the budget makes the client give up on
+work the platform is still doing: the read is abandoned with a
+``DatameshConnectError`` on the first timeout, because a read timeout is not
+retried.
 
 Tuning the retry behaviour
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -449,7 +479,8 @@ Tuning the retry behaviour
      - Base wait before re-attempting or raising on a gateway failure; jittered.
    * - ``DATAMESH_GATEWAY_RETRY_MIN``
      - 5
-     - Floor applied to a server-supplied ``Retry-After``.
+     - Floor applied to a server-supplied ``Retry-After``. A server value is
+       also capped at 120 s, so a longer one is reported and honoured as 120.
    * - ``DATAMESH_UNAVAILABLE_RETRY_AFTER``
      - 300
      - ``retry_after`` reported when the server gives no guidance.
