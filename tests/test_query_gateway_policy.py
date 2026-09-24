@@ -309,3 +309,46 @@ def test_query_session_is_closed_before_the_reattempt_wait(conn, no_session):
     assert order == ["close", "sleep", "close", "sleep"], (
         f"a wait was taken while a session was open: {order}"
     )
+
+
+def test_use_dask_with_caching_on_a_dataframe_does_not_crash(conn, no_session):
+    """Regression: localcache was created under `cache_timeout and not use_dask`
+    but locked under `cache_timeout` alone, so use_dask=True with a non-Dataset
+    container reached localcache.lock() with the name unbound.
+
+    Reachable without passing use_dask=True at all, because any query over
+    DASK_QUERY_SIZE sets it further down.
+    """
+    from oceanum.datamesh.query import Container
+
+    stage = _stage()
+    stage.container = Container.DataFrame
+    with patch.object(conn, "_stage_request", return_value=stage), \
+         patch.object(conn, "_retried_request", return_value=_response(200)), \
+         patch("oceanum.datamesh.connection.LocalCache") as LC:
+        # Fails with NameError before the fix; the parquet read is what raises
+        # now, which is fine -- the point is that the cache guard is reached.
+        try:
+            conn._query(QUERY, use_dask=True, cache_timeout=600)
+        except NameError:
+            raise AssertionError("localcache guard is still unbound")
+        except Exception:
+            pass
+        # Caching is on, so the cache object must have been built and locked.
+        assert LC.called, "LocalCache was never constructed despite cache_timeout"
+        assert LC.return_value.lock.called, "the cache entry was never locked"
+
+
+def test_no_caching_means_no_cache_object(conn, no_session):
+    from oceanum.datamesh.query import Container
+
+    stage = _stage()
+    stage.container = Container.DataFrame
+    with patch.object(conn, "_stage_request", return_value=stage), \
+         patch.object(conn, "_retried_request", return_value=_response(200)), \
+         patch("oceanum.datamesh.connection.LocalCache") as LC:
+        try:
+            conn._query(QUERY, cache_timeout=0)
+        except Exception:
+            pass
+        assert not LC.called

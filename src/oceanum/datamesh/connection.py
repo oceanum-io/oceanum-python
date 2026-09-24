@@ -410,8 +410,17 @@ class Connector(object):
     def _query_attempt(self, query, use_dask=False, cache_timeout=0, retry=0):
         if not isinstance(query, Query):
             query = Query(**query)
-        if cache_timeout and not use_dask:
-            localcache = LocalCache(cache_timeout)
+        # Created whenever caching is on, but only *consulted* here when the
+        # caller is not asking for a lazy result -- there is nothing useful to
+        # serve a dask-backed query from the local cache.
+        #
+        # These used to be the same condition, while the lock/copy calls below
+        # tested `cache_timeout` alone. use_dask is also set True further down
+        # for any query over DASK_QUERY_SIZE, so a large DataFrame query with
+        # caching on reached localcache.lock() with localcache undefined and
+        # raised NameError.
+        localcache = LocalCache(cache_timeout) if cache_timeout else None
+        if localcache is not None and not use_dask:
             cached = localcache.get(query)
             if cached is not None:
                 return cached
@@ -452,7 +461,7 @@ class Connector(object):
             # in the previous use_dask case the session needs to carry on
             # in order to the zarr client to keep working
             try:
-                if cache_timeout:
+                if localcache is not None:
                     localcache.lock(query)
                 transfer_format = (
                     "application/x-netcdf4"
@@ -469,7 +478,7 @@ class Connector(object):
                     timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
                 )
                 if resp.status_code > 500:
-                    if cache_timeout:
+                    if localcache is not None:
                         localcache.unlock(query)
                     # 502 and 503 mean different things here and deserve
                     # different handling.
@@ -494,7 +503,7 @@ class Connector(object):
                         f"{self._gateway}/oceanql/", resp, retry
                     )
                 if resp.status_code >= 400:
-                    if cache_timeout:
+                    if localcache is not None:
                         localcache.unlock(query)
                     detail = None
                     try:
@@ -521,7 +530,7 @@ class Connector(object):
                         else:
                             ds = pandas.read_parquet(f.name)
                             ext = ".pq"
-                        if cache_timeout:
+                        if localcache is not None:
                             localcache.copy(query, f.name, ext)
                             localcache.unlock(query)
                     return ds
