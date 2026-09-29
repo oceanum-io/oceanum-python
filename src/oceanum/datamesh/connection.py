@@ -72,6 +72,59 @@ def tempFile(mode="wb"):
             os.unlink(file.name)
 
 
+# Fields describing how a datasource's data is stored, not what it is. They
+# belong to the old data and must not survive an overwrite with new data.
+_STORAGE_FIELDS = {"driver", "driver_args", "dataschema"}
+_NOT_CARRIED = _STORAGE_FIELDS | {"id", "created", "modified", "coordinates"}
+
+
+def _carried_metadata(ds):
+    """The metadata of an existing datasource to keep across an overwrite,
+    as live attribute values keyed by field name."""
+    carried = {}
+    for field in type(ds).model_fields:
+        if field in _NOT_CARRIED:
+            continue
+        value = getattr(ds, field, None)
+        if value is not None:
+            carried[field] = value
+    carried["_coordinates"] = dict(ds.coordinates or {})
+    return carried
+
+
+def _data_names(data):
+    if isinstance(data, xarray.Dataset):
+        return set(map(str, data.variables))
+    names = set(map(str, data.columns))
+    names.update(str(n) for n in (data.index.names or []) if n is not None)
+    return names
+
+
+def _apply_carried_metadata(ds, carried, data, properties, name, geom):
+    """Apply carried metadata to the freshly written datasource.
+
+    Anything the caller passed explicitly wins. The old coordinate mapping is
+    kept only if every name it uses still exists in the new data; otherwise it
+    is left for the property sniffing to work out from the new data.
+    """
+    if not carried:
+        return
+    explicit = set(properties) | {"coordinates"}
+    if name:
+        explicit.add("name")
+    if geom:
+        explicit.add("geom")
+    for key, value in carried.items():
+        if key.startswith("_") or key in explicit:
+            continue
+        setattr(ds, key, value)
+    coordinates = carried.get("_coordinates") or {}
+    if coordinates and "coordinates" not in properties and (
+        set(map(str, coordinates.values())) <= _data_names(data)
+    ):
+        ds.coordinates = coordinates
+
+
 class Connector(object):
     """Datamesh connector class.
 
@@ -685,16 +738,22 @@ class Connector(object):
                 overwrite = True
                 ds = _ds
 
+        carried = {}
         if ds._exists and overwrite:
             try:
                 self._delete(datasource_id)
-                # This allows to carry over all metadata properties
-                # while wipping the existing stored data cleanly
-                ds._exists = False
-                ds = Datasource(**ds.model_dump(by_alias=True))
-                self._metadata_write(ds)
             except Exception as e:
                 raise DatameshWriteError(f"Cannot delete existing datasource")
+            # Carry the descriptive metadata over to the new data, but not how
+            # the old data was stored. The record is NOT re-registered before
+            # the write: re-registering it kept the old driver and args, so an
+            # onsql datasource overwritten with an xarray Dataset sent a zarr
+            # write to an onsql record, the write was refused, and the
+            # datasource was left as an onsql record with no table (#152).
+            # Written like a new datasource, the data gets the storage its own
+            # type needs; the carried metadata is applied afterwards.
+            carried = _carried_metadata(ds)
+            ds = _ds
 
         # Write data to datasource
         if data is not None:
@@ -741,7 +800,13 @@ class Connector(object):
                     )
                 ds._exists = True
             except Exception as e:
+                if carried:
+                    raise DatameshWriteError(
+                        f"{e} -- the existing datasource '{datasource_id}' was "
+                        f"deleted before this write, so it no longer exists"
+                    )
                 raise DatameshWriteError(e)
+            _apply_carried_metadata(ds, carried, data, properties, name, geom)
         elif overwrite:
             ds = _ds
 
