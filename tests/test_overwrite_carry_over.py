@@ -79,7 +79,9 @@ class FakeServer:
             self.calls.append(("zarr_write", ds_id))
             if error:
                 raise error
-            return self._stored(ds_id, "vzarr", {"urlpath": f"s3://bucket/{ds_id}"})
+            ds = self._stored(ds_id, "vzarr", {"urlpath": f"s3://bucket/{ds_id}"})
+            ds._detail = True  # zarr_write returns get_datasource(), a detailed record
+            return ds
         return zarr_write
 
     def kinds(self):
@@ -151,6 +153,8 @@ def test_a_dataset_over_an_onsql_datasource_is_written_as_a_new_zarr_datasource(
     # 'date_time' does not exist in the new data, so the mapping is re-derived.
     assert final.coordinates.get("t") == "time"
     assert ds is final
+    # The detailed view of the written record survives the rebuild.
+    assert ds._detail and ds.variables is not None
 
 
 def test_explicit_properties_win_over_carried_ones(monkeypatch):

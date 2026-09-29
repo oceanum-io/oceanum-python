@@ -149,6 +149,7 @@ def _with_carried_metadata(ds, carried, data, properties, name, geom):
         fields["coordinates"] = coordinates
     rebuilt = Datasource(**fields)
     rebuilt._exists = ds._exists
+    rebuilt._detail = ds._detail
     return rebuilt
 
 
