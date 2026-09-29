@@ -72,6 +72,87 @@ def tempFile(mode="wb"):
             os.unlink(file.name)
 
 
+# How a datasource's data is stored, and the extent of that data: both belong
+# to the old data and are not carried when an overwrite changes the kind of
+# data (see _same_storage_kind).
+_NOT_CARRIED = {
+    "driver", "driver_args", "dataschema",       # storage
+    "geom", "tstart", "tend",                     # extent of the old data
+    "id", "created", "modified", "coordinates",   # identity / handled apart
+}
+_ZARR_DRIVERS = ("vzarr", "onzarr")
+_TABLE_DRIVERS = ("onsql",)
+
+
+def _same_storage_kind(ds, data):
+    """Whether ``data`` can be written into the existing datasource's storage.
+
+    A Dataset goes to zarr (vzarr/onzarr), a DataFrame to a table (onsql).
+    When the kinds match, an overwrite keeps the existing record -- its
+    backend, database and arguments -- as it always has. When they differ,
+    the old storage cannot take the new data at all.
+    """
+    if isinstance(data, xarray.Dataset):
+        return ds.driver in _ZARR_DRIVERS
+    if isinstance(data, (pandas.DataFrame, dask.dataframe.DataFrame)):
+        return ds.driver in _TABLE_DRIVERS
+    return False
+
+
+def _carried_metadata(ds):
+    """The descriptive metadata of an existing datasource to keep when it is
+    overwritten with data of another kind, keyed by field name."""
+    carried = {}
+    for field in type(ds).model_fields:
+        if field in _NOT_CARRIED:
+            continue
+        value = getattr(ds, field, None)
+        if value is not None:
+            carried[field] = value
+    carried["_coordinates"] = dict(ds.coordinates or {})
+    return carried
+
+
+def _data_names(data):
+    if isinstance(data, xarray.Dataset):
+        return set(map(str, data.variables))
+    names = set(map(str, data.columns))
+    names.update(str(n) for n in (data.index.names or []) if n is not None)
+    return names
+
+
+def _with_carried_metadata(ds, carried, data, properties, name, geom):
+    """The freshly written datasource with the carried metadata applied.
+
+    Rebuilt through the constructor rather than by assignment, because some
+    carried fields (``expires``) are frozen. Anything the caller passed
+    explicitly wins; the old coordinate mapping is kept only if every name it
+    uses still exists in the new data, otherwise it is left for the property
+    sniffing to derive from the new data.
+    """
+    if not carried:
+        return ds
+    explicit = set(properties)
+    if name:
+        explicit.add("name")
+    if geom:
+        explicit.add("geom")
+    fields = ds.model_dump(by_alias=True)
+    for key, value in carried.items():
+        if key.startswith("_") or key in explicit:
+            continue
+        fields[key] = value
+    coordinates = carried.get("_coordinates") or {}
+    if coordinates and "coordinates" not in properties and (
+        set(map(str, coordinates.values())) <= _data_names(data)
+    ):
+        fields["coordinates"] = coordinates
+    rebuilt = Datasource(**fields)
+    rebuilt._exists = ds._exists
+    rebuilt._detail = ds._detail
+    return rebuilt
+
+
 class Connector(object):
     """Datamesh connector class.
 
@@ -685,16 +766,30 @@ class Connector(object):
                 overwrite = True
                 ds = _ds
 
+        carried = {}
         if ds._exists and overwrite:
+            same_kind = data is None or _same_storage_kind(ds, data)
+            if not same_kind:
+                carried = _carried_metadata(ds)
             try:
                 self._delete(datasource_id)
-                # This allows to carry over all metadata properties
-                # while wipping the existing stored data cleanly
-                ds._exists = False
-                ds = Datasource(**ds.model_dump(by_alias=True))
-                self._metadata_write(ds)
+                if same_kind:
+                    # This allows to carry over all metadata properties
+                    # while wipping the existing stored data cleanly
+                    ds._exists = False
+                    ds = Datasource(**ds.model_dump(by_alias=True))
+                    self._metadata_write(ds)
             except Exception as e:
                 raise DatameshWriteError(f"Cannot delete existing datasource")
+            if not same_kind:
+                # The new data is of another kind than the old storage can
+                # hold (a Dataset over an onsql table, a DataFrame over zarr).
+                # Re-registering the old record here kept its driver and args,
+                # so the write went to storage that cannot take it, failed, and
+                # left the datasource as a record with nothing behind it (#152).
+                # Write it as a new datasource instead, so it gets the storage
+                # its kind needs, and apply the descriptive metadata after.
+                ds = _ds
 
         # Write data to datasource
         if data is not None:
@@ -741,7 +836,13 @@ class Connector(object):
                     )
                 ds._exists = True
             except Exception as e:
+                if carried:
+                    raise DatameshWriteError(
+                        f"{e} -- the existing datasource '{datasource_id}' was "
+                        f"deleted before this write, so it no longer exists"
+                    )
                 raise DatameshWriteError(e)
+            ds = _with_carried_metadata(ds, carried, data, properties, name, geom)
         elif overwrite:
             ds = _ds
 
