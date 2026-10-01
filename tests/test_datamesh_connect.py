@@ -20,8 +20,14 @@ def conn():
     return Connector(os.environ["DATAMESH_TOKEN"])
 
 
+# These tests run against prod. Without a limit they list everything the
+# token can see: 100-170 s per query with a broad token, enough to take the
+# metadata server down (2026-10-01). A few rows exercise the same code path.
+CATALOG_LIMIT = 5
+
+
 def test_catalog(conn):
-    cat = conn.get_catalog()
+    cat = conn.get_catalog(limit=CATALOG_LIMIT)
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)
@@ -30,7 +36,7 @@ def test_catalog(conn):
 
 @pytest.mark.asyncio
 async def test_catalog_async(conn):
-    cat = await conn.get_catalog_async()
+    cat = await conn.get_catalog_async(limit=CATALOG_LIMIT)
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)
