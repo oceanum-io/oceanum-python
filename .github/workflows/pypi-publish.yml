@@ -4,19 +4,47 @@ on:
   release:
     types: [published]
 
-# Same group as build-and-test.yml: this workflow runs the same production
-# write tests, and publishing a release fires both workflows at once. See the
-# comment there for why the group is a constant and why nothing is cancelled.
-concurrency:
-  group: datamesh-prod-write-tests
-  cancel-in-progress: false
+# Tests run on every branch push (build-and-test.yml), including the merge to
+# main. A release does not run them again: it checks that "Build and test"
+# passed on the exact tagged commit and uploads only then.
+#
+# Re-running the production write tests here used to put this workflow in the
+# same concurrency group as build-and-test.yml. A group holds one running and
+# one pending run, and a newer pending run cancels the older one, so the tag
+# push that comes with every release cancelled this upload (v1.2.0). Without
+# tests this workflow touches nothing shared and needs no group.
 
 jobs:
+  check-ci:
+    name: Check CI passed on the tagged commit
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+    -
+      name: Check Build and test on ${{ github.sha }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        runs=$(gh api "repos/${{ github.repository }}/actions/workflows/build-and-test.yml/runs?head_sha=${{ github.sha }}&per_page=100" --jq '.workflow_runs')
+        jq -r '.[] | "\(.html_url) \(.status) \(.conclusion)"' <<< "$runs"
+        if [ "$(jq '[.[] | select(.conclusion == "success")] | length' <<< "$runs")" -gt 0 ]; then
+          echo "Build and test passed on ${{ github.sha }}."
+        elif [ "$(jq '[.[] | select(.status != "completed")] | length' <<< "$runs")" -gt 0 ]; then
+          echo "::error::Build and test is still running on ${{ github.sha }}. Re-run this workflow once it has passed."
+          exit 1
+        elif [ "$(jq 'length' <<< "$runs")" -eq 0 ]; then
+          echo "::error::Build and test never ran on ${{ github.sha }}. Release a commit that has been pushed to a branch, such as the merge commit on main."
+          exit 1
+        else
+          echo "::error::Build and test did not pass on ${{ github.sha }} (failed or cancelled). Re-run it, or fix it, then re-run this workflow."
+          exit 1
+        fi
+
   pypi-publish:
     name: Upload release to PyPI
+    needs: check-ci
     runs-on: ubuntu-latest
-    env:
-      OCEANUM_TEST_DATAMESH_TOKEN: ${{ secrets.DATAMESH_TOKEN }}
     environment:
       name: pypi
       url: https://pypi.org/p/oceanum
@@ -32,13 +60,10 @@ jobs:
       with:
         python-version: '3.10'
     -
-      name: Install dependencies
+      name: Install build
       run: |
         python -m pip install --upgrade pip
-        pip install . --group dev
-    -
-      name: Test
-      run: pytest -s -v tests
+        pip install build
     -
       name: Build package
       run: |

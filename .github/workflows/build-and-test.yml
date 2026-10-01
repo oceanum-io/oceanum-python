@@ -2,6 +2,9 @@ name: Build and test the library
 
 on:
   push:
+    # Branches only. A tag ships nothing; the release that follows checks the
+    # result of this workflow on the tagged commit (see pypi-publish.yml).
+    branches: ['**']
 
 # The write tests in tests/test_datamesh_write.py create, read back and delete
 # datasources with fixed ids (test-write-metadata, test-write-dataset-region-
@@ -11,10 +14,14 @@ on:
 # already exists"), or deletes one the other is midway through reading (HTTP
 # 410 "deleted within your session").
 #
-# The group is a constant, deliberately: it must serialize across branches and
-# across workflows, because the contended resource is the production tenant and
-# not the ref. pypi-publish.yml runs the same tests and uses the same group - a
-# release publish fires both workflows at once, which is how two runs collided.
+# The group is a constant, deliberately: it must serialize across branches,
+# because the contended resource is the production tenant and not the ref.
+# Only this workflow runs these tests; pypi-publish.yml checks their result
+# instead of re-running them.
+#
+# A group holds one running and one pending run: a newer pending run cancels
+# the older one. A commit whose run was cancelled that way has no result until
+# its run is re-run, and a release of it is refused until then.
 #
 # cancel-in-progress is false because cancelling a run partway through leaves
 # exactly the orphaned datasources this is trying to avoid. Queue, do not kill.
