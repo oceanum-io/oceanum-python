@@ -446,18 +446,21 @@ class Connector(object):
         return cat
 
     @asyncwrapper
-    def get_catalog_async(self, search=None, timefilter=None, geofilter=None):
+    def get_catalog_async(
+        self, search=None, timefilter=None, geofilter=None, limit=None
+    ):
         """Get datamesh catalog asynchronously
 
         Args:
             search (string, optional): Search string for filtering datasources
             timefilter (Union[:obj:`oceanum.datamesh.query.TimeFilter`, list], Optional): Time filter as valid Query TimeFilter or list of [start,end]
             geofilter (Union[:obj:`oceanum.datamesh.query.GeoFilter`, dict, shapely.geometry], Optional): Spatial filter as valid Query Geofilter or geojson geometry as dict or shapely Geometry
+            limit (int, optional): Limit the number of datasources returned. Defaults to None.
 
         Returns:
             Coroutine<:obj:`oceanum.datamesh.Catalog`>: A datamesh catalog instance
         """
-        return self.get_catalog(search, timefilter, geofilter)
+        return self.get_catalog(search, timefilter, geofilter, limit)
 
     def _get_datasource_metadata(self, datasource_id):
         """Get the metadata dictionary for a given datasource id from the datamesh.

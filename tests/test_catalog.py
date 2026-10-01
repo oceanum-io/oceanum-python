@@ -20,6 +20,14 @@ from oceanum import cli
 HERE = Path(__file__).parent
 
 
+pytestmark = pytest.mark.requires_datamesh_token
+
+# These tests run against prod. Without a limit they list everything the
+# token can see: 100-170 s per query with a broad token, enough to take the
+# metadata server down (2026-10-01). A few rows exercise the same code path.
+CATALOG_LIMIT = 5
+
+
 @pytest.fixture
 def conn():
     """Connection fixture"""
@@ -81,7 +89,7 @@ def test_catalog_ignore_broken(conn, dataset):
 
 
 def test_catalog_search(conn):
-    cat = conn.get_catalog(search="wave")
+    cat = conn.get_catalog(search="wave", limit=CATALOG_LIMIT)
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)
@@ -89,7 +97,9 @@ def test_catalog_search(conn):
 
 
 def test_catalog_timefilter(conn):
-    cat = conn.get_catalog(timefilter=TimeFilter(times=["2010-01-01", "2020-01-01"]))
+    cat = conn.get_catalog(
+        timefilter=TimeFilter(times=["2010-01-01", "2020-01-01"]), limit=CATALOG_LIMIT
+    )
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)
@@ -97,7 +107,7 @@ def test_catalog_timefilter(conn):
 
 
 def test_catalog_timefilter_none(conn):
-    cat = conn.get_catalog(timefilter=["2010-01-01", None])
+    cat = conn.get_catalog(timefilter=["2010-01-01", None], limit=CATALOG_LIMIT)
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)
@@ -106,7 +116,7 @@ def test_catalog_timefilter_none(conn):
 
 def test_catalog_geofilter_shapely(conn):
     bbox = shapely.geometry.box(0, 0, 10, 10)
-    cat = conn.get_catalog(geofilter=bbox)
+    cat = conn.get_catalog(geofilter=bbox, limit=CATALOG_LIMIT)
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)
@@ -115,7 +125,7 @@ def test_catalog_geofilter_shapely(conn):
 
 def test_catalog_geofilter_bbox(conn):
     geofilter = GeoFilter(type="bbox", geom=[0, 0, 10, 10])
-    cat = conn.get_catalog(geofilter=geofilter)
+    cat = conn.get_catalog(geofilter=geofilter, limit=CATALOG_LIMIT)
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)
@@ -133,7 +143,7 @@ def test_catalog_geofilter_feature(conn):
             },
         },
     )
-    cat = conn.get_catalog(geofilter=geofilter)
+    cat = conn.get_catalog(geofilter=geofilter, limit=CATALOG_LIMIT)
     ds0 = cat.ids[0]
     assert ds0 in str(cat)
     assert isinstance(cat[ds0], Datasource)

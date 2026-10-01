@@ -16,6 +16,9 @@ from oceanum.datamesh.cache import LocalCache
 from oceanum import cli
 
 
+pytestmark = pytest.mark.requires_datamesh_token
+
+
 @pytest.fixture
 def conn():
     """Connection fixture"""

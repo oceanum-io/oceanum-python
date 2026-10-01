@@ -23,7 +23,7 @@ def dataframe():
 
 
 def test_get_catalog(conn):
-    cat = conn.get_catalog()
+    cat = conn.get_catalog(limit=1)  # one row; unlimited lists the whole catalog
     for datasrc in cat:
         datasrc.model_dump_json()
         break
