@@ -19,7 +19,7 @@ jobs:
   check-ci:
     name: Check CI passed on the tagged commit
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 65
     permissions:
       actions: read
     steps:
@@ -28,16 +28,19 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         REPO: ${{ github.repository }}
-        TAG: ${{ github.ref_name }}
-        FALLBACK_SHA: ${{ github.sha }}
-        # The suite takes 8-10 min and may queue behind another run first
-        WAIT_SECONDS: 2400
+        # The tagged commit; the upload job checks out and builds this same sha
+        SHA: ${{ github.sha }}
+        # The suite takes 8-10 min and may queue behind several other runs
+        WAIT_SECONDS: 3600
         # A release made right after a push can arrive before its run exists
         NO_RUN_GRACE_SECONDS: 120
         POLL_SECONDS: 30
       run: |
-        # Peel the tag to its commit; the runs API matches full commit shas only
-        SHA=$(gh api "repos/$REPO/commits/$TAG" --jq .sha) || SHA=$FALLBACK_SHA
+        # The runs API matches full commit shas only, and drops an empty filter
+        if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "::error::Not a full commit sha: '$SHA'."
+          exit 1
+        fi
         RUNS_URL="repos/$REPO/actions/workflows/build-and-test.yml/runs?head_sha=$SHA&per_page=100"
         start=$(date +%s)
         first_read=""
