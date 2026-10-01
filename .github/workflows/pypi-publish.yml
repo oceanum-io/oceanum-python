@@ -4,19 +4,87 @@ on:
   release:
     types: [published]
 
-# Same group as build-and-test.yml: this workflow runs the same production
-# write tests, and publishing a release fires both workflows at once. See the
-# comment there for why the group is a constant and why nothing is cancelled.
-concurrency:
-  group: datamesh-prod-write-tests
-  cancel-in-progress: false
+# Tests run on every branch push (build-and-test.yml), including the merge to
+# main. A release does not run them again: it waits for "Build and test" on
+# the exact tagged commit and uploads only if it passed.
+#
+# Re-running the production write tests here used to put this workflow in the
+# same concurrency group as build-and-test.yml. By default a group holds one
+# running and one pending run, and a newer pending run cancels the older one,
+# so the tag push that comes with every release cancelled this upload
+# (v1.2.0). Without tests this workflow touches nothing shared and needs no
+# group.
 
 jobs:
+  check-ci:
+    name: Check CI passed on the tagged commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    permissions:
+      actions: read
+    steps:
+    -
+      name: Wait for Build and test on ${{ github.sha }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        # The tagged commit; the upload job checks out and builds this same sha
+        SHA: ${{ github.sha }}
+        # The suite takes 8-10 min and may queue behind several other runs
+        WAIT_SECONDS: 3600
+        # A release made right after a push can arrive before its run exists
+        NO_RUN_GRACE_SECONDS: 120
+        POLL_SECONDS: 30
+      run: |
+        # The runs API matches full commit shas only, and drops an empty filter
+        if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "::error::Not a full commit sha: '$SHA'."
+          exit 1
+        fi
+        RUNS_URL="repos/$REPO/actions/workflows/build-and-test.yml/runs?head_sha=$SHA&per_page=100"
+        start=$(date +%s)
+        first_read=""
+        while :; do
+          elapsed=$(( $(date +%s) - start ))
+          if ! runs=$(gh api "$RUNS_URL" --jq '.workflow_runs'); then
+            if [ "$elapsed" -ge "$WAIT_SECONDS" ]; then
+              echo "::error::Could not read the Build and test runs for $SHA. Re-run this workflow."
+              exit 1
+            fi
+            echo "GitHub API call failed; retrying."
+            sleep "$POLL_SECONDS"
+            continue
+          fi
+          # The no-run grace counts from the first successful read, not API errors
+          first_read=${first_read:-$(date +%s)}
+          if [ "$(jq '[.[] | select(.conclusion == "success")] | length' <<< "$runs")" -gt 0 ]; then
+            jq -r '.[] | "\(.html_url) \(.status) \(.conclusion)"' <<< "$runs"
+            echo "Build and test passed on $SHA."
+            exit 0
+          elif [ "$(jq '[.[] | select(.status != "completed")] | length' <<< "$runs")" -gt 0 ]; then
+            if [ "$elapsed" -ge "$WAIT_SECONDS" ]; then
+              echo "::error::Build and test is still running on $SHA after $((WAIT_SECONDS / 60)) min. Re-run this workflow once it has passed."
+              exit 1
+            fi
+            echo "Build and test still running on $SHA; waiting (${elapsed}s so far)."
+          elif [ "$(jq 'length' <<< "$runs")" -eq 0 ]; then
+            if [ $(( $(date +%s) - first_read )) -ge "$NO_RUN_GRACE_SECONDS" ]; then
+              echo "::error::Build and test never ran on $SHA. Release a commit that has been pushed to a branch, such as the merge commit on main."
+              exit 1
+            fi
+            echo "No Build and test run on $SHA yet; waiting (${elapsed}s so far)."
+          else
+            jq -r '.[] | "\(.html_url) \(.status) \(.conclusion)"' <<< "$runs"
+            echo "::error::Build and test did not pass on $SHA ($(jq -r '[.[].conclusion] | unique | join(", ")' <<< "$runs")). Re-run it, or fix it, then re-run this workflow."
+            exit 1
+          fi
+          sleep "$POLL_SECONDS"
+        done
+
   pypi-publish:
     name: Upload release to PyPI
+    needs: check-ci
     runs-on: ubuntu-latest
-    env:
-      OCEANUM_TEST_DATAMESH_TOKEN: ${{ secrets.DATAMESH_TOKEN }}
     environment:
       name: pypi
       url: https://pypi.org/p/oceanum
@@ -32,13 +100,10 @@ jobs:
       with:
         python-version: '3.10'
     -
-      name: Install dependencies
+      name: Install build
       run: |
         python -m pip install --upgrade pip
-        pip install . --group dev
-    -
-      name: Test
-      run: pytest -s -v tests
+        pip install build
     -
       name: Build package
       run: |
