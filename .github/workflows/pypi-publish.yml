@@ -5,8 +5,8 @@ on:
     types: [published]
 
 # Tests run on every branch push (build-and-test.yml), including the merge to
-# main. A release does not run them again: it checks that "Build and test"
-# passed on the exact tagged commit and uploads only then.
+# main. A release does not run them again: it waits for "Build and test" on
+# the exact tagged commit and uploads only if it passed.
 #
 # Re-running the production write tests here used to put this workflow in the
 # same concurrency group as build-and-test.yml. A group holds one running and
@@ -18,28 +18,57 @@ jobs:
   check-ci:
     name: Check CI passed on the tagged commit
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       actions: read
     steps:
     -
-      name: Check Build and test on ${{ github.sha }}
+      name: Wait for Build and test on ${{ github.sha }}
       env:
         GH_TOKEN: ${{ github.token }}
+        RUNS_URL: repos/${{ github.repository }}/actions/workflows/build-and-test.yml/runs?head_sha=${{ github.sha }}&per_page=100
+        SHA: ${{ github.sha }}
+        # The suite takes 8-10 min and may queue behind another run first
+        WAIT_SECONDS: 2400
+        # A release made right after a push can arrive before its run exists
+        NO_RUN_GRACE_SECONDS: 120
+        POLL_SECONDS: 30
       run: |
-        runs=$(gh api "repos/${{ github.repository }}/actions/workflows/build-and-test.yml/runs?head_sha=${{ github.sha }}&per_page=100" --jq '.workflow_runs')
-        jq -r '.[] | "\(.html_url) \(.status) \(.conclusion)"' <<< "$runs"
-        if [ "$(jq '[.[] | select(.conclusion == "success")] | length' <<< "$runs")" -gt 0 ]; then
-          echo "Build and test passed on ${{ github.sha }}."
-        elif [ "$(jq '[.[] | select(.status != "completed")] | length' <<< "$runs")" -gt 0 ]; then
-          echo "::error::Build and test is still running on ${{ github.sha }}. Re-run this workflow once it has passed."
-          exit 1
-        elif [ "$(jq 'length' <<< "$runs")" -eq 0 ]; then
-          echo "::error::Build and test never ran on ${{ github.sha }}. Release a commit that has been pushed to a branch, such as the merge commit on main."
-          exit 1
-        else
-          echo "::error::Build and test did not pass on ${{ github.sha }} (failed or cancelled). Re-run it, or fix it, then re-run this workflow."
-          exit 1
-        fi
+        start=$(date +%s)
+        while :; do
+          elapsed=$(( $(date +%s) - start ))
+          if ! runs=$(gh api "$RUNS_URL" --jq '.workflow_runs'); then
+            if [ "$elapsed" -ge "$WAIT_SECONDS" ]; then
+              echo "::error::Could not read the Build and test runs for $SHA. Re-run this workflow."
+              exit 1
+            fi
+            echo "GitHub API call failed; retrying."
+            sleep "$POLL_SECONDS"
+            continue
+          fi
+          if [ "$(jq '[.[] | select(.conclusion == "success")] | length' <<< "$runs")" -gt 0 ]; then
+            jq -r '.[] | "\(.html_url) \(.status) \(.conclusion)"' <<< "$runs"
+            echo "Build and test passed on $SHA."
+            exit 0
+          elif [ "$(jq '[.[] | select(.status != "completed")] | length' <<< "$runs")" -gt 0 ]; then
+            if [ "$elapsed" -ge "$WAIT_SECONDS" ]; then
+              echo "::error::Build and test is still running on $SHA after $((WAIT_SECONDS / 60)) min. Re-run this workflow once it has passed."
+              exit 1
+            fi
+            echo "Build and test still running on $SHA; waiting (${elapsed}s so far)."
+          elif [ "$(jq 'length' <<< "$runs")" -eq 0 ]; then
+            if [ "$elapsed" -ge "$NO_RUN_GRACE_SECONDS" ]; then
+              echo "::error::Build and test never ran on $SHA. Release a commit that has been pushed to a branch, such as the merge commit on main."
+              exit 1
+            fi
+            echo "No Build and test run on $SHA yet; waiting (${elapsed}s so far)."
+          else
+            jq -r '.[] | "\(.html_url) \(.status) \(.conclusion)"' <<< "$runs"
+            echo "::error::Build and test did not pass on $SHA (failed or cancelled). Re-run it, or fix it, then re-run this workflow."
+            exit 1
+          fi
+          sleep "$POLL_SECONDS"
+        done
 
   pypi-publish:
     name: Upload release to PyPI
