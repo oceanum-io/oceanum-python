@@ -9,29 +9,33 @@ CLI_DEBUG = bool(os.getenv('OCEANUM_CLI_DEBUG'))
 
 
 def load_cli_extensions(parent_group=None):
-    # Load CLI extension entry points at call time to avoid side effects on import
+    """Load the oceanum.cli.extensions entry points onto parent_group.
+
+    Module entry points (legacy) register their commands on oceanum.cli.main
+    as an import side effect, whatever parent_group is.
+    """
     if parent_group is None:
         parent_group = cli_main
     for run_ep in entry_points(group='oceanum.cli.extensions'):
         try:
             if CLI_DEBUG:
-                print(f"Loading entry point: {run_ep.name}...")
+                print(f"Loading entry point: {run_ep.name}...", file=sys.stderr)
             ep_obj = run_ep.load()
             # Module object: legacy behaviour (side effects only)
             if isinstance(ep_obj, types.ModuleType):
                 if CLI_DEBUG:
-                    print(f"Loaded module '{getattr(ep_obj, '__name__', run_ep.name)}' successfully.")
+                    print(f"Loaded module '{getattr(ep_obj, '__name__', run_ep.name)}' successfully.", file=sys.stderr)
             # Command/Group exported directly
             elif isinstance(ep_obj, click.Command):
                 name = getattr(ep_obj, 'name', None) or run_ep.name
                 parent_group.add_command(ep_obj, name=name)
                 if CLI_DEBUG:
-                    print(f"Registered command '{name}' from entry point '{run_ep.name}'.")
+                    print(f"Registered command '{name}' from entry point '{run_ep.name}'.", file=sys.stderr)
             # Registrar callable
             elif callable(ep_obj):
                 ep_obj(parent_group)
                 if CLI_DEBUG:
-                    print(f"Called registrar from entry point '{run_ep.name}'.")
+                    print(f"Called registrar from entry point '{run_ep.name}'.", file=sys.stderr)
             else:
                 if CLI_DEBUG:
                     print(f"Unknown entry point target type for '{run_ep.name}': {type(ep_obj)}", file=sys.stderr)
