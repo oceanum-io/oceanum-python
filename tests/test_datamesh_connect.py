@@ -11,6 +11,9 @@ from oceanum.datamesh import Connector, Datasource
 from oceanum import cli
 
 
+pytestmark = pytest.mark.requires_datamesh_token
+
+
 @pytest.fixture
 def conn():
     """Connection fixture"""

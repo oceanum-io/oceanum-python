@@ -15,6 +15,9 @@ from oceanum.datamesh.exceptions import DatameshWriteError
 HERE = os.path.dirname(__file__)
 
 
+pytestmark = pytest.mark.requires_datamesh_token
+
+
 @pytest.fixture
 def conn():
     """Connection fixture"""

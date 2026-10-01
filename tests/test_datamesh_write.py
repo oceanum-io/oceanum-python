@@ -23,6 +23,9 @@ from oceanum import cli
 HERE = os.path.dirname(__file__)
 
 
+pytestmark = pytest.mark.requires_datamesh_token
+
+
 @pytest.fixture
 def conn():
     """Connection fixture"""

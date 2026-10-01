@@ -454,6 +454,7 @@ def test_isdir_false_nonexistent(fs):
 
 
 # Test the sync wrapper functions from oceanum.storage module
+@pytest.mark.requires_datamesh_token
 def test_sync_exists():
     """Test the sync exists() wrapper function."""
     from oceanum.storage import exists
@@ -465,6 +466,7 @@ def test_sync_exists():
         assert not exists("nonexistent_test_path_12345", token=token)
 
 
+@pytest.mark.requires_datamesh_token
 def test_sync_isfile():
     """Test the sync isfile() wrapper function."""
     from oceanum.storage import isfile
@@ -476,6 +478,7 @@ def test_sync_isfile():
         assert not isfile("nonexistent_test_file_12345.txt", token=token)
 
 
+@pytest.mark.requires_datamesh_token
 def test_sync_isdir():
     """Test the sync isdir() wrapper function."""
     from oceanum.storage import isdir
@@ -674,6 +677,7 @@ def test_rm_nonexistent_path(fs):
         fs.rm(nonexistent_path)
 
 
+@pytest.mark.requires_datamesh_token
 def test_sync_rm():
     """Test the sync rm() wrapper function."""
     from oceanum.storage import rm
