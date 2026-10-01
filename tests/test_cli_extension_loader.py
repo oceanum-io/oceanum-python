@@ -51,24 +51,22 @@ def test_broken_plugin_non_fatal(capsys):
 
 
 def test_debug_safety(monkeypatch, capsys):
-    """Debug mode with non-module target does not raise AttributeError."""
-    monkeypatch.setenv("OCEANUM_CLI_DEBUG", "1")
-    # Reload CLI_DEBUG after env change
-    import importlib
+    """Debug mode with non-module target logs the registration to stderr without failing."""
     import oceanum.__main__ as m
-    importlib.reload(m)
-    from oceanum.__main__ import load_cli_extensions as lce
+    monkeypatch.setattr(m, "CLI_DEBUG", True)
 
     parent = click.Group("test-parent")
     demo_group = click.Group(name="debug-demo")
     ep = FakeEntryPoint("debug-ext", demo_group)
 
     with patch("oceanum.__main__.entry_points", return_value=[ep]):
-        lce(parent)
+        load_cli_extensions(parent)
 
     captured = capsys.readouterr()
-    assert "AttributeError" not in captured.out
-    assert "AttributeError" not in captured.err
+    # Load errors are caught and printed, so check for the loader's error line
+    assert "Error loading entry point" not in captured.err
+    assert "Registered command 'debug-demo' from entry point 'debug-ext'." in captured.err
+    assert captured.out == ""
     assert "debug-demo" in parent.commands
 
 
