@@ -3,6 +3,8 @@
 
 """Tests for `oceanum` package."""
 import os
+import time
+
 import pytest
 import pandas
 import geopandas
@@ -49,23 +51,72 @@ def geotiff():
     return ds
 
 
+CLEANUP_RETRIES = 3
+CLEANUP_RETRY_WAIT = 2.0
+
+
+def _datasource_exists(conn, datasource_id):
+    """Whether the datasource is still registered.
+
+    Used to tell a failed delete apart from a delete that had nothing to do:
+    several tests below delete their own datasource before returning, so the
+    cleanup delete legitimately fails as not-found. Asking the server is more
+    robust than matching on the error message, which is not a stable contract.
+    """
+    try:
+        conn.get_datasource(datasource_id)
+        return True
+    except Exception:
+        return False
+
+
 @pytest.fixture
 def mark_for_cleanup():
     """Fixture to track and cleanup datasources created during tests."""
     created_datasources = []
-    
+
     def register_datasource(datasource_id, conn):
         created_datasources.append((datasource_id, conn))
         return datasource_id
-    
+
     yield register_datasource
-    
-    # Cleanup all registered datasources
+
+    # Cleanup all registered datasources.
+    #
+    # These ids are fixed and shared with every other run of this suite against
+    # the same datamesh, so a delete that fails silently leaves state that
+    # breaks the *next* run with "data source with this id already exists".
+    # This used to be `except Exception: pass`, which is how
+    # test-write-dataset-region-chunked survived a failed run unnoticed for
+    # hours.
+    #
+    # Retry before reporting: a delete can fail transiently, and the metadata
+    # server is read-replicated, so a single existence check right after a
+    # delete can still see the old record. Only a datasource that is still
+    # there after all attempts counts as leaked.
+    leaked = []
     for datasource_id, conn in created_datasources:
-        try:
-            conn.delete_datasource(datasource_id)
-        except Exception as e:
-            pass
+        last_error = None
+        for attempt in range(CLEANUP_RETRIES):
+            try:
+                conn.delete_datasource(datasource_id)
+                break
+            except Exception as delete_error:
+                last_error = delete_error
+                if not _datasource_exists(conn, datasource_id):
+                    break  # already gone - the test deleted it itself
+                if attempt < CLEANUP_RETRIES - 1:
+                    time.sleep(CLEANUP_RETRY_WAIT)
+        else:
+            leaked.append((datasource_id, last_error))
+
+    if leaked:
+        report = "\n".join(f"  {d}: {e}" for d, e in leaked)
+        raise RuntimeError(
+            "Datasource cleanup failed - these are still registered on the "
+            "datamesh and will break the next run of this suite until they are "
+            f"deleted:\n{report}"
+        )
 
 
 def test_write_dataframe(conn, dataframe, mark_for_cleanup):

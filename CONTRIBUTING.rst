@@ -68,7 +68,7 @@ Ready to contribute? Here's how to set up `oceanum` for local development.
 
     $ mkvirtualenv oceanum
     $ cd oceanum/
-    $ python setup.py develop
+    $ pip install -e .
 
 4. Create a branch for local development::
 
@@ -80,7 +80,7 @@ Ready to contribute? Here's how to set up `oceanum` for local development.
    tests, including testing other Python versions with tox::
 
     $ flake8 oceanum tests
-    $ python setup.py test or py.test
+    $ pytest
     $ tox
 
    To get flake8 and tox, just pip install them into your virtualenv.
@@ -102,16 +102,16 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for supported Python versions and for PyPy. Check
-   https://travis-ci.org/oceanum/oceanum/pull_requests
-   and make sure that the tests pass for all supported Python versions.
+3. The pull request should work for supported Python versions and for PyPy.
+   Check the bottom of the pull request and make sure that the tests pass
+   for all supported Python versions.
 
 Tips
 ----
 
-To run a subset of tests::
+To run a subset of tests, e.g.::
 
-$ py.test tests.test_oceanum
+$ pytest tests/test_cache.py
 
 
 Deploying
@@ -125,4 +125,4 @@ $ bumpversion patch # possible: major / minor / patch
 $ git push
 $ git push --tags
 
-Travis will then deploy to PyPI if tests pass.
+GitHub Actions will then deploy to PyPI if tests pass.

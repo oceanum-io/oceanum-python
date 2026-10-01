@@ -4,6 +4,13 @@ on:
   release:
     types: [published]
 
+# Same group as build-and-test.yml: this workflow runs the same production
+# write tests, and publishing a release fires both workflows at once. See the
+# comment there for why the group is a constant and why nothing is cancelled.
+concurrency:
+  group: datamesh-prod-write-tests
+  cancel-in-progress: false
+
 jobs:
   pypi-publish:
     name: Upload release to PyPI
@@ -28,14 +35,13 @@ jobs:
       name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install . 'oceanum[extra,test]'
+        pip install . --group dev
     -
       name: Test
       run: pytest -s -v tests
     -
       name: Build package
       run: |
-        pip install build
         python -m build -s
     -
       name: Publish package

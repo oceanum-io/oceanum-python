@@ -1,12 +1,14 @@
 import os
+import json
 import warnings
 import pytest
 import datetime
 import shapely
 import numpy
+from pydantic import ValidationError
 
 from oceanum.datamesh import Query
-from oceanum.datamesh.query import Stage
+from oceanum.datamesh.query import Stage, LevelFilter
 
 
 def test_query_datasource():
@@ -26,20 +28,96 @@ def test_query_timefilter():
     )
     q = Query(
         datasource="test",
-        timefilter={"times": [numpy.datetime64("2000-01-01T00:00:00"), numpy.datetime64("2001-01-01T00:00:00")]},
+        timefilter={
+            "times": [
+                numpy.datetime64("2000-01-01T00:00:00"),
+                numpy.datetime64("2001-01-01T00:00:00"),
+            ]
+        },
     )
     q = Query(
         datasource="test",
-        timefilter={"times": ["P5D","P2D"]},
+        timefilter={"times": ["P5D", "P2D"]},
     )
     q = Query(
         datasource="test",
-        timefilter={"times": [-numpy.timedelta64(5,"D"), numpy.timedelta64(2,"D")]}
-        )
+        timefilter={"times": [-numpy.timedelta64(5, "D"), numpy.timedelta64(2, "D")]},
+    )
     q = Query(
         datasource="test",
-        timefilter={"times": [-datetime.timedelta(5), -datetime.timedelta(2)]}
-        )
+        timefilter={"times": [-datetime.timedelta(5), -datetime.timedelta(2)]},
+    )
+
+
+def _times(timefilter):
+    """Serialize a query and return the resolved timefilter times."""
+    q = Query(datasource="test", timefilter=timefilter)
+    return json.loads(q.model_dump_json())["timefilter"]["times"]
+
+
+def test_query_timefilter_negative_periods():
+    # ISO8601-2 convention: negative period => before now, positive => after now,
+    # for both timestart and tend. The sign must survive serialization.
+    assert _times({"times": ["P7D", "P1D"]}) == ["P7D", "P1D"]
+    assert _times({"times": ["-P7D", "P1D"]}) == ["-P7D", "P1D"]
+    assert _times({"times": ["-P7D", "-P1D"]}) == ["-P7D", "-P1D"]
+    # period with a time component keeps its sign
+    assert _times({"times": ["-P1DT12H", "PT6H"]}) == ["-P1DT12H", "PT6H"]
+    # negative python timedelta
+    assert _times(
+        {"times": [-datetime.timedelta(days=7), datetime.timedelta(days=2)]}
+    ) == ["-P7D", "P2D"]
+    # negative numpy timedelta64
+    assert _times(
+        {"times": [-numpy.timedelta64(5, "D"), numpy.timedelta64(2, "D")]}
+    ) == ["-P5D", "P2D"]
+
+
+def test_query_levelfilter():
+    q = Query(
+        datasource="test",
+        levelfilter={"type": "range", "levels": [0.0, 10.0]},
+    )
+    q = Query(
+        datasource="test",
+        levelfilter={"type": "series", "levels": [0.0]},
+    )
+    q = Query(
+        datasource="test",
+        levelfilter={"type": "series", "levels": [0.0, 10.0, 20.0]},
+    )
+    q = Query(
+        datasource="test",
+        levelfilter={"type": "trajectory", "levels": [0.0, 10.0, 20.0]},
+    )
+
+
+def test_query_levelfilter_range_requires_two_values():
+    with pytest.raises(ValidationError) as excinfo:
+        LevelFilter(type="range", levels=[0.0])
+    message = str(excinfo.value)
+    assert "type='series'" in message
+    assert "exactly 2 values" in message
+
+    with pytest.raises(ValidationError):
+        LevelFilter(type="range", levels=[0.0, 5.0, 10.0])
+
+    # type defaults to 'range', so an omitted type must be caught too - this is
+    # the shape that reached production and crashed the query engine.
+    with pytest.raises(ValidationError) as excinfo:
+        LevelFilter(levels=[0.0])
+    assert "type='series'" in str(excinfo.value)
+
+
+def test_query_levelfilter_series_requires_at_least_one_value():
+    with pytest.raises(ValidationError):
+        LevelFilter(type="series", levels=[])
+
+
+def test_query_levelfilter_trajectory_requires_at_least_one_value():
+    with pytest.raises(ValidationError):
+        LevelFilter(type="trajectory", levels=[])
+
 
 def test_query_aggregate():
     q = Query(
@@ -95,7 +173,7 @@ def test_stage_resp():
         coordmap={"var": "tyx"},
         coordkeys={"var": "tyx"},
         container="dataset",
-        sig="efg"
+        sig="efg",
     )
 
 
