@@ -52,7 +52,7 @@ dependencies = [
     "requests",
     "shapely",
     "tabulate",
-    "xarray",
+    "xarray<2026.9",  # 2026.9 passes zarr_format to zarr.open_group, which zarr 2 rejects
     "rioxarray",
     "zarr<3",
 ]
