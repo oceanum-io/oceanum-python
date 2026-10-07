@@ -7,6 +7,7 @@ import shapely
 import geojson_pydantic
 from pydantic import (
     field_validator,
+    model_validator,
     ConfigDict,
     BaseModel,
     Field,
@@ -351,6 +352,7 @@ class AggregateOps(str, Enum):
     max = "max"
     std = "std"
     sum = "sum"
+    quantile = "quantile"
 
 
 class Aggregate(BaseModel):
@@ -370,6 +372,24 @@ class Aggregate(BaseModel):
         default=True,
         description="Aggregate over temporal dimension (default True)",
     )
+    q: Optional[float] = Field(
+        title="Quantile",
+        default=None,
+        ge=0,
+        le=1,
+        description="Quantile computed by the 'quantile' operation, between 0 and 1 inclusive (e.g. 0.95 for the 95th percentile), with linear interpolation as in xarray/pandas. Required with, and only valid with, the 'quantile' operation.",
+    )
+
+    @model_validator(mode="after")
+    def validate_q(self):
+        if AggregateOps.quantile in self.operations:
+            if self.q is None:
+                raise ValueError(
+                    "The 'quantile' aggregate operation requires q, the quantile between 0 and 1 (e.g. q=0.95)"
+                )
+        elif self.q is not None:
+            raise ValueError("q is only valid with the 'quantile' aggregate operation")
+        return self
 
 
 class Function(BaseModel):
