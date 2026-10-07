@@ -141,6 +141,17 @@ def test_query_aggregate_quantile():
     )
 
 
+def test_query_aggregate_quantile_round_trip():
+    q = Query(
+        datasource="test",
+        aggregate={"operations": ["quantile"], "q": 0.95},
+    )
+    payload = json.loads(q.model_dump_json(warnings=False))
+    assert payload["aggregate"]["operations"] == ["quantile"]
+    assert payload["aggregate"]["q"] == 0.95
+    assert Query(**payload).aggregate == q.aggregate
+
+
 @pytest.mark.parametrize(
     "aggregate",
     [
