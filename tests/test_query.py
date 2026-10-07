@@ -8,7 +8,7 @@ import numpy
 from pydantic import ValidationError
 
 from oceanum.datamesh import Query
-from oceanum.datamesh.query import Stage, LevelFilter
+from oceanum.datamesh.query import Stage, LevelFilter, AggregateOps
 
 
 def test_query_datasource():
@@ -125,6 +125,48 @@ def test_query_aggregate():
         timefilter={"times": ["2000-01-01T00:00:00", "2001-01-01T00:00:00Z"]},
         aggregate={"operations": ["sum", "mean"]},
     )
+
+
+def test_query_aggregate_quantile():
+    q = Query(
+        datasource="test",
+        aggregate={"operations": ["quantile", "mean"], "q": 0.95},
+    )
+    assert q.aggregate.operations == [AggregateOps.quantile, AggregateOps.mean]
+    assert q.aggregate.q == 0.95
+    for bound in (0, 1):
+        Query(datasource="test", aggregate={"operations": ["quantile"], "q": bound})
+    assert (
+        Query(datasource="test", aggregate={"operations": ["mean"]}).aggregate.q is None
+    )
+
+
+def test_query_aggregate_quantile_round_trip():
+    q = Query(
+        datasource="test",
+        aggregate={"operations": ["quantile"], "q": 0.95},
+    )
+    payload = json.loads(q.model_dump_json(warnings=False))
+    assert payload["aggregate"]["operations"] == ["quantile"]
+    assert payload["aggregate"]["q"] == 0.95
+    assert Query(**payload).aggregate == q.aggregate
+
+
+@pytest.mark.parametrize(
+    "aggregate",
+    [
+        {"operations": ["quantile"]},
+        {"operations": ["quantile"], "q": None},
+        {"operations": ["quantile"], "q": -0.1},
+        {"operations": ["quantile"], "q": 1.5},
+        {"operations": ["quantile"], "q": float("nan")},
+        {"operations": ["quantile"], "q": [0.5, 0.95]},
+        {"operations": ["mean"], "q": 0.95},
+    ],
+)
+def test_query_aggregate_quantile_invalid(aggregate):
+    with pytest.raises(ValidationError):
+        Query(datasource="test", aggregate=aggregate)
 
 
 def test_query_geofilter():
