@@ -32,6 +32,10 @@ class DatasourceException(Exception):
 
 
 def parse_period(period):
+    # Already a period: re-validating a Datasource built from another one
+    # (e.g. carrying metadata across an overwrite) passes timedeltas through.
+    if isinstance(period, datetime.timedelta):
+        return period
     try:
         m = re.match(
             r"^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:.\d+)?)S)?$",
@@ -49,8 +53,10 @@ def parse_period(period):
         if m[5]:
             minutes = int(m[5])
         return datetime.timedelta(days=days, hours=hours, minutes=minutes)
-    except:
-        raise "Period string not valid"
+    except Exception:
+        # A bare string cannot be raised (it is itself a TypeError); a
+        # ValueError becomes a normal pydantic validation error.
+        raise ValueError(f"Period string not valid: {period!r}")
 
 
 def to_datetime(v):
