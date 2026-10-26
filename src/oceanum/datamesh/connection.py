@@ -30,7 +30,7 @@ from pydantic import ValidationError
 from .datasource import Datasource
 from .catalog import Catalog
 from .query import Query, Stage, Container, TimeFilter, GeoFilter, GeoFilterType
-from .zarr import zarr_write, ZarrClient
+from .zarr import zarr_write, ZarrClient, json_serial
 from .zarr_v2wire import make_v2wire_store
 from .zarr_v3 import make_v3_store
 from .cache import LocalCache
@@ -272,11 +272,16 @@ class Connector(object):
         self._validate_response(resp)
         return True
 
-    def _data_request(self, datasource_id, data_format="application/json", cache=False):
+    def _data_request(
+        self, datasource_id, data_format="application/json", cache=False, parameters=None
+    ):
         tmpfile = os.path.join(self._cachedir.name, datasource_id)
+        headers = {"Accept": data_format}
+        if parameters:
+            headers["X-PARAMETERS"] = json.dumps(parameters, default=json_serial)
         resp = self._retried_request(
             f"{self._gateway}/data/{datasource_id}",
-            headers={"Accept": data_format},
+            headers=headers,
             timeout=(DATAMESH_CONNECT_TIMEOUT, DATAMESH_DOWNLOAD_TIMEOUT),
         )
         self._validate_response(resp)
@@ -644,10 +649,14 @@ class Connector(object):
                 decode_coords="all", mask_and_scale=True,
             )
         elif stage.container == Container.GeoDataFrame:
-            tmpfile = self._data_request(datasource_id, "application/parquet")
+            tmpfile = self._data_request(
+                datasource_id, "application/parquet", parameters=parameters
+            )
             return geopandas.read_parquet(tmpfile)
         elif stage.container == Container.DataFrame:
-            tmpfile = self._data_request(datasource_id, "application/parquet")
+            tmpfile = self._data_request(
+                datasource_id, "application/parquet", parameters=parameters
+            )
             return pandas.read_parquet(tmpfile)
 
     @asyncwrapper
