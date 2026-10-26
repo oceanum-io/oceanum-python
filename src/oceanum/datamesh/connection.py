@@ -252,6 +252,12 @@ class Connector(object):
         headers = {"Accept": data_format}
         if parameters:
             headers["X-PARAMETERS"] = json.dumps(parameters, default=json_serial)
+            # Concurrent loads of one datasource with different parameters
+            # must not share a download file.
+            digest = hashlib.sha1(
+                json.dumps(parameters, sort_keys=True, default=json_serial).encode()
+            ).hexdigest()[:16]
+            tmpfile = f"{tmpfile}-{digest}"
         resp = self._retried_request(
             f"{self._gateway}/data/{datasource_id}",
             headers=headers,

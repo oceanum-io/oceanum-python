@@ -75,3 +75,20 @@ def test_no_parameters_sends_no_header(requests_mock, parameters):
     cache on the header, and a bare dump keeps its existing entry."""
     _, headers = _load(requests_mock, Container.DataFrame, parameters)
     assert "X-PARAMETERS" not in headers
+
+
+def test_parameter_sets_do_not_share_a_download_file(requests_mock):
+    """load_datasource_async can run two loads of one datasource at once."""
+    requests_mock.return_value = MagicMock(
+        status_code=200, content=_parquet(Container.DataFrame)
+    )
+    conn = Connector(token="test-token")
+    conn._validate_response = MagicMock()
+    paths = {
+        conn._data_request("ds", parameters=p)
+        for p in ({}, {"member": 1}, {"member": 2})
+    }
+    assert len(paths) == 3
+    assert conn._data_request("ds", parameters={"a": 1, "b": 2}) == conn._data_request(
+        "ds", parameters={"b": 2, "a": 1}
+    )
