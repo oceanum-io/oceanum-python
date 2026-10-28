@@ -1,5 +1,6 @@
 import datetime
 import json
+import time
 import re
 from collections.abc import MutableMapping
 import os
@@ -126,6 +127,52 @@ class ZarrClient(MutableMapping):
             raise DatameshConnectError(f"Server error {resp.status_code}: {resp.text}")
         return resp
 
+    def acquire_write_lock(self, attempts=5):
+        """Take this session's write lock on the datasource, before reading it.
+
+        Until the session is finalised or closed no other session can commit to
+        the datasource, and the session's reads see the version its writes land
+        on, so an append's overlap check cannot be computed on a stale version.
+
+        Returns True once locked, False if the gateway does not offer the lock
+        (an older gateway: the lock is then taken at the first write, as before).
+        Raises DatameshWriteError if another session holds the lock.
+        """
+        if self.api == "query":
+            raise DatameshConnectError("Query api does not support write operations")
+        url = f"{self._proxy}/_write_lock/{self.datasource}"
+        for attempt in range(attempts):
+            try:
+                resp = retried_request(
+                    url=url,
+                    method="PATCH",
+                    retries=self.retries,
+                    timeout=(self.connect_timeout, self.write_timeout),
+                    verify=self.verify,
+                    http_session=self.http_session,
+                )
+            except requests.RequestException as e:
+                raise DatameshConnectError(str(e))
+            # 503: the lock is taken but not visible to the session's reads yet.
+            if resp.status_code != 503 or attempt == attempts - 1:
+                break
+            time.sleep(0.5 * 2**attempt)
+        if resp.status_code == 405:
+            return False
+        if resp.status_code == 409:
+            # Another session's lock reads "already has a write session"; other
+            # 409s (e.g. a backend that cannot be locked) keep their own reason.
+            raise DatameshWriteError(f"Cannot write to {self.datasource}: {resp.text}")
+        if resp.status_code == 401:
+            raise DatameshConnectError(f"Not Authorized {resp.text}")
+        if resp.status_code >= 500:
+            raise DatameshConnectError(f"Server error {resp.status_code}: {resp.text}")
+        if resp.status_code >= 300:
+            raise DatameshWriteError(
+                f"Failed to lock {self.datasource} for writing: {resp.status_code} - {resp.text}"
+            )
+        return True
+
     def __getitem__(self, item):
         encoded_item = urllib.parse.quote(item, safe="/")
         resp = self._retried_request(
@@ -224,6 +271,10 @@ def zarr_write(
         else:
             ds = connection.get_datasource(datasource_id)
         if append and ds._exists:
+            # Lock before reading the existing coordinate: the overlap is then
+            # computed on the version this append lands on, and a concurrent writer
+            # fails here (DatameshWriteError, "write session") instead of racing.
+            store.acquire_write_lock()
             if append not in ds.dataschema.coords:
                 raise DatameshWriteError(
                     f"Append coordinate {append} not in existing zarr"
