@@ -165,4 +165,11 @@ def test_a_concurrent_writer_stops_an_overwrite_before_it_clears():
 
 def test_a_new_datasource_still_writes():
     order = _run_append(_conn(), append=None, lock_result=False)
-    assert call.to_zarr() in order.mock_calls
+    names = [c[0] for c in order.mock_calls if c[0] in ("store.acquire_write_lock", "to_zarr")]
+    assert names == ["store.acquire_write_lock", "to_zarr"]
+
+
+def test_a_first_append_to_a_new_datasource_locks_and_writes_without_reading():
+    order = _run_append(_conn(ds_exists=False), lock_result=False)
+    names = [c[0] for c in order.mock_calls if c[0] in ("store.acquire_write_lock", "open_zarr", "to_zarr")]
+    assert names == ["store.acquire_write_lock", "to_zarr"]
