@@ -134,9 +134,8 @@ class ZarrClient(MutableMapping):
         the datasource, and the session's reads see the version its writes land
         on, so an append's overlap check cannot be computed on a stale version.
 
-        Returns True once locked, False if there is nothing to lock yet (a new
-        datasource) or the gateway does not offer the lock (an older gateway);
-        the lock is then taken at the first write, as before.
+        Returns True once locked, False if the gateway does not offer the lock
+        (an older gateway: the lock is then taken at the first write, as before).
         Raises DatameshWriteError if another session holds the lock.
         """
         if self.api == "query":
@@ -158,9 +157,7 @@ class ZarrClient(MutableMapping):
             if resp.status_code != 503 or attempt == attempts - 1:
                 break
             time.sleep(0.5 * 2**attempt)
-        # 405: an older gateway without the lock route. 404: the datasource does
-        # not exist yet, so there is nothing to lock; its first write takes it.
-        if resp.status_code in (404, 405):
+        if resp.status_code == 405:
             return False
         if resp.status_code == 409:
             # Another session's lock reads "already has a write session"; other
@@ -268,16 +265,16 @@ def zarr_write(
 
     with Session.acquire(connection) as session:
         store = ZarrClient(connection, datasource_id, session, api="zarr", nocache=True)
-        # Lock before touching the datasource: an append's overlap check then
-        # reads the version it lands on, and a concurrent writer fails here
-        # (DatameshWriteError, "write session") before anything is read or cleared.
-        store.acquire_write_lock()
         if overwrite is True:
             store.clear()
             append = None
         else:
             ds = connection.get_datasource(datasource_id)
         if append and ds._exists:
+            # Lock before reading the existing coordinate: the overlap is then
+            # computed on the version this append lands on, and a concurrent writer
+            # fails here (DatameshWriteError, "write session") instead of racing.
+            store.acquire_write_lock()
             if append not in ds.dataschema.coords:
                 raise DatameshWriteError(
                     f"Append coordinate {append} not in existing zarr"

@@ -1,12 +1,10 @@
-"""zarr_write takes the datasource's write lock before it touches the datasource.
+"""zarr_write takes the datasource's write lock before its append reads.
 
 The overlap check reads the existing coordinate; reading before the lock let
 another writer commit in between, so the append was computed on a stale
-version. Every write locks first, so an overwrite also fails before it clears.
-ZarrClient.acquire_write_lock calls PATCH <gateway>/zarr/_write_lock/<id>:
-404 means a new datasource and 405 an older gateway without the endpoint (in
-both cases the lock is taken at the first write, as before), 409 that another
-session is writing.
+version. ZarrClient.acquire_write_lock calls PATCH <gateway>/zarr/_write_lock/<id>:
+405 means an older gateway without the endpoint (the lock is taken at the
+first write, as before), 409 that another session is writing.
 """
 from unittest.mock import MagicMock, Mock, call, patch
 
@@ -38,11 +36,6 @@ def test_it_patches_the_lock_route():
 
 def test_an_older_gateway_without_the_route_falls_back():
     with patch("oceanum.datamesh.zarr.retried_request", return_value=_response(405)):
-        assert _client().acquire_write_lock() is False
-
-
-def test_a_new_datasource_has_nothing_to_lock_yet():
-    with patch("oceanum.datamesh.zarr.retried_request", return_value=_response(404)):
         assert _client().acquire_write_lock() is False
 
 
@@ -103,8 +96,8 @@ def _session():
     return s
 
 
-def _run_append(conn, append="time", lock_error=None, lock_result=True, session=None, overwrite=False, order=None):
-    order = order or MagicMock()
+def _run_append(conn, append="time", lock_error=None, lock_result=True, session=None):
+    order = MagicMock()
     store = order.store
     store.acquire_write_lock.side_effect = lock_error
     store.acquire_write_lock.return_value = lock_result
@@ -119,7 +112,7 @@ def _run_append(conn, append="time", lock_error=None, lock_result=True, session=
          patch("oceanum.datamesh.zarr.ZarrClient", return_value=store), \
          patch("oceanum.datamesh.zarr.xarray.open_zarr", side_effect=open_zarr), \
          patch("oceanum.datamesh.zarr._to_zarr", side_effect=lambda *a, **k: order.to_zarr()):
-        zarr_write(conn, "my_ds", incoming, append=append, overwrite=overwrite)
+        zarr_write(conn, "my_ds", incoming, append=append)
     return order
 
 
@@ -143,33 +136,6 @@ def test_an_older_gateway_without_the_lock_still_appends():
     assert call.to_zarr() in order.mock_calls
 
 
-def test_a_write_that_does_not_append_locks_before_it_writes():
+def test_a_write_that_does_not_append_takes_no_explicit_lock():
     order = _run_append(_conn(), append=None)
-    names = [c[0] for c in order.mock_calls if c[0] in ("store.acquire_write_lock", "to_zarr")]
-    assert names == ["store.acquire_write_lock", "to_zarr"]
-
-
-def test_an_overwrite_locks_before_it_clears():
-    order = _run_append(_conn(), append=None, overwrite=True)
-    names = [c[0] for c in order.mock_calls if c[0] in ("store.acquire_write_lock", "store.clear", "to_zarr")]
-    assert names == ["store.acquire_write_lock", "store.clear", "to_zarr"]
-
-
-def test_a_concurrent_writer_stops_an_overwrite_before_it_clears():
-    order = MagicMock()
-    with pytest.raises(DatameshWriteError, match="write session"):
-        _run_append(_conn(), append=None, overwrite=True, order=order,
-                    lock_error=DatameshWriteError("Cannot write to my_ds: already has a write session"))
-    order.store.clear.assert_not_called()
-
-
-def test_a_new_datasource_still_writes():
-    order = _run_append(_conn(), append=None, lock_result=False)
-    names = [c[0] for c in order.mock_calls if c[0] in ("store.acquire_write_lock", "to_zarr")]
-    assert names == ["store.acquire_write_lock", "to_zarr"]
-
-
-def test_a_first_append_to_a_new_datasource_locks_and_writes_without_reading():
-    order = _run_append(_conn(ds_exists=False), lock_result=False)
-    names = [c[0] for c in order.mock_calls if c[0] in ("store.acquire_write_lock", "open_zarr", "to_zarr")]
-    assert names == ["store.acquire_write_lock", "to_zarr"]
+    assert call.store.acquire_write_lock() not in order.mock_calls
