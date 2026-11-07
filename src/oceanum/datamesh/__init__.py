@@ -3,3 +3,4 @@ from .datasource import Datasource
 from .catalog import Catalog
 from .query import Query
 from .session import Session
+from .notices import Notice, NoticeWarning

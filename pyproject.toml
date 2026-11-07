@@ -116,5 +116,7 @@ exclude = ["tests", "docs"]
 [tool.pytest.ini_options]
 required_plugins = "pytest-env"
 pythonpath = ["src"]
-env = ["STORAGE_SERVICE = https://storage.oceanum.io"]
+# OCEANUM_NOTICES: no test may reach the oceanum.io admin service (tests/test_notices.py
+# turns notices back on against a mocked one)
+env = ["STORAGE_SERVICE = https://storage.oceanum.io", "OCEANUM_NOTICES = 0"]
 markers = ["requires_datamesh_token: marks tests that need OCEANUM_TEST_DATAMESH_TOKEN"]
