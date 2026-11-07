@@ -99,6 +99,59 @@ Check the spatial and temporal extent::
     print(dsrc.tstart, dsrc.tend)
 
 
+Datasource Notices
+~~~~~~~~~~~~~~~~~~
+
+Oceanum publishes notices about datasources on oceanum.io: deprecations, changes
+and outages. When you load, query or get a datasource, the connector checks for
+notices about it, with your own credential, and shows each one once per
+datasource per Python process:
+
+* ``outage`` and ``action_required`` notices as a
+  :class:`~oceanum.datamesh.NoticeWarning` (a ``UserWarning``),
+* ``change`` and ``info`` notices as one ``INFO`` line on the
+  ``oceanum.datamesh.notices`` logger (only counted as shown when ``INFO``
+  logging is on for it).
+
+Writes and metadata updates do not check for notices.
+
+The check never makes the operation fail: every error is ignored. It runs
+alongside the operation, and once the operation has returned it waits for the
+answer for what is left of 3 seconds from the start of the call. So with no
+cached answer, the check can add up to 3 seconds to a call. An answer is cached
+for 10 minutes per datasource. After a timeout, a connection error, a 5xx or a
+429 the admin service is not asked again for a while (the ``Retry-After`` it
+sent, else 5 minutes after a timeout, a connection error, a 429 or a 503, and 1
+minute after another 5xx); after any other failure, such as a 401, only that
+datasource waits, for 1 minute. The last good answer is used meanwhile. At most the 20 newest notices are kept, with titles cut to 200
+characters and bodies to 2,000. To read the notices yourself, including their
+markdown body, use :meth:`~oceanum.datamesh.Connector.get_notices`::
+
+    for notice in datamesh.get_notices("oceanum_wave_glob05_era5_v1_grid"):
+        print(notice.severity, notice.title, notice.publish_at)
+        print(notice.body)
+
+Notices are fetched from https://admin.oceanum.io for ``datamesh.oceanum.io``
+(and https://admin.oceanum.tech for ``datamesh.oceanum.tech``); set
+``OCEANUM_ADMIN_SERVICE`` to use another admin service (``https``, or ``http``
+on ``localhost`` or ``127.0.0.1`` only; any other value turns notices off). The
+admin service receives your Datamesh token or bearer token with every notices
+request, so only point ``OCEANUM_ADMIN_SERVICE`` at a service you trust. For any
+other Datamesh service with no ``OCEANUM_ADMIN_SERVICE``, no request is made.
+
+To turn the check off, set ``OCEANUM_NOTICES=0`` or pass ``notices=False``::
+
+    datamesh = Connector(notices=False)
+
+Notice warnings can be filtered like any other warning. With an ``error``
+filter (``python -W error``), a notice's ``NoticeWarning`` is raised from the
+call that found it, once::
+
+    import warnings
+    from oceanum.datamesh import NoticeWarning
+    warnings.simplefilter("ignore", NoticeWarning)
+
+
 Loading a Datasource
 ~~~~~~~~~~~~~~~~~~~~
 

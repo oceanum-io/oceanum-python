@@ -31,6 +31,13 @@ oceanum.datamesh.datasource module
    :model-show-config-summary: False
 
 
+oceanum.datamesh.notices module
+-------------------------------
+
+.. automodule:: oceanum.datamesh.notices
+   :members: Notice, NoticeWarning
+   :show-inheritance:
+
 oceanum.datamesh.query module
 -----------------------------
 

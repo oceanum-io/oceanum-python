@@ -33,6 +33,16 @@ from .zarr import zarr_write, ZarrClient, json_serial
 from .cache import LocalCache
 from .exceptions import DatameshConnectError, DatameshQueryError, DatameshWriteError
 from .session import Session
+from .notices import (
+    NOTICES_TIMEOUT,
+    Notice,
+    NoticeWarning,
+    admin_service_url,
+    notices_enabled,
+    request_notices,
+    show_notices,
+    wait_notices,
+)
 from .utils import (
     retried_request,
     HTTPSession,
@@ -58,6 +68,57 @@ def asyncwrapper(func):
         return await loop.run_in_executor(executor, pfunc)
 
     return run
+
+
+def _datasource_arg(datasource_id=None, *args, **kwargs):
+    return datasource_id
+
+
+def _query_datasource(query=None, *args, **query_keys):
+    if query is None:
+        return query_keys.get("datasource")
+    if isinstance(query, dict):
+        return query.get("datasource")
+    return getattr(query, "datasource", None)
+
+
+def with_notices(get_datasource_id):
+    """Show the notices about the datasource a Connector method uses, once it has
+    returned: each notice at most once per datasource per process, waiting at most
+    NOTICES_TIMEOUT seconds from the call (they are fetched while the method runs).
+    Nothing is shown if the method raises, or if notices are disabled. A
+    NoticeWarning made an error by a warnings filter propagates; any other failure
+    to show notices is swallowed."""
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            start = time.monotonic()
+            pending = None
+            datasource_id = None
+            if getattr(self, "_notices", False):
+                try:
+                    datasource_id = get_datasource_id(*args, **kwargs)
+                    pending = self._request_notices(datasource_id)
+                except Exception:
+                    pending = None
+            result = func(self, *args, **kwargs)
+            if pending is not None:
+                try:
+                    remaining = start + NOTICES_TIMEOUT - time.monotonic()
+                    show_notices(
+                        datasource_id, wait_notices(pending, remaining), stacklevel=2
+                    )
+                except NoticeWarning:
+                    # An "error" warnings filter: the user's choice, raised once.
+                    raise
+                except Exception:
+                    pass
+            return result
+
+        return wrapper
+
+    return decorator
 
 
 # Windows compatibility tempfile
@@ -86,6 +147,7 @@ class Connector(object):
         user=None,
         session_duration=None,
         verify=True,
+        notices=None,
     ):
         """Datamesh connector constructor
 
@@ -95,6 +157,7 @@ class Connector(object):
             user (string, optional): Optional user identifier to be sent in the header for datamesh authentication. Defaults to None.
             session_duration (float, optional): The desired length of time for acquired datamesh sessions in seconds. Will be 3600 seconds by default.
             verify (bool, optional): Whether to verify the datamesh server certificate. Defaults to True.
+            notices (bool, optional): Whether to show oceanum.io notices about a datasource when it is loaded, queried or fetched. Defaults to None: on unless the OCEANUM_NOTICES environment variable is 0.
         Raises:
             ValueError: Missing or invalid arguments
         """
@@ -118,6 +181,8 @@ class Connector(object):
         self._gateway = _gateway or f"{self._proto}://{self._host}"
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         self._verify = verify
+        self._notices = notices_enabled(notices)
+        self._admin_service = admin_service_url(url.hostname)
 
         # Suppress InsecureRequestWarning when verify=False is used
         if not verify:
@@ -145,6 +210,28 @@ class Connector(object):
             raise ValueError(
                 "A valid key must be supplied as a connection constructor argument or defined in environment variables as DATAMESH_TOKEN"
             )
+
+    def _request_notices(self, datasource_id):
+        return request_notices(
+            self._admin_service, datasource_id, self._token, verify=self._verify
+        )
+
+    def get_notices(self, datasource_id: str) -> list[Notice]:
+        """Get the published, unexpired oceanum.io notices about a datasource, newest first.
+
+        Uses the connector's credential, and answers are cached for 10 minutes. This
+        never raises: when the notices cannot be fetched within 3 seconds, or the admin
+        service is unknown (set OCEANUM_ADMIN_SERVICE for a Datamesh service other than
+        datamesh.oceanum.io or datamesh.oceanum.tech), it returns an empty list. It works
+        whether or not notices are shown on load.
+
+        Args:
+            datasource_id (string): Unique datasource id
+
+        Returns:
+            list[:obj:`oceanum.datamesh.Notice`]: The notices, an empty list if none
+        """
+        return wait_notices(self._request_notices(datasource_id))
 
     def _retried_request(self, *args, **kwargs):
         """Wrapper around retried_request to use connection settings"""
@@ -492,6 +579,7 @@ class Connector(object):
         }
         return props
 
+    @with_notices(_datasource_arg)
     def get_datasource(self, datasource_id):
         """Get a Datasource instance from the datamesh. This does not load the actual data.
 
@@ -504,6 +592,11 @@ class Connector(object):
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
+        return self._get_datasource(datasource_id)
+
+    def _get_datasource(self, datasource_id):
+        """get_datasource without its notices check, for the connector's own use
+        (writes and metadata updates)."""
         props = self._get_datasource_metadata(datasource_id)
         try:
             ds = Datasource(**props)
@@ -536,6 +629,7 @@ class Connector(object):
         """
         return self.get_datasource(datasource_id)
 
+    @with_notices(_datasource_arg)
     def load_datasource(self, datasource_id, parameters={}, use_dask=False):
         """Load a datasource into the work environment.
         For datasources which load into DataFrames or GeoDataFrames, this returns an in memory instance of the DataFrame.
@@ -595,6 +689,7 @@ class Connector(object):
         """
         return self.load_datasource(datasource_id, parameters, use_dask)
 
+    @with_notices(_query_datasource)
     def query(self, query=None, *, use_dask=False, cache_timeout=0, **query_keys):
         """Make a datamesh query
 
@@ -614,6 +709,7 @@ class Connector(object):
         return self._query(query, use_dask, cache_timeout)
 
     @asyncwrapper
+    @with_notices(_query_datasource)
     def query_async(self, query, *, use_dask=False, cache_timeout=0, **query_keys):
         """Make a datamesh query asynchronously
 
@@ -695,7 +791,7 @@ class Connector(object):
 
         # Try to get an existing datasoure with the same id
         try:
-            ds = self.get_datasource(datasource_id)
+            ds = self._get_datasource(datasource_id)
         except DatameshConnectError as e:
             if append:
                 raise DatameshWriteError(f"Cannot append to non-existent datasource")
@@ -825,7 +921,7 @@ class Connector(object):
         Returns:
             :obj:`oceanum.datamesh.Datasource`: The datasource instance that was updated
         """
-        ds = self.get_datasource(datasource_id)
+        ds = self._get_datasource(datasource_id)
         for key in properties:
             if key not in ["driver", "schema", "driver_args"]:
                 setattr(ds, key, properties[key])

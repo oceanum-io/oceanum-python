@@ -269,7 +269,7 @@ def zarr_write(
             store.clear()
             append = None
         else:
-            ds = connection.get_datasource(datasource_id)
+            ds = connection._get_datasource(datasource_id)
         if append and ds._exists:
             # Lock before reading the existing coordinate: the overlap is then
             # computed on the version this append lands on, and a concurrent writer
@@ -347,6 +347,6 @@ def zarr_write(
                     )
         else:
             _to_zarr(data, store, mode="w", consolidated=True, group=group)
-            ds = connection.get_datasource(datasource_id)
+            ds = connection._get_datasource(datasource_id)
             ds.dataschema = data.to_dict(data=False)
         return ds
