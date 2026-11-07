@@ -38,6 +38,9 @@ SHOWN_NOTICES_SIZE = 1024
 # Seconds no request is made to an admin service after one timed out or could not
 # connect, and after a 429/503 that gave no usable Retry-After.
 NOTICES_BACKOFF = 300.0
+# Seconds no request is made to an admin service after any other failure (another
+# status than 200/404, an unreadable answer).
+NOTICES_ERROR_BACKOFF = 60.0
 MAX_RETRY_AFTER = 3600.0
 
 # Severities shown as a NoticeWarning; any other (change, info, or one this client
@@ -142,11 +145,20 @@ class _NoticesState:
     def __init__(self) -> None:
         self.pid = os.getpid()
         self.lock = threading.Lock()
-        # key -> (expiry on the monotonic clock, Future[list[Notice]])
+        # key -> (expiry on the monotonic clock, Future[list[Notice]]): a fetch in
+        # flight, or a good answer (200 or 404) until it expires. Never a failure.
         self.cache: OrderedDict[tuple, tuple[float, Future]] = OrderedDict()
+        # key -> the last good answer, kept past its expiry: returned while the
+        # admin service is backed off.
+        self.good: OrderedDict[tuple, list[Notice]] = OrderedDict()
         # admin url -> no request before this time (monotonic clock)
         self.backoff: dict[str, float] = {}
         self.shown: OrderedDict[str, None] = OrderedDict()
+
+    def back_off(self, admin_url: str, seconds: float) -> None:
+        with self.lock:
+            until = time.monotonic() + seconds
+            self.backoff[admin_url] = max(self.backoff.get(admin_url, 0.0), until)
 
 
 _state = _NoticesState()
@@ -205,8 +217,9 @@ def _fetch(
     headers: dict[str, str],
     verify: bool,
 ) -> list[Notice]:
-    """One request for a datasource's notices. Never raises: any failure is no
-    notices."""
+    """One request for a datasource's notices: the notices of a 200, [] for a 404,
+    None for any failure, after which the admin service is backed off. Never
+    raises."""
     try:
         resp = requests.get(
             f"{admin_url}/notices/active",
@@ -219,22 +232,25 @@ def _fetch(
         )
     except (requests.Timeout, requests.ConnectionError) as e:
         logger.debug("Notices request to %s failed: %s", admin_url, type(e).__name__)
-        with state.lock:
-            state.backoff[admin_url] = time.monotonic() + NOTICES_BACKOFF
-        return []
+        state.back_off(admin_url, NOTICES_BACKOFF)
+        return None
     except Exception as e:
         logger.debug("Notices request to %s failed: %s", admin_url, type(e).__name__)
-        return []
+        state.back_off(admin_url, NOTICES_ERROR_BACKOFF)
+        return None
     try:
-        if resp.status_code in (429, 503):
-            with state.lock:
-                state.backoff[admin_url] = time.monotonic() + _retry_after(resp)
+        if resp.status_code == 404:
+            # No access, an unknown datasource or no notices: all an answer of none.
+            return []
         if resp.status_code != 200:
-            # 404 is no access, an unknown datasource or no notices: all "none".
             logger.debug(
                 "Notices for datasource %s: HTTP %s", datasource_id, resp.status_code
             )
-            return []
+            if resp.status_code in (429, 503):
+                state.back_off(admin_url, _retry_after(resp))
+            else:
+                state.back_off(admin_url, NOTICES_ERROR_BACKOFF)
+            return None
         notices = []
         for item in resp.json().get("items") or []:
             try:
@@ -250,7 +266,17 @@ def _fetch(
         logger.debug(
             "Unreadable notices answer for %s: %s", datasource_id, type(e).__name__
         )
-        return []
+        state.back_off(admin_url, NOTICES_ERROR_BACKOFF)
+        return None
+
+
+def _remember(store: OrderedDict, key: tuple, value: object) -> None:
+    """Put a value in a bounded store, newest last, dropping the oldest beyond
+    NOTICES_CACHE_SIZE. The caller holds the state lock."""
+    store[key] = value
+    store.move_to_end(key)
+    while len(store) > NOTICES_CACHE_SIZE:
+        store.popitem(last=False)
 
 
 def request_notices(
@@ -259,8 +285,11 @@ def request_notices(
     """Start, or reuse, the fetch of a datasource's notices.
 
     Returns a Future of the list of notices (it never holds an exception), or None
-    when there is nothing to fetch: no admin service, or it is being backed off.
-    Never raises, never blocks on the network: the request runs in a daemon thread.
+    when there is nothing to fetch: no admin service, or it is backed off with no
+    earlier good answer (with one, a Future of that answer). Only a 200 or a 404 is
+    cached, for NOTICES_CACHE_TTL; a failure gives the callers waiting [], drops the
+    fetch from the cache and backs the admin service off. Never raises, never blocks
+    on the network: the request runs in a daemon thread.
     """
     try:
         datasource_id = normalise_datasource_id(datasource_id)
@@ -272,30 +301,48 @@ def request_notices(
         now = time.monotonic()
         with state.lock:
             cached = state.cache.get(key)
-            if cached is not None and cached[0] > now:
+            if cached is not None and (not cached[1].done() or cached[0] > now):
                 state.cache.move_to_end(key)
                 return cached[1]
             if state.backoff.get(admin_url, 0.0) > now:
-                return None
+                good = state.good.get(key)
+                if good is None:
+                    return None
+                answer: Future = Future()
+                answer.set_result(good)
+                return answer
             future: Future = Future()
-            state.cache[key] = (now + NOTICES_CACHE_TTL, future)
-            state.cache.move_to_end(key)
-            while len(state.cache) > NOTICES_CACHE_SIZE:
-                state.cache.popitem(last=False)
+            _remember(state.cache, key, (now + NOTICES_CACHE_TTL, future))
         headers = credential_headers(token)
 
+        def settle(notices: list[Notice] | None) -> None:
+            with state.lock:
+                if notices is not None:
+                    _remember(
+                        state.cache,
+                        key,
+                        (time.monotonic() + NOTICES_CACHE_TTL, future),
+                    )
+                    _remember(state.good, key, notices)
+                else:
+                    cached = state.cache.get(key)
+                    if cached is not None and cached[1] is future:
+                        del state.cache[key]
+            future.set_result(notices if notices is not None else [])
+
         def run() -> None:
-            notices: list[Notice] = []
+            notices: list[Notice] | None = None
             try:
                 notices = _fetch(state, admin_url, datasource_id, headers, verify)
             finally:
-                future.set_result(notices)
+                settle(notices)
 
         try:
             threading.Thread(target=run, name="oceanum-notices", daemon=True).start()
         except Exception:
-            # A cached answer must never stay pending: callers would wait on it.
-            future.set_result([])
+            # A fetch that never ran must not stay pending: callers would wait on it.
+            state.back_off(admin_url, NOTICES_ERROR_BACKOFF)
+            settle(None)
             raise
         return future
     except Exception as e:
@@ -331,23 +378,29 @@ def show_notices(
     state = _get_state()
     datasource_id = normalise_datasource_id(datasource_id) or ""
     for notice in notices:
+        key = f"{datasource_id}\x00{notice.id}"
         with state.lock:
-            key = f"{datasource_id}\x00{notice.id}"
             if key in state.shown:
                 continue
-            state.shown[key] = None
-            while len(state.shown) > SHOWN_NOTICES_SIZE:
-                state.shown.popitem(last=False)
         severity = _clean(notice.severity.replace("_", " "))
         title = _clean(notice.title)
         if notice.severity in WARN_SEVERITIES:
+            # Raises under an "error" warnings filter: the notice then stays unshown.
             warnings.warn(
                 f"Datasource '{datasource_id}' ({severity}): {title}. "
                 f"See Connector.get_notices('{datasource_id}') for details.",
                 NoticeWarning,
                 stacklevel=stacklevel + 1,
             )
-        else:
+        elif logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Datasource '%s' notice (%s): %s", datasource_id, severity, title
             )
+        else:
+            # Not displayed, so not shown: it is shown once INFO logging is on.
+            continue
+        with state.lock:
+            state.shown[key] = None
+            state.shown.move_to_end(key)
+            while len(state.shown) > SHOWN_NOTICES_SIZE:
+                state.shown.popitem(last=False)

@@ -74,6 +74,14 @@ def _load(conn, datasource_id="my-datasource"):
         return conn.load_datasource(datasource_id)
 
 
+def _after_backoff():
+    """Time passes: every back-off ends and every cached answer expires."""
+    state = notices_module._get_state()
+    state.backoff.clear()
+    for key, (_, future) in list(state.cache.items()):
+        state.cache[key] = (0.0, future)
+
+
 def _notice_warnings(record):
     return [w for w in record if issubclass(w.category, NoticeWarning)]
 
@@ -546,8 +554,9 @@ def test_failure_does_not_suppress_later_warnings(admin_get):
         warnings.simplefilter("always")
         _load(conn)
         assert not _notice_warnings(record)
-        # The cached failure expires.
-        notices_module._get_state().cache.clear()
+        # A failure is not cached: the next request waits only for the back-off.
+        assert not notices_module._get_state().cache
+        _after_backoff()
         admin_get.return_value = _response(200, [_notice("outage")])
         _load(conn)
     assert len(_notice_warnings(record)) == 1
@@ -682,3 +691,136 @@ def test_datasource_id_normalised(admin_get):
     assert conn.get_notices("   ") == []
     assert conn.get_notices(None) == []
     assert admin_get.call_count == 1
+
+
+def test_404_is_a_cached_answer(admin_get):
+    admin_get.return_value = _response(404)
+    conn = _connector()
+    assert conn.get_notices("my-ds") == []
+    assert conn.get_notices("my-ds") == []
+    assert admin_get.call_count == 1
+    assert not notices_module._get_state().backoff
+
+
+@pytest.mark.parametrize(
+    "answer,backoff",
+    [
+        (_response(500), 60),
+        (_response(401), 60),
+        (_response(302), 60),
+        (_response(429, headers={"Retry-After": "120"}), 120),
+        (_response(503), 300),
+        (requests.Timeout("slow"), 300),
+        (requests.ConnectionError("down"), 300),
+        (ValueError("boom"), 60),
+    ],
+    ids=["500", "401", "302", "429", "503-no-retry-after", "timeout", "conn", "other"],
+)
+def test_failure_not_cached_and_backed_off(admin_get, answer, backoff):
+    if isinstance(answer, Exception):
+        admin_get.side_effect = answer
+    else:
+        admin_get.return_value = answer
+    before = time.monotonic()
+    assert _connector().get_notices("my-ds") == []
+    state = notices_module._get_state()
+    assert not state.cache
+    assert not state.good
+    assert backoff - 1 <= state.backoff[ADMIN] - before <= backoff + 1
+
+
+def test_503_then_success_after_backoff_shows_notice(admin_get):
+    admin_get.return_value = _response(503, headers={"Retry-After": "5"})
+    conn = _connector()
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        _load(conn)
+        admin_get.return_value = _response(200, [_notice("outage")])
+        _load(conn)  # backed off: no request
+        assert admin_get.call_count == 1
+        assert not _notice_warnings(record)
+        _after_backoff()
+        _load(conn)
+    assert admin_get.call_count == 2
+    assert len(_notice_warnings(record)) == 1
+
+
+def test_failure_keeps_earlier_good_answer(admin_get):
+    admin_get.return_value = _response(200, [_notice("outage", title="Good")])
+    conn = _connector()
+    assert [n.title for n in conn.get_notices("my-ds")] == ["Good"]
+    _after_backoff()
+    admin_get.return_value = _response(500)
+    # The callers waiting on the failed fetch get none ...
+    assert conn.get_notices("my-ds") == []
+    assert admin_get.call_count == 2
+    # ... and while backed off, the last good answer is returned, unreplaced.
+    assert [n.title for n in conn.get_notices("my-ds")] == ["Good"]
+    assert admin_get.call_count == 2
+    # After the back-off, a new good answer replaces it.
+    _after_backoff()
+    admin_get.return_value = _response(200, [])
+    assert conn.get_notices("my-ds") == []
+    assert admin_get.call_count == 3
+
+
+def test_write_datasource_makes_no_notices_request(admin_get):
+    from oceanum.datamesh.exceptions import DatameshConnectError
+
+    conn = _connector()
+    with (
+        patch.object(
+            conn,
+            "_get_datasource_metadata",
+            side_effect=DatameshConnectError("Datasource my-ds not found"),
+        ),
+        patch.object(conn, "_metadata_write"),
+        warnings.catch_warnings(),
+    ):
+        warnings.simplefilter("ignore")
+        conn.write_datasource("my-ds", None, name="My ds")
+    admin_get.assert_not_called()
+
+
+def test_update_metadata_makes_no_notices_request(admin_get):
+    conn = _connector()
+    meta = {"id": "my-ds", "name": "my-ds", "driver": "null", "geom": None}
+    with (
+        patch.object(conn, "_get_datasource_metadata", return_value=meta),
+        patch.object(conn, "_metadata_write"),
+    ):
+        conn.update_metadata("my-ds", name="Renamed")
+    admin_get.assert_not_called()
+
+
+def test_error_filter_does_not_consume_notice(admin_get):
+    admin_get.return_value = _response(200, [_notice("outage")])
+    conn = _connector()
+    meta = {"id": "my-ds", "name": "my-ds", "driver": "null", "geom": None}
+    with patch.object(conn, "_get_datasource_metadata", return_value=meta):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            # The NoticeWarning the filter raises does not break the call ...
+            assert conn.get_datasource("my-ds").id == "my-ds"
+        with warnings.catch_warnings(record=True) as record:
+            warnings.simplefilter("always")
+            conn.get_datasource("my-ds")
+    # ... and the notice is still shown once warnings are displayed.
+    assert len(_notice_warnings(record)) == 1
+
+
+def test_info_notice_not_consumed_when_info_logging_off(admin_get, caplog):
+    admin_get.return_value = _response(200, [_notice("change", title="New var")])
+    conn = _connector()
+    with caplog.at_level(logging.WARNING, logger="oceanum.datamesh.notices"):
+        _load(conn)
+    assert "New var" not in caplog.text
+    with caplog.at_level(logging.INFO, logger="oceanum.datamesh.notices"):
+        _load(conn)
+        _load(conn)
+    assert caplog.text.count("New var") == 1
+
+
+def test_service_with_default_port_maps_to_admin(admin_get):
+    _connector(service="https://datamesh.oceanum.io:443").get_notices("my-ds")
+    assert admin_get.call_args.args[0] == f"{ADMIN}/notices/active"

@@ -85,7 +85,7 @@ def _conn(ds_exists=True):
     conn = Mock(_gateway="http://gw", _auth_headers={}, _is_v1=True)
     ds = Mock(_exists=ds_exists)
     ds.dataschema = Mock(coords={"time": {}})
-    conn.get_datasource = Mock(return_value=ds)
+    conn._get_datasource = Mock(return_value=ds)
     return conn
 
 

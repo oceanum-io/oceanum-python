@@ -12,7 +12,7 @@ def _append_conn(ds_exists=True):
     conn = Mock(_gateway="http://test", _auth_headers={}, _is_v1=True)
     ds = Mock(_exists=ds_exists)
     ds.dataschema = Mock(coords={"time": {}})
-    conn.get_datasource = Mock(return_value=ds)
+    conn._get_datasource = Mock(return_value=ds)
     return conn
 
 

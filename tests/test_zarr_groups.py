@@ -11,7 +11,7 @@ import xarray as xr
 def test_zarr_write_passes_group_to_to_zarr():
     """Test that zarr_write passes group to _to_zarr."""
     conn = Mock(_gateway="http://test", _auth_headers={}, _is_v1=True)
-    conn.get_datasource = Mock(return_value=Mock(_exists=False))
+    conn._get_datasource = Mock(return_value=Mock(_exists=False))
 
     session_mock = MagicMock()
     session_mock.__enter__ = Mock(return_value=session_mock)
@@ -33,7 +33,7 @@ def test_zarr_write_passes_group_to_to_zarr():
 def test_zarr_write_without_group():
     """Test backward compatibility - zarr_write works without group."""
     conn = Mock(_gateway="http://test", _auth_headers={}, _is_v1=True)
-    conn.get_datasource = Mock(return_value=Mock(_exists=False))
+    conn._get_datasource = Mock(return_value=Mock(_exists=False))
 
     session_mock = MagicMock()
     session_mock.__enter__ = Mock(return_value=session_mock)

@@ -176,7 +176,7 @@ class Connector(object):
         self._cachedir = tempfile.TemporaryDirectory(prefix="datamesh_")
         self._verify = verify
         self._notices = notices_enabled(notices)
-        self._admin_service = admin_service_url(self._host)
+        self._admin_service = admin_service_url(url.hostname)
 
         # Suppress InsecureRequestWarning when verify=False is used
         if not verify:
@@ -586,6 +586,11 @@ class Connector(object):
         Raises:
             DatameshConnectError: Datasource cannot be found or is not authorized for the datamesh key
         """
+        return self._get_datasource(datasource_id)
+
+    def _get_datasource(self, datasource_id):
+        """get_datasource without its notices check, for the connector's own use
+        (writes and metadata updates)."""
         props = self._get_datasource_metadata(datasource_id)
         try:
             ds = Datasource(**props)
@@ -780,7 +785,7 @@ class Connector(object):
 
         # Try to get an existing datasoure with the same id
         try:
-            ds = self.get_datasource(datasource_id)
+            ds = self._get_datasource(datasource_id)
         except DatameshConnectError as e:
             if append:
                 raise DatameshWriteError(f"Cannot append to non-existent datasource")
@@ -910,7 +915,7 @@ class Connector(object):
         Returns:
             :obj:`oceanum.datamesh.Datasource`: The datasource instance that was updated
         """
-        ds = self.get_datasource(datasource_id)
+        ds = self._get_datasource(datasource_id)
         for key in properties:
             if key not in ["driver", "schema", "driver_args"]:
                 setattr(ds, key, properties[key])

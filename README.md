@@ -6,7 +6,7 @@ Documentation is at: (https://oceanum-python.readthedocs.io/)
 
 ## Datasource notices
 
-When you load, query or get a datasource, the Datamesh `Connector` shows oceanum.io notices about it once per process: `outage` and `action_required` as a `NoticeWarning`, `change` and `info` as an `INFO` log line. `Connector.get_notices(datasource_id)` returns them as a list. The check never raises and waits at most 3 seconds. Turn it off with `OCEANUM_NOTICES=0` or `Connector(notices=False)`; `OCEANUM_ADMIN_SERVICE` overrides the admin service url. See the "Datasource Notices" section of the usage docs.
+When you load, query or get a datasource, the Datamesh `Connector` shows oceanum.io notices about it once per datasource per process: `outage` and `action_required` as a `NoticeWarning`, `change` and `info` as an `INFO` log line. `Connector.get_notices(datasource_id)` returns them as a list. The check never raises, but with no cached answer it can add up to 3 seconds to a call. Turn it off with `OCEANUM_NOTICES=0` or `Connector(notices=False)`. `OCEANUM_ADMIN_SERVICE` overrides the admin service url, and that service receives your credential. See the "Datasource Notices" section of the usage docs.
 
 ## Testing
 
