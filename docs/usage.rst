@@ -119,10 +119,11 @@ The check never makes the operation fail: every error is ignored. It runs
 alongside the operation, and once the operation has returned it waits for the
 answer for what is left of 3 seconds from the start of the call. So with no
 cached answer, the check can add up to 3 seconds to a call. An answer is cached
-for 10 minutes per datasource. After a failure the admin service is not asked
-again for a while (the ``Retry-After`` it sent, 5 minutes after a timeout or
-connection error, 1 minute otherwise), and the last good answer is used
-meanwhile. At most the 20 newest notices are kept, with titles cut to 200
+for 10 minutes per datasource. After a timeout, a connection error, a 5xx or a
+429 the admin service is not asked again for a while (the ``Retry-After`` it
+sent, else 5 minutes after a timeout, a connection error, a 429 or a 503, and 1
+minute after another 5xx); after any other failure, such as a 401, only that
+datasource waits, for 1 minute. The last good answer is used meanwhile. At most the 20 newest notices are kept, with titles cut to 200
 characters and bodies to 2,000. To read the notices yourself, including their
 markdown body, use :meth:`~oceanum.datamesh.Connector.get_notices`::
 
@@ -142,7 +143,9 @@ To turn the check off, set ``OCEANUM_NOTICES=0`` or pass ``notices=False``::
 
     datamesh = Connector(notices=False)
 
-Notice warnings can also be filtered like any other warning::
+Notice warnings can be filtered like any other warning. With an ``error``
+filter (``python -W error``), a notice's ``NoticeWarning`` is raised from the
+call that found it, once::
 
     import warnings
     from oceanum.datamesh import NoticeWarning

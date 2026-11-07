@@ -36,6 +36,7 @@ from .session import Session
 from .notices import (
     NOTICES_TIMEOUT,
     Notice,
+    NoticeWarning,
     admin_service_url,
     notices_enabled,
     request_notices,
@@ -85,7 +86,9 @@ def with_notices(get_datasource_id):
     """Show the notices about the datasource a Connector method uses, once it has
     returned: each notice at most once per datasource per process, waiting at most
     NOTICES_TIMEOUT seconds from the call (they are fetched while the method runs).
-    Nothing is shown if the method raises, or if notices are disabled."""
+    Nothing is shown if the method raises, or if notices are disabled. A
+    NoticeWarning made an error by a warnings filter propagates; any other failure
+    to show notices is swallowed."""
 
     def decorator(func):
         @wraps(func)
@@ -106,6 +109,9 @@ def with_notices(get_datasource_id):
                     show_notices(
                         datasource_id, wait_notices(pending, remaining), stacklevel=2
                     )
+                except NoticeWarning:
+                    # An "error" warnings filter: the user's choice, raised once.
+                    raise
                 except Exception:
                     pass
             return result

@@ -491,18 +491,6 @@ def test_get_notices_works_when_opted_out(admin_get):
     assert len(_connector(notices=False).get_notices("my-ds")) == 1
 
 
-def test_thread_failure_is_no_notices(admin_get):
-    conn = _connector()
-    with patch.object(
-        threading.Thread, "start", side_effect=RuntimeError("no threads")
-    ):
-        assert conn.get_notices("my-ds") == []
-    start = time.monotonic()
-    assert conn.get_notices("my-ds") == []
-    assert time.monotonic() - start < 0.5
-    admin_get.assert_not_called()
-
-
 def test_redirect_not_followed(admin_get):
     """A redirect would carry X-DATAMESH-TOKEN to wherever it points."""
     resp = _response(302, headers={"Location": "https://elsewhere.example.com/"})
@@ -706,27 +694,130 @@ def test_404_is_a_cached_answer(admin_get):
     "answer,backoff",
     [
         (_response(500), 60),
-        (_response(401), 60),
-        (_response(302), 60),
+        (_response(502), 60),
+        (_response(504, headers={"Retry-After": "30"}), 30),
         (_response(429, headers={"Retry-After": "120"}), 120),
         (_response(503), 300),
         (requests.Timeout("slow"), 300),
         (requests.ConnectionError("down"), 300),
-        (ValueError("boom"), 60),
     ],
-    ids=["500", "401", "302", "429", "503-no-retry-after", "timeout", "conn", "other"],
+    ids=["500", "502", "504", "429", "503-no-retry-after", "timeout", "conn"],
 )
-def test_failure_not_cached_and_backed_off(admin_get, answer, backoff):
+def test_service_failure_backs_off_the_admin_service(admin_get, answer, backoff):
     if isinstance(answer, Exception):
         admin_get.side_effect = answer
     else:
         admin_get.return_value = answer
     before = time.monotonic()
-    assert _connector().get_notices("my-ds") == []
+    conn = _connector()
+    assert conn.get_notices("my-ds") == []
     state = notices_module._get_state()
     assert not state.cache
     assert not state.good
     assert backoff - 1 <= state.backoff[ADMIN] - before <= backoff + 1
+    # Every datasource waits for the back-off.
+    assert conn.get_notices("other-ds") == []
+    assert admin_get.call_count == 1
+
+
+def _unreadable():
+    resp = _response(200)
+    resp.json.side_effect = ValueError("not json")
+    return resp
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        _response(401),
+        _response(403),
+        _response(400),
+        _response(422),
+        _response(302),
+        _unreadable(),
+        ValueError("boom"),
+        requests.TooManyRedirects("loop"),
+    ],
+    ids=["401", "403", "400", "422", "302", "unreadable", "other", "redirects"],
+)
+def test_key_failure_holds_off_that_key_alone(admin_get, answer):
+    if isinstance(answer, Exception):
+        admin_get.side_effect = answer
+    else:
+        admin_get.return_value = answer
+    before = time.monotonic()
+    conn = _connector()
+    assert conn.get_notices("my-ds") == []
+    state = notices_module._get_state()
+    assert not state.cache
+    assert not state.good
+    assert not state.backoff
+    [(key, until)] = state.holdoff.items()
+    assert key[1] == "my-ds"
+    assert 59 <= until - before <= 61
+    # The same key is held off ...
+    assert conn.get_notices("my-ds") == []
+    assert admin_get.call_count == 1
+    # ... other datasources are not ...
+    admin_get.side_effect = None
+    admin_get.return_value = _response(200, [_notice("info")])
+    assert len(conn.get_notices("other-ds")) == 1
+    assert admin_get.call_count == 2
+    # ... and after 60 s the key is asked again.
+    state.holdoff.clear()
+    assert len(conn.get_notices("my-ds")) == 1
+    assert admin_get.call_count == 3
+
+
+def test_key_failure_keeps_earlier_good_answer(admin_get):
+    admin_get.return_value = _response(200, [_notice("outage", title="Good")])
+    conn = _connector()
+    conn.get_notices("my-ds")
+    _after_backoff()
+    admin_get.return_value = _response(401)
+    assert conn.get_notices("my-ds") == []
+    assert [n.title for n in conn.get_notices("my-ds")] == ["Good"]
+    assert admin_get.call_count == 2
+
+
+def test_executor_failure_is_no_notices(admin_get):
+    conn = _connector()
+    state = notices_module._get_state()
+    with patch.object(state.executor, "submit", side_effect=RuntimeError("shut down")):
+        assert conn.get_notices("my-ds") == []
+    start = time.monotonic()
+    assert conn.get_notices("my-ds") == []
+    assert time.monotonic() - start < 0.5
+    assert not state.cache
+    admin_get.assert_not_called()
+
+
+def test_fetches_run_on_a_bounded_pool(admin_get):
+    release = threading.Event()
+    lock = threading.Lock()
+    running = {"now": 0, "most": 0, "threads": set()}
+
+    def slow_get(*args, **kwargs):
+        with lock:
+            running["now"] += 1
+            running["most"] = max(running["most"], running["now"])
+            running["threads"].add(threading.current_thread().name)
+        release.wait(5)
+        with lock:
+            running["now"] -= 1
+        return _response(200, [])
+
+    admin_get.side_effect = slow_get
+    conn = _connector()
+    futures = [conn._request_notices(f"ds-{i}") for i in range(12)]
+    time.sleep(0.3)
+    assert running["most"] == notices_module.NOTICES_WORKERS == 4
+    release.set()
+    for f in futures:
+        assert f.result(timeout=5) == []
+    assert admin_get.call_count == 12
+    assert len(running["threads"]) <= 4
+    assert all(t.startswith("oceanum-notices") for t in running["threads"])
 
 
 def test_503_then_success_after_backoff_shows_notice(admin_get):
@@ -793,20 +884,73 @@ def test_update_metadata_makes_no_notices_request(admin_get):
     admin_get.assert_not_called()
 
 
-def test_error_filter_does_not_consume_notice(admin_get):
+def test_error_filter_raises_notice_warning_once(admin_get):
+    admin_get.return_value = _response(200, [_notice("outage", title="Feed down")])
+    conn = _connector()
+    meta = {"id": "my-ds", "name": "my-ds", "driver": "null", "geom": None}
+    with (
+        patch.object(conn, "_get_datasource_metadata", return_value=meta),
+        warnings.catch_warnings(),
+    ):
+        warnings.simplefilter("error")
+        # The user asked for warnings as errors: the NoticeWarning propagates ...
+        with pytest.raises(NoticeWarning, match="Feed down"):
+            conn.get_datasource("my-ds")
+        # ... once: the notice now counts as shown.
+        assert conn.get_datasource("my-ds").id == "my-ds"
+
+
+def test_display_failure_leaves_notice_unshown(admin_get):
     admin_get.return_value = _response(200, [_notice("outage")])
     conn = _connector()
     meta = {"id": "my-ds", "name": "my-ds", "driver": "null", "geom": None}
     with patch.object(conn, "_get_datasource_metadata", return_value=meta):
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            # The NoticeWarning the filter raises does not break the call ...
+        with patch.object(
+            notices_module.warnings, "warn", side_effect=RuntimeError("broken hook")
+        ):
+            # Swallowed: the call is unaffected ...
             assert conn.get_datasource("my-ds").id == "my-ds"
         with warnings.catch_warnings(record=True) as record:
             warnings.simplefilter("always")
             conn.get_datasource("my-ds")
-    # ... and the notice is still shown once warnings are displayed.
+    # ... and the notice is shown on the next call.
     assert len(_notice_warnings(record)) == 1
+
+
+def test_concurrent_callers_show_a_notice_once(caplog):
+    notice = Notice.model_validate(_notice("info", title="Once only"))
+    barrier = threading.Barrier(8)
+
+    def show():
+        barrier.wait(5)
+        notices_module.show_notices("my-ds", [notice])
+
+    with caplog.at_level(logging.INFO, logger="oceanum.datamesh.notices"):
+        threads = [threading.Thread(target=show) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(5)
+    assert caplog.text.count("Once only") == 1
+
+
+def test_null_body_and_type_are_empty(admin_get):
+    admin_get.return_value = _response(
+        200,
+        [
+            dict(_notice("outage", nid="a"), body=None, type=None),
+            dict(_notice("info", nid="b"), title=None),
+            dict(_notice("info", nid="c"), severity=None),
+            dict(_notice("info", nid="d"), publish_at="not a time"),
+            {k: v for k, v in _notice("info", nid="e").items() if k != "id"},
+            {k: v for k, v in _notice("info", nid="f").items() if k != "body"},
+        ],
+    )
+    notices = _connector().get_notices("my-ds")
+    assert [(n.id, n.body, n.type) for n in notices] == [
+        ("a", "", ""),
+        ("f", "", "deprecation"),
+    ]
 
 
 def test_info_notice_not_consumed_when_info_logging_off(admin_get, caplog):
