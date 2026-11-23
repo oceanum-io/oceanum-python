@@ -32,13 +32,17 @@ class DatasourceException(Exception):
 
 
 def parse_period(period):
+    # Already a period: rebuilding a Datasource from another one (as an
+    # overwrite does) re-validates the timedelta it holds.
+    if isinstance(period, datetime.timedelta):
+        return period
     try:
         m = re.match(
             r"^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:.\d+)?)S)?$",
             period,
         )
         if m is None:
-            raise serializers.ValidationError("invalid ISO 8601 duration string")
+            raise ValueError("invalid ISO 8601 duration string")
         days = 0
         hours = 0
         minutes = 0
@@ -49,8 +53,10 @@ def parse_period(period):
         if m[5]:
             minutes = int(m[5])
         return datetime.timedelta(days=days, hours=hours, minutes=minutes)
-    except:
-        raise "Period string not valid"
+    except Exception:
+        # A bare string cannot be raised (that is itself a TypeError); a
+        # ValueError becomes a normal pydantic validation error.
+        raise ValueError(f"Period string not valid: {period!r}")
 
 
 def to_datetime(v):

@@ -133,6 +133,47 @@ def tempFile(mode="wb"):
             os.unlink(file.name)
 
 
+# Drivers known to take an overwrite of each kind of data. An overwrite keeps
+# the existing record -- its driver and arguments, which the server chose -- and
+# only replaces the data, so it is allowed only where that record is known to
+# accept the new data. This list never chooses a storage backend: a driver not
+# on it is refused with an explicit error, before anything is deleted, rather
+# than guessed at (oceanum/datamesh-gateway-v1#152).
+_OVERWRITABLE_DRIVERS = {
+    "Dataset": ("vzarr", "onzarr"),
+    "DataFrame": ("onsql",),
+}
+
+
+def _data_kind(data):
+    if isinstance(data, xarray.Dataset):
+        return "Dataset"
+    if isinstance(data, (pandas.DataFrame, dask.dataframe.DataFrame)):
+        return "DataFrame"
+    return None
+
+
+def _check_overwrite_fits(ds, data):
+    """Refuse an overwrite the existing datasource cannot take.
+
+    Raises before anything is deleted, so a refused overwrite leaves the
+    datasource as it was.
+    """
+    kind = _data_kind(data)
+    if kind is None:
+        # Not a supported data type; the write itself raises the usual error.
+        return
+    if ds.driver in _OVERWRITABLE_DRIVERS[kind]:
+        return
+    raise DatameshWriteError(
+        f"Cannot overwrite datasource '{ds.id}' with a {type(data).__name__}: "
+        f"its existing storage (driver '{ds.driver}') is not known to accept "
+        f"this kind of data. Nothing was changed. To replace it, delete it "
+        f"first with delete_datasource('{ds.id}') and write again, or write "
+        f"to a new datasource id."
+    )
+
+
 class Connector(object):
     """Datamesh connector class.
 
@@ -800,6 +841,10 @@ class Connector(object):
                 ds = _ds
 
         if ds._exists and overwrite:
+            # Checked before the delete: the overwrite keeps the existing
+            # record (driver and args), so it must be able to take the data.
+            if data is not None:
+                _check_overwrite_fits(ds, data)
             try:
                 self._delete(datasource_id)
                 # This allows to carry over all metadata properties
